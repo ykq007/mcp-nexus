@@ -189,6 +189,13 @@ export class D1Client {
     return result;
   }
 
+  async getBraveKeyById(id: string): Promise<BraveKey | null> {
+    const result = await this.db.prepare(`
+      SELECT * FROM BraveKey WHERE id = ?
+    `).bind(id).first<BraveKey>();
+    return result;
+  }
+
   async createBraveKey(data: {
     id: string;
     label: string;

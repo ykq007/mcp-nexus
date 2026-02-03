@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import type { Env } from '../../env.js';
 import { adminAuth } from '../../middleware/adminAuth.js';
 import { D1Client, generateId } from '../../db/d1.js';
-import { encrypt, maskApiKey, generateToken } from '../../crypto/crypto.js';
+import { encrypt, decrypt, maskApiKey, generateToken } from '../../crypto/crypto.js';
 
 // Create admin router
 const adminRouter = new Hono<{ Bindings: Env }>();
@@ -121,9 +121,23 @@ adminRouter.delete('/keys/:id', async (c) => {
   return c.json({ success: true });
 });
 
-// Key reveal is not supported in worker (keys are encrypted, no decryption exposed)
+// Key reveal - decrypt and return the API key
 adminRouter.get('/keys/:id/reveal', async (c) => {
-  return c.json({ error: 'Key reveal not supported in Cloudflare Workers deployment' }, 501);
+  const id = c.req.param('id');
+  const db = new D1Client(c.env.DB);
+
+  const key = await db.getTavilyKeyById(id);
+  if (!key) {
+    return c.json({ error: 'Key not found' }, 404);
+  }
+
+  try {
+    const keyEncrypted = new Uint8Array(key.keyEncrypted);
+    const apiKey = await decrypt(keyEncrypted, c.env.KEY_ENCRYPTION_SECRET);
+    return c.json({ apiKey });
+  } catch (error) {
+    return c.json({ error: 'Failed to decrypt key' }, 500);
+  }
 });
 
 // Credit refresh stubs (not implemented in worker)
@@ -277,7 +291,21 @@ adminRouter.patch('/brave-keys/:id', async (c) => {
 });
 
 adminRouter.get('/brave-keys/:id/reveal', async (c) => {
-  return c.json({ error: 'Key reveal not supported in Cloudflare Workers deployment' }, 501);
+  const id = c.req.param('id');
+  const db = new D1Client(c.env.DB);
+
+  const key = await db.getBraveKeyById(id);
+  if (!key) {
+    return c.json({ error: 'Key not found' }, 404);
+  }
+
+  try {
+    const keyEncrypted = new Uint8Array(key.keyEncrypted);
+    const apiKey = await decrypt(keyEncrypted, c.env.KEY_ENCRYPTION_SECRET);
+    return c.json({ apiKey });
+  } catch (error) {
+    return c.json({ error: 'Failed to decrypt key' }, 500);
+  }
 });
 
 // ============ Client Tokens ============
