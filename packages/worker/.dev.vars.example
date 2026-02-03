@@ -1,0 +1,10 @@
+# Required secrets for MCP Nexus
+# Generate these values and enter them during deployment
+
+# Admin API Token - used to authenticate admin API requests
+# Generate a secure random string (e.g., using: openssl rand -hex 32)
+ADMIN_API_TOKEN=your-admin-token-here
+
+# Key Encryption Secret - used to encrypt API keys at rest
+# Must be a base64-encoded 32-byte key (e.g., using: openssl rand -base64 32)
+KEY_ENCRYPTION_SECRET=your-base64-encryption-key-here

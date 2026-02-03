@@ -168,4 +168,12 @@ Set `TAVILY_BRIDGE_BASE_URL` to your deployment URL (for local Docker Compose: `
 
 ## Deployment
 
-The server is designed to be deployed as a standalone service. The included `docker-compose.yml` and `Dockerfile` provide a production-ready setup for self-hosting.
+### Cloudflare Workers (Recommended - Free)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ykq007/mcp-nexus/tree/main/packages/worker)
+
+One-click deployment to Cloudflare's free tier with D1 database. See [packages/worker/README.md](packages/worker/README.md) for details.
+
+### Docker Compose (Self-Hosted)
+
+The included `docker-compose.yml` and `Dockerfile` provide a production-ready setup for self-hosting.

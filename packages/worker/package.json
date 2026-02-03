@@ -1,0 +1,34 @@
+{
+  "name": "@mcp-nexus/worker",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "echo 'No build step required - Wrangler handles TypeScript'",
+    "deploy": "wrangler d1 execute DB --remote --file=migrations/0001_init.sql && wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 execute DB --local --file=migrations/0001_init.sql",
+    "db:migrate:remote": "wrangler d1 execute DB --remote --file=migrations/0001_init.sql"
+  },
+  "cloudflare": {
+    "bindings": {
+      "ADMIN_API_TOKEN": {
+        "description": "Token for authenticating admin API requests. Generate using `openssl rand -hex 32`."
+      },
+      "KEY_ENCRYPTION_SECRET": {
+        "description": "Base64-encoded 32-byte key for encrypting API keys. Generate using `openssl rand -base64 32`."
+      }
+    }
+  },
+  "dependencies": {
+    "hono": "^4.7.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250127.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.0.0"
+  }
+}

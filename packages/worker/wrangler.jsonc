@@ -1,0 +1,67 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mcp-nexus",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // D1 Database binding - auto-provisioned by Deploy Button
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mcp-nexus-db",
+      "database_id": "placeholder"
+    }
+  ],
+
+  // Durable Objects for MCP sessions and rate limiting
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MCP_SESSION",
+        "class_name": "McpSession"
+      },
+      {
+        "name": "RATE_LIMITER",
+        "class_name": "RateLimiter"
+      }
+    ]
+  },
+
+  // Migrations for Durable Objects (required on first deploy)
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["McpSession", "RateLimiter"]
+    }
+  ],
+
+  // Environment variables (non-secret)
+  "vars": {
+    "MCP_RATE_LIMIT_PER_MINUTE": "60",
+    "MCP_GLOBAL_RATE_LIMIT_PER_MINUTE": "600",
+    "TAVILY_KEY_SELECTION_STRATEGY": "round_robin",
+    "TAVILY_USAGE_LOG_MODE": "preview",
+    "BRAVE_USAGE_LOG_MODE": "preview"
+  },
+
+  // Static assets for landing page
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "none"
+  },
+
+  // Development environment overrides
+  "env": {
+    "dev": {
+      "vars": {
+        "ENVIRONMENT": "development"
+      }
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}

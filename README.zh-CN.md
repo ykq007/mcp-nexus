@@ -168,4 +168,12 @@ npm run dev:bridge-server
 
 ## 部署
 
-该服务器设计为可作为独立服务部署。附带的 `docker-compose.yml` 和 `Dockerfile` 为自托管提供了一个生产就绪的设置。
+### Cloudflare Workers（推荐 - 免费）
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ykq007/mcp-nexus/tree/main/packages/worker)
+
+一键部署到 Cloudflare 免费层，使用 D1 数据库。详情请参阅 [packages/worker/README.md](packages/worker/README.md)。
+
+### Docker Compose（自托管）
+
+附带的 `docker-compose.yml` 和 `Dockerfile` 为自托管提供了一个生产就绪的设置。

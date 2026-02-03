@@ -1,0 +1,3 @@
+# Worker Assets
+
+This directory contains static assets served by the Cloudflare Worker.
