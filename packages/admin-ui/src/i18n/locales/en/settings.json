@@ -39,7 +39,16 @@
     "keySelection": "Upstream key selection",
     "roundRobin": "Round robin",
     "random": "Random",
-    "keySelectionHelp": "Persists on the server. When unset, it falls back to <mono>TAVILY_KEY_SELECTION_STRATEGY</mono> (<mono>round_robin</mono> or <mono>random</mono>)."
+    "keySelectionHelp": "Persists on the server. When unset, it falls back to <mono>TAVILY_KEY_SELECTION_STRATEGY</mono> (<mono>round_robin</mono> or <mono>random</mono>).",
+    "searchSourceMode": {
+      "label": "Search source mode",
+      "help": "Determines which search API to use. 'Combined' queries both in parallel and merges results.",
+      "tavily_only": "Tavily only",
+      "brave_only": "Brave only",
+      "combined": "Combined (Tavily + Brave)",
+      "brave_prefer_tavily_fallback": "Brave with Tavily fallback",
+      "braveUnavailableWarning": "Warning: Brave Search is not configured. This option will fail."
+    }
   },
   "rotation": {
     "label": "Rotation behavior",
@@ -53,6 +62,8 @@
     "signInRequiredMessage": "Sign in with the admin token to update server settings.",
     "updated": "Updated",
     "updatedMessage": "Upstream key selection set to {{strategy}}.",
+    "searchSourceModeUpdated": "Search source mode updated",
+    "searchSourceModeUpdatedMessage": "Search source mode set to {{mode}}.",
     "updateFailed": "Update failed",
     "connected": "Connected",
     "connectedMessage": "Admin API authenticated successfully.",

@@ -1,5 +1,6 @@
 export type TavilyKeyStatus = 'active' | 'disabled' | 'cooldown' | 'invalid';
 export type BraveKeyStatus = 'active' | 'disabled' | 'invalid';
+export type SearchSourceMode = 'tavily_only' | 'brave_only' | 'combined' | 'brave_prefer_tavily_fallback';
 
 export type TavilyKeyDto = {
   id: string;
@@ -79,6 +80,8 @@ export type TavilyToolUsageSummaryDto = {
 
 export type ServerInfoDto = {
   tavilyKeySelectionStrategy: 'round_robin' | 'random';
+  searchSourceMode: SearchSourceMode;
+  braveSearchEnabled: boolean;
 };
 
 export type AdminApiConfig = {
@@ -98,7 +101,7 @@ export class AdminApiError extends Error {
 
 export type AdminApi = {
   getServerInfo: () => Promise<ServerInfoDto>;
-  updateServerInfo: (input: { tavilyKeySelectionStrategy: ServerInfoDto['tavilyKeySelectionStrategy'] }) => Promise<{ ok: true; tavilyKeySelectionStrategy: ServerInfoDto['tavilyKeySelectionStrategy'] }>;
+  updateServerInfo: (input: Partial<Pick<ServerInfoDto, 'tavilyKeySelectionStrategy' | 'searchSourceMode'>>) => Promise<ServerInfoDto & { ok: true }>;
 
   listKeys: () => Promise<TavilyKeyDto[]>;
   createKey: (input: { label: string; apiKey: string }) => Promise<{ id: string }>;

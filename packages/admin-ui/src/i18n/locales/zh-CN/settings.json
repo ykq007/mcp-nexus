@@ -39,7 +39,16 @@
     "keySelection": "上游密钥选择",
     "roundRobin": "轮询",
     "random": "随机",
-    "keySelectionHelp": "在服务器上持久化。未设置时，回退到 <mono>TAVILY_KEY_SELECTION_STRATEGY</mono>（<mono>round_robin</mono> 或 <mono>random</mono>）。"
+    "keySelectionHelp": "在服务器上持久化。未设置时，回退到 <mono>TAVILY_KEY_SELECTION_STRATEGY</mono>（<mono>round_robin</mono> 或 <mono>random</mono>）。",
+    "searchSourceMode": {
+      "label": "搜索源模式",
+      "help": "决定使用哪个搜索 API。「合并」模式会并行查询两者并合并结果。",
+      "tavily_only": "仅 Tavily",
+      "brave_only": "仅 Brave",
+      "combined": "合并模式 (Tavily + Brave)",
+      "brave_prefer_tavily_fallback": "Brave 优先，Tavily 备用",
+      "braveUnavailableWarning": "警告：服务器未配置 Brave 搜索。此选项将会失败。"
+    }
   },
   "rotation": {
     "label": "轮换行为",
@@ -53,6 +62,8 @@
     "signInRequiredMessage": "使用管理员令牌登录以更新服务器设置。",
     "updated": "已更新",
     "updatedMessage": "上游密钥选择已设置为 {{strategy}}。",
+    "searchSourceModeUpdated": "搜索源模式已更新",
+    "searchSourceModeUpdatedMessage": "搜索源模式已设置为 {{mode}}。",
     "updateFailed": "更新失败",
     "connected": "已连接",
     "connectedMessage": "管理员 API 认证成功。",

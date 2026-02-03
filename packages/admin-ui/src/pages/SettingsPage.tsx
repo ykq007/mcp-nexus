@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AdminApiError, type AdminApi } from '../lib/adminApi';
+import { AdminApiError, type AdminApi, type SearchSourceMode, type ServerInfoDto } from '../lib/adminApi';
 import type { Theme } from '../app/prefs';
 import { IconLogout, IconRefresh, IconSettings } from '../ui/icons';
 import { useToast } from '../ui/toast';
@@ -25,10 +25,12 @@ export function SettingsPage({
   const { t: tc } = useTranslation('common');
   const toast = useToast();
   const [testing, setTesting] = useState(false);
-  const [serverInfo, setServerInfo] = useState<{ tavilyKeySelectionStrategy: 'round_robin' | 'random' } | null>(null);
+  const [serverInfo, setServerInfo] = useState<ServerInfoDto | null>(null);
   const [serverInfoError, setServerInfoError] = useState<string | null>(null);
   const [serverStrategyDraft, setServerStrategyDraft] = useState<'round_robin' | 'random'>('round_robin');
   const [savingServerStrategy, setSavingServerStrategy] = useState(false);
+  const [searchSourceModeDraft, setSearchSourceModeDraft] = useState<SearchSourceMode>('brave_prefer_tavily_fallback');
+  const [savingSearchSourceMode, setSavingSearchSourceMode] = useState(false);
   const baseUrlNeedsScheme = useMemo(() => value.apiBaseUrl.trim() !== '' && !/^https?:\/\//.test(value.apiBaseUrl.trim()), [value.apiBaseUrl]);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export function SettingsPage({
         if (cancelled) return;
         setServerInfo(info);
         setServerStrategyDraft(info.tavilyKeySelectionStrategy);
+        setSearchSourceModeDraft(info.searchSourceMode);
       })
       .catch((e: any) => {
         if (cancelled) return;
@@ -64,7 +67,7 @@ export function SettingsPage({
     setSavingServerStrategy(true);
     try {
       const res = await api.updateServerInfo({ tavilyKeySelectionStrategy: next });
-      setServerInfo({ tavilyKeySelectionStrategy: res.tavilyKeySelectionStrategy });
+      setServerInfo(res);
       setServerStrategyDraft(res.tavilyKeySelectionStrategy);
       toast.push({ title: t('toast.updated'), message: t('toast.updatedMessage', { strategy: res.tavilyKeySelectionStrategy }) });
     } catch (e: any) {
@@ -72,6 +75,25 @@ export function SettingsPage({
       toast.push({ title: t('toast.updateFailed'), message: msg });
     } finally {
       setSavingServerStrategy(false);
+    }
+  }
+
+  async function saveSearchSourceMode(next: SearchSourceMode) {
+    if (!signedIn) {
+      toast.push({ title: t('toast.signInRequired'), message: t('toast.signInRequiredMessage') });
+      return;
+    }
+    setSavingSearchSourceMode(true);
+    try {
+      const res = await api.updateServerInfo({ searchSourceMode: next });
+      setServerInfo(res);
+      setSearchSourceModeDraft(res.searchSourceMode);
+      toast.push({ title: t('toast.searchSourceModeUpdated'), message: t('toast.searchSourceModeUpdatedMessage', { mode: res.searchSourceMode }) });
+    } catch (e: any) {
+      const msg = typeof e?.message === 'string' ? e.message : tc('errors.unknownError');
+      toast.push({ title: t('toast.updateFailed'), message: msg });
+    } finally {
+      setSavingSearchSourceMode(false);
     }
   }
 
@@ -249,6 +271,41 @@ export function SettingsPage({
                       </button>
                     </div>
                     <div className="help" dangerouslySetInnerHTML={{ __html: t('server.keySelectionHelp').replace(/<mono>/g, '<span class="mono">').replace(/<\/mono>/g, '</span>') }} />
+
+                    <div className="flex gap-3 items-center mt-4">
+                      <div className="help">{t('server.searchSourceMode.label')}</div>
+                      <span className="badge mono" data-variant="info">
+                        {serverInfo.searchSourceMode}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 items-center flex-wrap">
+                      <select
+                        className="select"
+                        value={searchSourceModeDraft}
+                        onChange={(e) => setSearchSourceModeDraft(e.target.value as SearchSourceMode)}
+                        disabled={savingSearchSourceMode}
+                        aria-label={t('server.searchSourceMode.label')}
+                      >
+                        <option value="brave_prefer_tavily_fallback">{t('server.searchSourceMode.brave_prefer_tavily_fallback')}</option>
+                        <option value="combined">{t('server.searchSourceMode.combined')}</option>
+                        <option value="tavily_only">{t('server.searchSourceMode.tavily_only')}</option>
+                        <option value="brave_only">{t('server.searchSourceMode.brave_only')}</option>
+                      </select>
+                      <button
+                        className="btn btn--sm"
+                        data-variant="primary"
+                        onClick={() => saveSearchSourceMode(searchSourceModeDraft)}
+                        disabled={savingSearchSourceMode || searchSourceModeDraft === serverInfo.searchSourceMode}
+                      >
+                        {savingSearchSourceMode ? tc('status.saving') : tc('actions.save')}
+                      </button>
+                    </div>
+                    <div className="help">{t('server.searchSourceMode.help')}</div>
+                    {searchSourceModeDraft === 'brave_only' && !serverInfo.braveSearchEnabled ? (
+                      <div className="badge mono" data-variant="warning">
+                        {t('server.searchSourceMode.braveUnavailableWarning')}
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="help">{tc('status.loading')}</div>

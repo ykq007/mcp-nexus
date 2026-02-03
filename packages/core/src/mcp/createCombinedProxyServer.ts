@@ -17,7 +17,11 @@ import { braveToolsV0100 } from '../brave/tools-v0100.js';
 import { formatBraveLocalResultsV0100, formatBraveWebResultsFromTavilyV0100, formatBraveWebResultsV0100 } from '../brave/format-v0100.js';
 import { BraveHttpError, isBraveHttpError, isBraveRateGateTimeoutError } from '../brave/errors.js';
 
+import type { SearchSourceMode } from './searchSource.js';
+
 export type BraveOverflowMode = 'queue' | 'error' | 'fallback_to_tavily';
+
+export type SearchSourceModeProvider = (ctx: unknown) => SearchSourceMode | Promise<SearchSourceMode>;
 
 type CreateCombinedProxyServerOptions = {
   serverName: string;
@@ -28,6 +32,7 @@ type CreateCombinedProxyServerOptions = {
   braveMaxQueueMs?: number;
   getDefaultParameters?: TavilyDefaultParametersProvider;
   getAuthToken?: (ctx: unknown) => string | undefined;
+  getSearchSourceMode?: SearchSourceModeProvider;
 };
 
 export function createCombinedProxyServer({
@@ -38,7 +43,8 @@ export function createCombinedProxyServer({
   braveOverflow = 'fallback_to_tavily',
   braveMaxQueueMs = 30_000,
   getDefaultParameters,
-  getAuthToken
+  getAuthToken,
+  getSearchSourceMode
 }: CreateCombinedProxyServerOptions): Server {
   const server = new Server(
     { name: serverName, version: serverVersion },
@@ -95,6 +101,7 @@ export function createCombinedProxyServer({
           return textResult(formatResearchResultsV0216(response));
         }
         case 'brave_web_search': {
+          const searchSourceMode = await getSearchSourceMode?.(extra) ?? 'brave_prefer_tavily_fallback';
           return await handleBraveWebSearch({
             args,
             extra,
@@ -102,10 +109,12 @@ export function createCombinedProxyServer({
             braveClient,
             braveOverflow,
             braveMaxQueueMs,
-            getDefaultParameters
+            getDefaultParameters,
+            searchSourceMode
           });
         }
         case 'brave_local_search': {
+          const searchSourceMode = await getSearchSourceMode?.(extra) ?? 'brave_prefer_tavily_fallback';
           return await handleBraveLocalSearch({
             args,
             extra,
@@ -113,7 +122,8 @@ export function createCombinedProxyServer({
             braveClient,
             braveOverflow,
             braveMaxQueueMs,
-            getDefaultParameters
+            getDefaultParameters,
+            searchSourceMode
           });
         }
         default:
@@ -142,11 +152,34 @@ async function handleBraveWebSearch(opts: {
   braveOverflow: BraveOverflowMode;
   braveMaxQueueMs: number;
   getDefaultParameters: TavilyDefaultParametersProvider | undefined;
+  searchSourceMode: SearchSourceMode;
 }): Promise<CallToolResult> {
   const defaults = opts.getDefaultParameters?.(opts.extra) ?? {};
   const query = typeof (opts.args as any).query === 'string' ? String((opts.args as any).query) : '';
   const maxResults = typeof (opts.args as any).count === 'number' ? (opts.args as any).count : undefined;
 
+  // Handle tavily_only mode
+  if (opts.searchSourceMode === 'tavily_only') {
+    const response = await opts.tavilyClient.search({ query, max_results: maxResults }, { defaults });
+    return textResult(formatBraveWebResultsFromTavilyV0100(response));
+  }
+
+  // Handle brave_only mode
+  if (opts.searchSourceMode === 'brave_only') {
+    if (!opts.braveClient) {
+      return toolError('Brave Search is not configured. Please add a Brave API key or change the search source mode.');
+    }
+    const maxWaitMs = resolveBraveMaxWaitMs(opts.braveOverflow, opts.braveMaxQueueMs);
+    const response = await opts.braveClient.webSearch(opts.args as any, { defaults, maxWaitMs });
+    return textResult(formatBraveWebResultsV0100(response));
+  }
+
+  // Handle combined mode - call both in parallel and dedupe
+  if (opts.searchSourceMode === 'combined') {
+    return await handleCombinedWebSearch(opts, query, maxResults, defaults);
+  }
+
+  // Default: brave_prefer_tavily_fallback (original behavior)
   if (!opts.braveClient) {
     const response = await opts.tavilyClient.search({ query, max_results: maxResults }, { defaults });
     return textResult(formatBraveWebResultsFromTavilyV0100(response));
@@ -169,6 +202,64 @@ async function handleBraveWebSearch(opts: {
   }
 }
 
+async function handleCombinedWebSearch(
+  opts: {
+    tavilyClient: TavilyClient;
+    braveClient: BraveClient | undefined;
+    braveMaxQueueMs: number;
+    braveOverflow: BraveOverflowMode;
+    args: Record<string, unknown>;
+    getDefaultParameters: TavilyDefaultParametersProvider | undefined;
+    extra: unknown;
+  },
+  query: string,
+  maxResults: number | undefined,
+  defaults: Record<string, unknown>
+): Promise<CallToolResult> {
+  const promises: Promise<{ source: 'tavily' | 'brave'; results: any[] }>[] = [];
+
+  // Always call Tavily
+  promises.push(
+    opts.tavilyClient.search({ query, max_results: maxResults }, { defaults })
+      .then(res => ({ source: 'tavily' as const, results: res.results ?? [] }))
+      .catch(() => ({ source: 'tavily' as const, results: [] }))
+  );
+
+  // Call Brave if available
+  if (opts.braveClient) {
+    const maxWaitMs = resolveBraveMaxWaitMs(opts.braveOverflow, opts.braveMaxQueueMs);
+    promises.push(
+      opts.braveClient.webSearch(opts.args as any, { defaults, maxWaitMs })
+        .then(res => {
+          const webResults = (res as any)?.web?.results ?? (res as any)?.results ?? [];
+          return { source: 'brave' as const, results: webResults };
+        })
+        .catch(() => ({ source: 'brave' as const, results: [] }))
+    );
+  }
+
+  const settled = await Promise.all(promises);
+
+  // Merge and deduplicate by URL
+  const seenUrls = new Set<string>();
+  const merged: Array<{ title: string; url: string; description?: string }> = [];
+
+  for (const { source, results } of settled) {
+    for (const r of results) {
+      const url = String(r?.url ?? '');
+      if (!url || seenUrls.has(url)) continue;
+      seenUrls.add(url);
+      merged.push({
+        title: String(r?.title ?? ''),
+        url,
+        description: String(r?.content ?? r?.description ?? r?.snippet ?? '') || undefined
+      });
+    }
+  }
+
+  return textResult(JSON.stringify(merged, null, 2));
+}
+
 async function handleBraveLocalSearch(opts: {
   args: Record<string, unknown>;
   extra: unknown;
@@ -177,11 +268,34 @@ async function handleBraveLocalSearch(opts: {
   braveOverflow: BraveOverflowMode;
   braveMaxQueueMs: number;
   getDefaultParameters: TavilyDefaultParametersProvider | undefined;
+  searchSourceMode: SearchSourceMode;
 }): Promise<CallToolResult> {
   const defaults = opts.getDefaultParameters?.(opts.extra) ?? {};
   const query = typeof (opts.args as any).query === 'string' ? String((opts.args as any).query) : '';
   const maxResults = typeof (opts.args as any).count === 'number' ? (opts.args as any).count : undefined;
 
+  // Handle tavily_only mode
+  if (opts.searchSourceMode === 'tavily_only') {
+    const response = await opts.tavilyClient.search({ query, max_results: maxResults }, { defaults });
+    return textResult(formatBraveWebResultsFromTavilyV0100(response));
+  }
+
+  // Handle brave_only mode
+  if (opts.searchSourceMode === 'brave_only') {
+    if (!opts.braveClient) {
+      return toolError('Brave Search is not configured. Please add a Brave API key or change the search source mode.');
+    }
+    const maxWaitMs = resolveBraveMaxWaitMs(opts.braveOverflow, opts.braveMaxQueueMs);
+    const response = await opts.braveClient.localSearch(opts.args as any, { defaults, maxWaitMs });
+    return textResult(formatBraveLocalResultsV0100(response));
+  }
+
+  // Handle combined mode - call both in parallel and dedupe
+  if (opts.searchSourceMode === 'combined') {
+    return await handleCombinedLocalSearch(opts, query, maxResults, defaults);
+  }
+
+  // Default: brave_prefer_tavily_fallback (original behavior)
   if (!opts.braveClient) {
     const response = await opts.tavilyClient.search({ query, max_results: maxResults }, { defaults });
     return textResult(formatBraveWebResultsFromTavilyV0100(response));
@@ -202,6 +316,64 @@ async function handleBraveLocalSearch(opts: {
     }
     throw err;
   }
+}
+
+async function handleCombinedLocalSearch(
+  opts: {
+    tavilyClient: TavilyClient;
+    braveClient: BraveClient | undefined;
+    braveMaxQueueMs: number;
+    braveOverflow: BraveOverflowMode;
+    args: Record<string, unknown>;
+    getDefaultParameters: TavilyDefaultParametersProvider | undefined;
+    extra: unknown;
+  },
+  query: string,
+  maxResults: number | undefined,
+  defaults: Record<string, unknown>
+): Promise<CallToolResult> {
+  const promises: Promise<{ source: 'tavily' | 'brave'; results: any[] }>[] = [];
+
+  // Always call Tavily
+  promises.push(
+    opts.tavilyClient.search({ query, max_results: maxResults }, { defaults })
+      .then(res => ({ source: 'tavily' as const, results: res.results ?? [] }))
+      .catch(() => ({ source: 'tavily' as const, results: [] }))
+  );
+
+  // Call Brave local search if available
+  if (opts.braveClient) {
+    const maxWaitMs = resolveBraveMaxWaitMs(opts.braveOverflow, opts.braveMaxQueueMs);
+    promises.push(
+      opts.braveClient.localSearch(opts.args as any, { defaults, maxWaitMs })
+        .then(res => {
+          const localResults = (res as any)?.local?.results ?? (res as any)?.results ?? (res as any)?.web?.results ?? [];
+          return { source: 'brave' as const, results: localResults };
+        })
+        .catch(() => ({ source: 'brave' as const, results: [] }))
+    );
+  }
+
+  const settled = await Promise.all(promises);
+
+  // Merge and deduplicate by URL
+  const seenUrls = new Set<string>();
+  const merged: Array<{ title: string; url: string; description?: string }> = [];
+
+  for (const { source, results } of settled) {
+    for (const r of results) {
+      const url = String(r?.url ?? r?.website ?? '');
+      if (!url || seenUrls.has(url)) continue;
+      seenUrls.add(url);
+      merged.push({
+        title: String(r?.title ?? r?.name ?? ''),
+        url,
+        description: String(r?.content ?? r?.description ?? r?.snippet ?? '') || undefined
+      });
+    }
+  }
+
+  return textResult(JSON.stringify(merged, null, 2));
 }
 
 function resolveBraveMaxWaitMs(mode: BraveOverflowMode, maxQueueMs: number): number | undefined {

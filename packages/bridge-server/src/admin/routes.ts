@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import { randomBytes } from 'node:crypto';
 import type { PrismaClient } from '@mcp-tavily-bridge/db';
-import type { TavilyKeySelectionStrategy } from '@mcp-tavily-bridge/core';
+import type { TavilyKeySelectionStrategy, SearchSourceMode } from '@mcp-tavily-bridge/core';
 import { decryptAes256Gcm, encryptAes256Gcm, sha256Bytes, tryParseAes256GcmKeyFromEnv } from '../crypto/crypto.js';
 import { FixedWindowRateLimiter } from '../auth/rateLimit.js';
 import { requireAdminToken } from './adminAuth.js';
@@ -76,21 +76,49 @@ export function registerAdminRoutes(
   app.get(p('/server-info'), requireAdmin, asyncHandler(async (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     const tavilyKeySelectionStrategy = await opts.serverSettings.getTavilyKeySelectionStrategy();
+    const searchSourceMode = await opts.serverSettings.getSearchSourceMode();
+    const braveKeyCount = await prisma.braveKey.count({ where: { status: 'active' } });
     res.json({
-      tavilyKeySelectionStrategy
+      tavilyKeySelectionStrategy,
+      searchSourceMode,
+      braveSearchEnabled: braveKeyCount > 0
     });
   }));
 
   app.patch(p('/server-info'), requireAdmin, asyncHandler(async (req, res) => {
-    const raw = req.body?.tavilyKeySelectionStrategy;
-    if (raw !== 'round_robin' && raw !== 'random') {
-      res.status(400).json({ error: 'tavilyKeySelectionStrategy must be \"round_robin\" or \"random\"' });
-      return;
+    const { tavilyKeySelectionStrategy, searchSourceMode } = req.body ?? {};
+
+    // Validate tavilyKeySelectionStrategy if provided
+    if (tavilyKeySelectionStrategy !== undefined) {
+      if (tavilyKeySelectionStrategy !== 'round_robin' && tavilyKeySelectionStrategy !== 'random') {
+        res.status(400).json({ error: 'tavilyKeySelectionStrategy must be "round_robin" or "random"' });
+        return;
+      }
+      await opts.serverSettings.setTavilyKeySelectionStrategy(tavilyKeySelectionStrategy as TavilyKeySelectionStrategy);
     }
-    const next = raw as TavilyKeySelectionStrategy;
-    const updated = await opts.serverSettings.setTavilyKeySelectionStrategy(next);
+
+    // Validate searchSourceMode if provided
+    if (searchSourceMode !== undefined) {
+      const validModes: SearchSourceMode[] = ['tavily_only', 'brave_only', 'combined', 'brave_prefer_tavily_fallback'];
+      if (!validModes.includes(searchSourceMode)) {
+        res.status(400).json({ error: 'searchSourceMode must be one of: tavily_only, brave_only, combined, brave_prefer_tavily_fallback' });
+        return;
+      }
+      await opts.serverSettings.setSearchSourceMode(searchSourceMode as SearchSourceMode);
+    }
+
+    // Return updated values
+    const updatedStrategy = await opts.serverSettings.getTavilyKeySelectionStrategy();
+    const updatedMode = await opts.serverSettings.getSearchSourceMode();
+    const braveKeyCount = await prisma.braveKey.count({ where: { status: 'active' } });
+
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ ok: true, tavilyKeySelectionStrategy: updated });
+    res.json({
+      ok: true,
+      tavilyKeySelectionStrategy: updatedStrategy,
+      searchSourceMode: updatedMode,
+      braveSearchEnabled: braveKeyCount > 0
+    });
   }));
 
   app.get(p('/keys'), requireAdmin, asyncHandler(async (req, res) => {

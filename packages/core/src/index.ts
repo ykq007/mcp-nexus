@@ -1,5 +1,6 @@
 export * from './mcp/createTavilyProxyServer.js';
 export * from './mcp/createCombinedProxyServer.js';
+export * from './mcp/searchSource.js';
 
 export * from './brave/tools-v0100.js';
 export * from './brave/format-v0100.js';

@@ -276,7 +276,8 @@ export function createBridgeApp(options: CreateBridgeAppOptions = {}): express.E
                 const envDefaults = getDefaultParametersFromEnv();
                 const headerDefaults = parseDefaultParametersJson(defaultParametersHeader);
                 return { ...envDefaults, ...headerDefaults };
-              }
+              },
+              getSearchSourceMode: () => serverSettings.getSearchSourceMode()
             });
 
             await server.connect(transport);
