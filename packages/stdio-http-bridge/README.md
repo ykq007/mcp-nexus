@@ -1,20 +1,20 @@
-# @mcp-tavily-bridge/stdio-http-bridge
+# @mcp-nexus/stdio-http-bridge
 
-Thin stdio ↔ Streamable HTTP bridge for `mcp-tavily-bridge`.
+Thin stdio ↔ Streamable HTTP bridge for `mcp-nexus`.
 
 This is intended for MCP clients that only support **stdio** (subprocess) servers, but you want to connect them to a remotely hosted `bridge-server` over HTTP.
 
 ## Usage
 
 ```sh
-npx -y @mcp-tavily-bridge/stdio-http-bridge --base-url https://your-bridge-host --token <client_token>
+npx -y @mcp-nexus/stdio-http-bridge --base-url https://your-bridge-host --token <client_token>
 ```
 
 Environment-only (recommended; avoids putting the token on the command line):
 ```sh
 export TAVILY_BRIDGE_BASE_URL="https://your-bridge-host"
 export TAVILY_BRIDGE_MCP_TOKEN="<client_token>"
-npx -y @mcp-tavily-bridge/stdio-http-bridge
+npx -y @mcp-nexus/stdio-http-bridge
 ```
 
 ## Options

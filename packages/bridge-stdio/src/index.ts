@@ -1,7 +1,7 @@
 import process from 'node:process';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { PrismaClient } from '@mcp-tavily-bridge/db';
+import { PrismaClient } from '@mcp-nexus/db';
 import {
   createBraveHttpClient,
   createCombinedProxyServer,
@@ -9,7 +9,7 @@ import {
   parseTavilyKeySelectionStrategy,
   QueuedRateGate,
   type BraveOverflowMode
-} from '@mcp-tavily-bridge/core';
+} from '@mcp-nexus/core';
 
 import { requestContext } from './context.js';
 import { validateClientToken } from './auth/clientToken.js';

@@ -9,7 +9,7 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import express from 'express';
 
-import { PrismaClient } from '@mcp-tavily-bridge/db';
+import { PrismaClient } from '@mcp-nexus/db';
 import {
   createBraveHttpClient,
   createCombinedProxyServer,
@@ -18,7 +18,7 @@ import {
   parseTavilyKeySelectionStrategy,
   QueuedRateGate,
   type BraveOverflowMode
-} from '@mcp-tavily-bridge/core';
+} from '@mcp-nexus/core';
 
 import { requestContext } from './context.js';
 import { validateClientToken } from './auth/clientToken.js';
@@ -60,14 +60,14 @@ function asyncHandler(fn: (req: any, res: any, next: any) => Promise<void>) {
 
 declare global {
   // eslint-disable-next-line no-var
-  var __mcpTavilyBridgePrisma: PrismaClient | undefined;
+  var __mcpNexusPrisma: PrismaClient | undefined;
 }
 
 function getPrisma(): PrismaClient {
-  if (!globalThis.__mcpTavilyBridgePrisma) {
-    globalThis.__mcpTavilyBridgePrisma = new PrismaClient();
+  if (!globalThis.__mcpNexusPrisma) {
+    globalThis.__mcpNexusPrisma = new PrismaClient();
   }
-  return globalThis.__mcpTavilyBridgePrisma;
+  return globalThis.__mcpNexusPrisma;
 }
 
 export function createBridgeApp(options: CreateBridgeAppOptions = {}): express.Express {
@@ -90,7 +90,7 @@ export function createBridgeApp(options: CreateBridgeAppOptions = {}): express.E
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(
       renderLandingPage({
-        githubUrl: 'https://github.com/ykq007/mcp-tavily-bridge',
+        githubUrl: 'https://github.com/ykq007/mcp-nexus',
         adminPath: '/admin',
         healthPath: '/health'
       })

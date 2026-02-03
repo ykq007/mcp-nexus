@@ -65,7 +65,7 @@ i18n
     },
     detection: {
       order: ['localStorage', 'navigator'],
-      lookupLocalStorage: 'mcp-tavily-bridge.locale',
+      lookupLocalStorage: 'mcp-nexus.locale',
       caches: ['localStorage']
     }
   });
@@ -74,7 +74,7 @@ export default i18n;
 
 export function changeLanguage(locale: SupportedLocale): void {
   i18n.changeLanguage(locale);
-  localStorage.setItem('mcp-tavily-bridge.locale', locale);
+  localStorage.setItem('mcp-nexus.locale', locale);
 }
 
 export function getCurrentLanguage(): SupportedLocale {

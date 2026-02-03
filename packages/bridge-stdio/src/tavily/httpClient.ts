@@ -1,4 +1,4 @@
-import { TavilyHttpError } from '@mcp-tavily-bridge/core';
+import { TavilyHttpError } from '@mcp-nexus/core';
 
 const baseUrls = {
   search: 'https://api.tavily.com/search',

@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
+import type { PrismaClient } from '@mcp-nexus/db';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 type ParsedClientToken =

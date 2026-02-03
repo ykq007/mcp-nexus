@@ -41,7 +41,7 @@ export function parseStdioCliArgs(argv: string[]): ParseStdioCliArgsResult {
 
 export function usage(): string {
   return [
-    'mcp-tavily-bridge local stdio server',
+    'mcp-nexus local stdio server',
     '',
     'Usage:',
     '  node packages/bridge-stdio/dist/index.js [--token <client_token>]',

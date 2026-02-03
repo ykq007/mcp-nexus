@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
-import { parseTavilyKeySelectionStrategy, parseSearchSourceMode, type TavilyKeySelectionStrategy, type SearchSourceMode } from '@mcp-tavily-bridge/core';
+import type { PrismaClient } from '@mcp-nexus/db';
+import { parseTavilyKeySelectionStrategy, parseSearchSourceMode, type TavilyKeySelectionStrategy, type SearchSourceMode } from '@mcp-nexus/core';
 
 const REFRESH_MS = Number(process.env.SERVER_SETTINGS_REFRESH_MS ?? '5000');
 const KEY_TAVILY_STRATEGY = 'tavilyKeySelectionStrategy';

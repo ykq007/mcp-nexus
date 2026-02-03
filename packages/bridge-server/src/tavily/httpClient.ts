@@ -1,4 +1,4 @@
-import { TavilyHttpError } from '@mcp-tavily-bridge/core';
+import { TavilyHttpError } from '@mcp-nexus/core';
 
 export type TavilyHttpClient = {
   search: (payload: Record<string, unknown>) => Promise<any>;

@@ -1,5 +1,5 @@
 {
-  "name": "@mcp-tavily-bridge/bridge-stdio",
+  "name": "@mcp-nexus/bridge-stdio",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -11,8 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mcp-tavily-bridge/core": "*",
-    "@mcp-tavily-bridge/db": "*",
+    "@mcp-nexus/core": "*",
+    "@mcp-nexus/db": "*",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "tsx": "^4.19.2"
   },

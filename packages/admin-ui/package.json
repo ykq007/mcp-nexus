@@ -1,5 +1,5 @@
 {
-  "name": "@mcp-tavily-bridge/admin-ui",
+  "name": "@mcp-nexus/admin-ui",
   "private": true,
   "type": "module",
   "scripts": {

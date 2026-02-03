@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import { randomBytes } from 'node:crypto';
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
-import type { TavilyKeySelectionStrategy, SearchSourceMode } from '@mcp-tavily-bridge/core';
+import type { PrismaClient } from '@mcp-nexus/db';
+import type { TavilyKeySelectionStrategy, SearchSourceMode } from '@mcp-nexus/core';
 import { decryptAes256Gcm, encryptAes256Gcm, sha256Bytes, tryParseAes256GcmKeyFromEnv } from '../crypto/crypto.js';
 import { FixedWindowRateLimiter } from '../auth/rateLimit.js';
 import { requireAdminToken } from './adminAuth.js';

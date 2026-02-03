@@ -1,5 +1,5 @@
 import { createHash, createHmac } from 'node:crypto';
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
+import type { PrismaClient } from '@mcp-nexus/db';
 import { requestContext } from '../context.js';
 
 export type TavilyUsageLogMode = 'none' | 'hash' | 'preview' | 'full';

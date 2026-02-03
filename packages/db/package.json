@@ -1,5 +1,5 @@
 {
-  "name": "@mcp-tavily-bridge/db",
+  "name": "@mcp-nexus/db",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

@@ -4,8 +4,8 @@ export type StorageLike = {
   removeItem: (key: string) => void;
 };
 
-const SESSION_KEY = 'mcp-tavily-bridge.adminUiAdminToken.session.v1';
-const LOCAL_KEY = 'mcp-tavily-bridge.adminUiAdminToken.local.v1';
+const SESSION_KEY = 'mcp-nexus.adminUiAdminToken.session.v1';
+const LOCAL_KEY = 'mcp-nexus.adminUiAdminToken.local.v1';
 
 function safeGet(storage: StorageLike | null | undefined, key: string): string | null {
   try {

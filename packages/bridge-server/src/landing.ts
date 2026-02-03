@@ -24,7 +24,7 @@ export function renderLandingPage(opts: { githubUrl: string; adminPath: string; 
 
   const connectHttp = `curl -X POST ${healthPath.replace('/health', '/mcp')} \\\n+  -H "Authorization: Bearer <client_token>" \\\n+  -H "Content-Type: application/json" \\\n+  -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}'`;
 
-  const connectStdio = `{\n+  \"mcpServers\": {\n+    \"tavily-bridge\": {\n+      \"command\": \"npx\",\n+      \"args\": [\"-y\", \"@mcp-tavily-bridge/stdio-http-bridge\"],\n+      \"env\": {\n+        \"TAVILY_BRIDGE_BASE_URL\": \"http://localhost:8787\",\n+        \"TAVILY_BRIDGE_MCP_TOKEN\": \"<client_token>\"\n+      }\n+    }\n+  }\n+}`;
+  const connectStdio = `{\n+  \"mcpServers\": {\n+    \"tavily-bridge\": {\n+      \"command\": \"npx\",\n+      \"args\": [\"-y\", \"@mcp-nexus/stdio-http-bridge\"],\n+      \"env\": {\n+        \"TAVILY_BRIDGE_BASE_URL\": \"http://localhost:8787\",\n+        \"TAVILY_BRIDGE_MCP_TOKEN\": \"<client_token>\"\n+      }\n+    }\n+  }\n+}`;
 
   return `<!doctype html>
 <html lang="en">
@@ -32,7 +32,7 @@ export function renderLandingPage(opts: { githubUrl: string; adminPath: string; 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
-    <title>mcp-tavily-bridge</title>
+    <title>mcp-nexus</title>
     <meta
       name="description"
       content="MCP server that proxies Tavily tools while rotating across a pool of upstream Tavily API keys, with an admin UI for keys, tokens, usage, and credits."
@@ -190,7 +190,7 @@ export function renderLandingPage(opts: { githubUrl: string; adminPath: string; 
         <div class="navInner">
           <a class="brand" href="/">
             <div class="logo" aria-hidden="true"></div>
-            <div>mcp-tavily-bridge</div>
+            <div>mcp-nexus</div>
           </a>
           <div class="navLinks">
             <a class="btn btn--ghost" href="${escapeHtml(githubUrl)}" target="_blank" rel="noreferrer">GitHub</a>
@@ -292,7 +292,7 @@ export function renderLandingPage(opts: { githubUrl: string; adminPath: string; 
 
       <div class="footer">
         <div class="statusRow">
-          <div>© ${new Date().getFullYear()} mcp-tavily-bridge</div>
+          <div>© ${new Date().getFullYear()} mcp-nexus</div>
           <div class="footerLinks">
             <a href="${escapeHtml(adminPath)}">Admin UI</a>
             <a href="${escapeHtml(githubUrl)}" target="_blank" rel="noreferrer">GitHub</a>

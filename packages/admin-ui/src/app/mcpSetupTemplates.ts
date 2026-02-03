@@ -79,7 +79,7 @@ export const MCP_SETUP_TARGETS: McpSetupTarget[] = [
         `export TAVILY_BRIDGE_MCP_TOKEN="${token}"`,
         `export TAVILY_BRIDGE_BASE_URL="${baseUrl}"`,
         '',
-        'npx -y @mcp-tavily-bridge/stdio-http-bridge'
+        'npx -y @mcp-nexus/stdio-http-bridge'
       ].join('\n');
     }
   },
@@ -96,7 +96,7 @@ export const MCP_SETUP_TARGETS: McpSetupTarget[] = [
         '  "mcpServers": {',
         '    "tavily-bridge": {',
         '      "command": "npx",',
-        '      "args": ["-y", "@mcp-tavily-bridge/stdio-http-bridge"],',
+        '      "args": ["-y", "@mcp-nexus/stdio-http-bridge"],',
         '      "env": {',
         `        "TAVILY_BRIDGE_BASE_URL": "${baseUrl}",`,
         `        "TAVILY_BRIDGE_MCP_TOKEN": "${token}"`,

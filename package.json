@@ -1,5 +1,5 @@
 {
-  "name": "mcp-tavily-bridge",
+  "name": "mcp-nexus",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -10,7 +10,7 @@
     "dev": "npm --workspaces run dev --if-present",
     "dev:bridge-server": "npm run build && node packages/bridge-server/dist/index.js",
     "dev:bridge-stdio": "npm run build && node packages/bridge-stdio/dist/index.js",
-    "dev:admin-ui": "npm --workspace @mcp-tavily-bridge/admin-ui run dev",
+    "dev:admin-ui": "npm --workspace @mcp-nexus/admin-ui run dev",
     "typecheck": "npm --workspaces run typecheck --if-present",
     "test": "npm run build && npm --workspaces run test --if-present"
   },

@@ -13,7 +13,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm -w @mcp-tavily-bridge/db run prisma:generate
+RUN npm -w @mcp-nexus/db run prisma:generate
 RUN npm run build
 
 FROM node:20-alpine AS runtime

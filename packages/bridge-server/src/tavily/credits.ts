@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
-import { TavilyHttpError } from '@mcp-tavily-bridge/core';
+import type { PrismaClient } from '@mcp-nexus/db';
+import { TavilyHttpError } from '@mcp-nexus/core';
 
 export type TavilyCreditsSnapshot = {
   keyUsage: number | null;

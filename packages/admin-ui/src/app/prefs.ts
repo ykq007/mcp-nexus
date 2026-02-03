@@ -12,8 +12,8 @@ export type AdminUiPrefs = {
   locale: SupportedLocale;
 };
 
-const STORAGE_KEY_V1 = 'mcp-tavily-bridge.adminUiPrefs.v1';
-const STORAGE_KEY_V2 = 'mcp-tavily-bridge.adminUiPrefs.v2';
+const STORAGE_KEY_V1 = 'mcp-nexus.adminUiPrefs.v1';
+const STORAGE_KEY_V2 = 'mcp-nexus.adminUiPrefs.v2';
 
 export function loadPrefs(defaults: Partial<AdminUiPrefs> = {}): AdminUiPrefs {
   const savedV2 = readJson<Partial<AdminUiPrefs>>(STORAGE_KEY_V2) ?? null;
@@ -77,7 +77,7 @@ function inferTheme(): Theme {
 
 function inferLocale(): SupportedLocale {
   if (typeof window === 'undefined') return 'en';
-  const stored = localStorage.getItem('mcp-tavily-bridge.locale');
+  const stored = localStorage.getItem('mcp-nexus.locale');
   if (stored === 'zh-CN') return 'zh-CN';
   if (stored === 'en') return 'en';
   const browserLang = navigator.language || (navigator as any).userLanguage || '';

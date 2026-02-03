@@ -1,5 +1,5 @@
-import type { TavilyClient } from '@mcp-tavily-bridge/core';
-import type { PrismaClient } from '@mcp-tavily-bridge/db';
+import type { TavilyClient } from '@mcp-nexus/core';
+import type { PrismaClient } from '@mcp-nexus/db';
 import { requestContext } from '../context.js';
 import { createTavilyHttpClient } from './httpClient.js';
 import { TavilyKeyPool } from './keyPool.js';

@@ -1,5 +1,5 @@
 {
-  "name": "@mcp-tavily-bridge/stdio-http-bridge",
+  "name": "@mcp-nexus/stdio-http-bridge",
   "version": "0.0.0",
   "private": false,
   "type": "module",

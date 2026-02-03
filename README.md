@@ -1,4 +1,4 @@
-# mcp-tavily-bridge
+# mcp-nexus
 
 English | [中文](README.zh-CN.md)
 
@@ -60,9 +60,9 @@ Set `TAVILY_BRIDGE_BASE_URL` to your deployment URL (for local Docker Compose: `
 ```json
 {
   "mcpServers": {
-    "tavily-bridge": {
+    "mcp-nexus": {
       "command": "npx",
-      "args": ["-y", "@mcp-tavily-bridge/stdio-http-bridge"],
+      "args": ["-y", "@mcp-nexus/stdio-http-bridge"],
       "env": {
         "TAVILY_BRIDGE_BASE_URL": "http://localhost:8787",
         "TAVILY_BRIDGE_MCP_TOKEN": "<client_token>"

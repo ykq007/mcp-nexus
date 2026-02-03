@@ -83,10 +83,10 @@ export function normalizeMcpUrl(mcpUrl: string): string {
 
 export function usage(): string {
   return [
-    'mcp-tavily-bridge stdio→http bridge',
+    'mcp-nexus stdio→http bridge',
     '',
     'Usage:',
-    '  npx -y @mcp-tavily-bridge/stdio-http-bridge [--base-url <origin> | --mcp-url <url>] [--token <client_token>]',
+    '  npx -y @mcp-nexus/stdio-http-bridge [--base-url <origin> | --mcp-url <url>] [--token <client_token>]',
     '',
     'Options:',
     '  --base-url <origin>           Base URL for the bridge-server (we append /mcp).',

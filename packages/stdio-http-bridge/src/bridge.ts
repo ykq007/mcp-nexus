@@ -47,7 +47,7 @@ export async function startStdioHttpBridge({
     });
 
     remoteClient = new Client(
-      { name: 'mcp-tavily-bridge-stdio-http-bridge', version: '0.0.0' },
+      { name: 'mcp-nexus-stdio-http-bridge', version: '0.0.0' },
       { capabilities: {} }
     );
 

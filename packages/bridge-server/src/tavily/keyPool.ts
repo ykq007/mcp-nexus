@@ -1,5 +1,5 @@
-import type { PrismaClient, TavilyKey } from '@mcp-tavily-bridge/db';
-import { orderKeyCandidates, type TavilyKeySelectionStrategy } from '@mcp-tavily-bridge/core';
+import type { PrismaClient, TavilyKey } from '@mcp-nexus/db';
+import { orderKeyCandidates, type TavilyKeySelectionStrategy } from '@mcp-nexus/core';
 import { decryptAes256Gcm } from '../crypto/crypto.js';
 import { fetchTavilyCredits, releaseCreditsRefreshLock, tryAcquireCreditsRefreshLock } from './credits.js';
 

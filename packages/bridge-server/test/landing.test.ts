@@ -9,7 +9,7 @@ describe('landing', () => {
       healthPath: '/health'
     });
 
-    expect(html).toContain('mcp-tavily-bridge');
+    expect(html).toContain('mcp-nexus');
     expect(html).toContain('href="/admin"');
     expect(html).toContain("fetch('/health'");
 

@@ -1,4 +1,4 @@
-# mcp-tavily-bridge
+# mcp-nexus
 
 [English](README.md) | 中文
 
@@ -60,9 +60,9 @@ npm run dev:bridge-server
 ```json
 {
   "mcpServers": {
-    "tavily-bridge": {
+    "mcp-nexus": {
       "command": "npx",
-      "args": ["-y", "@mcp-tavily-bridge/stdio-http-bridge"],
+      "args": ["-y", "@mcp-nexus/stdio-http-bridge"],
       "env": {
         "TAVILY_BRIDGE_BASE_URL": "http://localhost:8787",
         "TAVILY_BRIDGE_MCP_TOKEN": "<client_token>"

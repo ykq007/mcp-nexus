@@ -1,5 +1,5 @@
 {
-  "name": "@mcp-tavily-bridge/bridge-server",
+  "name": "@mcp-nexus/bridge-server",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -11,8 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mcp-tavily-bridge/core": "*",
-    "@mcp-tavily-bridge/db": "*",
+    "@mcp-nexus/core": "*",
+    "@mcp-nexus/db": "*",
     "@modelcontextprotocol/sdk": "^1.25.3",
     "express": "^4.21.2",
     "tsx": "^4.19.2"
