@@ -8,8 +8,7 @@
     "dev": "tsx src/index.ts",
     "build": "tsc -b tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
-    "issue-discover-by-prompt": "tsx src/workflow/issueDiscoverByPromptCli.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@mcp-nexus/core": "*",
@@ -24,3 +23,4 @@
     "vitest": "^2.1.8"
   }
 }
+
