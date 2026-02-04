@@ -326,4 +326,33 @@ export class D1Client {
     `).bind(limit, offset).all<BraveToolUsage>();
     return result.results;
   }
+
+  // ============ Audit Logs ============
+
+  async createAuditLog(input: {
+    eventType: string;
+    outcome: string;
+    resourceType?: string | null;
+    resourceId?: string | null;
+    ip?: string | null;
+    userAgent?: string | null;
+    detailsJson: string;
+  }): Promise<void> {
+    const id = generateId();
+    const now = new Date().toISOString();
+    await this.db.prepare(`
+      INSERT INTO AuditLog (id, eventType, outcome, resourceType, resourceId, ip, userAgent, detailsJson, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id,
+      input.eventType,
+      input.outcome,
+      input.resourceType ?? null,
+      input.resourceId ?? null,
+      input.ip ?? null,
+      input.userAgent ?? null,
+      input.detailsJson,
+      now
+    ).run();
+  }
 }

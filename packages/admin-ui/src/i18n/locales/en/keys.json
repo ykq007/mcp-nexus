@@ -180,5 +180,26 @@
   "button": {
     "adding": "Adding...",
     "deleteKey": "Delete key"
+  },
+  "import": {
+    "title": "Import Keys",
+    "selectFile": "Select JSON file",
+    "parsing": "Parsing file...",
+    "preview": "Ready to import {{valid}} valid keys ({{tavily}} Tavily, {{brave}} Brave). {{invalid}} invalid items will be skipped.",
+    "invalidWarning": "{{count}} items have missing or invalid fields and will be skipped.",
+    "confirm": "Import",
+    "importing": "Importing...",
+    "resultTitle": "Import Complete",
+    "resultSummary": "Imported {{imported}} keys, {{failed}} failed, {{renamed}} renamed.",
+    "renamedKeys": "Renamed keys (due to label conflicts):",
+    "errors": "Errors:"
+  },
+  "export": {
+    "button": "Export",
+    "preparing": "Preparing export...",
+    "securityWarning": "The exported file contains plaintext API keys. Store it securely.",
+    "success": "Keys exported",
+    "successMessage": "Downloaded {{count}} keys",
+    "failed": "Export failed"
   }
 }

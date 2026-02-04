@@ -180,5 +180,26 @@
   "button": {
     "adding": "添加中...",
     "deleteKey": "删除密钥"
+  },
+  "import": {
+    "title": "导入密钥",
+    "selectFile": "选择 JSON 文件",
+    "parsing": "解析文件中...",
+    "preview": "准备导入 {{valid}} 个有效密钥（{{tavily}} 个 Tavily，{{brave}} 个 Brave）。{{invalid}} 个无效项将被跳过。",
+    "invalidWarning": "{{count}} 个项目缺少必需字段或格式无效，将被跳过。",
+    "confirm": "导入",
+    "importing": "导入中...",
+    "resultTitle": "导入完成",
+    "resultSummary": "已导入 {{imported}} 个密钥，{{failed}} 个失败，{{renamed}} 个重命名。",
+    "renamedKeys": "重命名的密钥（由于标签冲突）：",
+    "errors": "错误："
+  },
+  "export": {
+    "button": "导出",
+    "preparing": "准备导出...",
+    "securityWarning": "导出的文件包含明文 API 密钥，请妥善保管。",
+    "success": "密钥已导出",
+    "successMessage": "已下载 {{count}} 个密钥",
+    "failed": "导出失败"
   }
 }

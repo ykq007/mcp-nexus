@@ -540,4 +540,303 @@ adminRouter.get('/usage/summary', async (c) => {
   });
 });
 
+// ============ Keys Import/Export ============
+
+function toIsoOrNull(d: string | null | undefined): string | null {
+  return d ?? null;
+}
+
+function isUniqueConstraintError(err: any): boolean {
+  const msg = err?.message ?? String(err);
+  return msg.includes('UNIQUE constraint failed') && msg.includes('label');
+}
+
+async function createTavilyKeyWithAutoRename(
+  db: D1Client,
+  env: Env,
+  input: {
+    label: string;
+    apiKey: string;
+    status?: string;
+    cooldownUntil?: string | null;
+  }
+): Promise<{ id: string; labelUsed: string; renamedFrom?: string }> {
+  const maxRetries = 100;
+  let attempt = 0;
+  let currentLabel = input.label;
+
+  while (attempt < maxRetries) {
+    try {
+      const keyEncrypted = await encrypt(input.apiKey, env.KEY_ENCRYPTION_SECRET);
+      const keyMasked = maskApiKey(input.apiKey);
+      const id = generateId();
+
+      await db.createTavilyKey({
+        id,
+        label: currentLabel,
+        keyEncrypted: keyEncrypted.buffer as ArrayBuffer,
+        keyMasked,
+        status: input.status ?? 'active',
+        cooldownUntil: input.cooldownUntil ?? null
+      });
+
+      return {
+        id,
+        labelUsed: currentLabel,
+        renamedFrom: currentLabel !== input.label ? input.label : undefined
+      };
+    } catch (err: any) {
+      if (isUniqueConstraintError(err)) {
+        attempt++;
+        currentLabel = `${input.label} (import ${attempt + 1})`;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error(`Failed to create key after ${maxRetries} rename attempts`);
+}
+
+async function createBraveKeyWithAutoRename(
+  db: D1Client,
+  env: Env,
+  input: {
+    label: string;
+    apiKey: string;
+    status?: string;
+  }
+): Promise<{ id: string; labelUsed: string; renamedFrom?: string }> {
+  const maxRetries = 100;
+  let attempt = 0;
+  let currentLabel = input.label;
+
+  while (attempt < maxRetries) {
+    try {
+      const keyEncrypted = await encrypt(input.apiKey, env.KEY_ENCRYPTION_SECRET);
+      const keyMasked = maskApiKey(input.apiKey);
+      const id = generateId();
+
+      await db.createBraveKey({
+        id,
+        label: currentLabel,
+        keyEncrypted: keyEncrypted.buffer as ArrayBuffer,
+        keyMasked,
+        status: input.status ?? 'active'
+      });
+
+      return {
+        id,
+        labelUsed: currentLabel,
+        renamedFrom: currentLabel !== input.label ? input.label : undefined
+      };
+    } catch (err: any) {
+      if (isUniqueConstraintError(err)) {
+        attempt++;
+        currentLabel = `${input.label} (import ${attempt + 1})`;
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error(`Failed to create key after ${maxRetries} rename attempts`);
+}
+
+adminRouter.get('/keys/export', async (c) => {
+  const ip = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For') ?? null;
+  const userAgent = c.req.header('User-Agent') ?? null;
+  const db = new D1Client(c.env.DB);
+
+  try {
+    const [tavilyKeys, braveKeys] = await Promise.all([
+      db.getTavilyKeys(),
+      db.getBraveKeys()
+    ]);
+
+    const tavily = await Promise.all(tavilyKeys.map(async (k) => {
+      const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+      return {
+        id: k.id,
+        label: k.label,
+        apiKey,
+        maskedKey: k.keyMasked,
+        status: k.status,
+        cooldownUntil: toIsoOrNull(k.cooldownUntil),
+        lastUsedAt: toIsoOrNull(k.lastUsedAt),
+        failureScore: k.failureScore,
+        creditsRemaining: k.creditsRemaining,
+        creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
+        createdAt: k.createdAt,
+        updatedAt: k.updatedAt
+      };
+    }));
+
+    const brave = await Promise.all(braveKeys.map(async (k) => {
+      const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+      return {
+        id: k.id,
+        label: k.label,
+        apiKey,
+        maskedKey: k.keyMasked,
+        status: k.status,
+        lastUsedAt: toIsoOrNull(k.lastUsedAt),
+        failureScore: k.failureScore,
+        createdAt: k.createdAt,
+        updatedAt: k.updatedAt
+      };
+    }));
+
+    const exportData = {
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      tavily,
+      brave
+    };
+
+    await db.createAuditLog({
+      eventType: 'keys.export',
+      outcome: 'success',
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ tavilyCount: tavily.length, braveCount: brave.length })
+    }).catch(() => {});
+
+    return c.json(exportData, 200, {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'application/json; charset=utf-8'
+    });
+  } catch (err: any) {
+    await db.createAuditLog({
+      eventType: 'keys.export',
+      outcome: 'error',
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ error: err instanceof Error ? err.message : String(err) })
+    }).catch(() => {});
+    return c.json({ error: 'Failed to export keys' }, 500);
+  }
+});
+
+adminRouter.post('/keys/import', async (c) => {
+  const ip = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For') ?? null;
+  const userAgent = c.req.header('User-Agent') ?? null;
+  const db = new D1Client(c.env.DB);
+
+  const body = await c.req.json();
+
+  // Validate payload
+  if (body.schemaVersion !== 1) {
+    return c.json({ error: 'Invalid import file', details: 'schemaVersion must be 1' }, 400);
+  }
+
+  if (!Array.isArray(body.tavily) || !Array.isArray(body.brave)) {
+    return c.json({ error: 'Invalid import file', details: 'tavily and brave must be arrays' }, 400);
+  }
+
+  const tavilyItems = body.tavily;
+  const braveItems = body.brave;
+
+  const summary = {
+    tavily: { total: tavilyItems.length, imported: 0, failed: 0, renamed: 0 },
+    brave: { total: braveItems.length, imported: 0, failed: 0, renamed: 0 },
+    total: 0,
+    imported: 0,
+    failed: 0,
+    renamed: 0
+  };
+
+  const renamed: Array<{ provider: 'tavily' | 'brave'; from: string; to: string }> = [];
+  const errors: Array<{ provider: 'tavily' | 'brave'; index: number; label: string; error: string }> = [];
+
+  // Import Tavily keys
+  for (let i = 0; i < tavilyItems.length; i++) {
+    const item = tavilyItems[i];
+    if (typeof item.label !== 'string' || !item.label.trim()) {
+      errors.push({ provider: 'tavily', index: i, label: item.label ?? '', error: 'label is required' });
+      summary.tavily.failed++;
+      continue;
+    }
+    if (typeof item.apiKey !== 'string' || !item.apiKey.trim()) {
+      errors.push({ provider: 'tavily', index: i, label: item.label, error: 'apiKey is required' });
+      summary.tavily.failed++;
+      continue;
+    }
+
+    try {
+      const status = ['active', 'disabled', 'cooldown', 'invalid'].includes(item.status) ? item.status : 'active';
+      const cooldownUntil = item.status === 'cooldown' && item.cooldownUntil ? item.cooldownUntil : null;
+
+      const result = await createTavilyKeyWithAutoRename(db, c.env, {
+        label: item.label.trim(),
+        apiKey: item.apiKey,
+        status,
+        cooldownUntil
+      });
+
+      summary.tavily.imported++;
+      if (result.renamedFrom) {
+        summary.tavily.renamed++;
+        renamed.push({ provider: 'tavily', from: result.renamedFrom, to: result.labelUsed });
+      }
+    } catch (err: any) {
+      summary.tavily.failed++;
+      errors.push({ provider: 'tavily', index: i, label: item.label, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  // Import Brave keys
+  for (let i = 0; i < braveItems.length; i++) {
+    const item = braveItems[i];
+    if (typeof item.label !== 'string' || !item.label.trim()) {
+      errors.push({ provider: 'brave', index: i, label: item.label ?? '', error: 'label is required' });
+      summary.brave.failed++;
+      continue;
+    }
+    if (typeof item.apiKey !== 'string' || !item.apiKey.trim()) {
+      errors.push({ provider: 'brave', index: i, label: item.label, error: 'apiKey is required' });
+      summary.brave.failed++;
+      continue;
+    }
+
+    try {
+      const status = ['active', 'disabled', 'invalid'].includes(item.status) ? item.status : 'active';
+
+      const result = await createBraveKeyWithAutoRename(db, c.env, {
+        label: item.label.trim(),
+        apiKey: item.apiKey,
+        status
+      });
+
+      summary.brave.imported++;
+      if (result.renamedFrom) {
+        summary.brave.renamed++;
+        renamed.push({ provider: 'brave', from: result.renamedFrom, to: result.labelUsed });
+      }
+    } catch (err: any) {
+      summary.brave.failed++;
+      errors.push({ provider: 'brave', index: i, label: item.label, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
+  summary.total = summary.tavily.total + summary.brave.total;
+  summary.imported = summary.tavily.imported + summary.brave.imported;
+  summary.failed = summary.tavily.failed + summary.brave.failed;
+  summary.renamed = summary.tavily.renamed + summary.brave.renamed;
+
+  const outcome = summary.failed > 0 ? 'partial' : 'success';
+  await db.createAuditLog({
+    eventType: 'keys.import',
+    outcome,
+    ip,
+    userAgent,
+    detailsJson: JSON.stringify({ summary, renamedCount: renamed.length, errorCount: errors.length })
+  }).catch(() => {});
+
+  return c.json({
+    ok: true,
+    summary,
+    renamed,
+    errors
+  });
+});
+
 export { adminRouter };

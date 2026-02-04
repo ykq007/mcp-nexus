@@ -766,4 +766,332 @@ export function registerAdminRoutes(
       }))
     });
   }));
+
+  // ==================== Keys Import/Export ====================
+
+  const exportLimiter = new FixedWindowRateLimiter({
+    maxPerWindow: Number(process.env.ADMIN_KEYS_EXPORT_RATE_LIMIT_PER_MINUTE ?? '2'),
+    windowMs: 60_000
+  });
+
+  const importLimiter = new FixedWindowRateLimiter({
+    maxPerWindow: Number(process.env.ADMIN_KEYS_IMPORT_RATE_LIMIT_PER_MINUTE ?? '2'),
+    windowMs: 60_000
+  });
+
+  function toIsoOrNull(d: Date | null | undefined): string | null {
+    return d ? d.toISOString() : null;
+  }
+
+  function isPrismaUniqueLabelError(err: any): boolean {
+    return err?.code === 'P2002' && Array.isArray(err?.meta?.target) && err.meta.target.includes('label');
+  }
+
+  async function createTavilyKeyWithAutoRename(input: {
+    label: string;
+    keyEncrypted: Uint8Array;
+    keyMasked: string;
+    status?: string;
+    cooldownUntil?: Date | null;
+  }): Promise<{ id: string; labelUsed: string; renamedFrom?: string }> {
+    const maxRetries = 100;
+    let attempt = 0;
+    let currentLabel = input.label;
+
+    while (attempt < maxRetries) {
+      try {
+        const created = await prisma.tavilyKey.create({
+          data: {
+            label: currentLabel,
+            keyEncrypted: input.keyEncrypted,
+            keyMasked: input.keyMasked,
+            status: (input.status as any) ?? 'active',
+            cooldownUntil: input.cooldownUntil ?? null
+          }
+        });
+        return {
+          id: created.id,
+          labelUsed: currentLabel,
+          renamedFrom: currentLabel !== input.label ? input.label : undefined
+        };
+      } catch (err: any) {
+        if (isPrismaUniqueLabelError(err)) {
+          attempt++;
+          currentLabel = `${input.label} (import ${attempt + 1})`;
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error(`Failed to create key after ${maxRetries} rename attempts`);
+  }
+
+  async function createBraveKeyWithAutoRename(input: {
+    label: string;
+    keyEncrypted: Uint8Array;
+    keyMasked: string;
+    status?: string;
+  }): Promise<{ id: string; labelUsed: string; renamedFrom?: string }> {
+    const maxRetries = 100;
+    let attempt = 0;
+    let currentLabel = input.label;
+
+    while (attempt < maxRetries) {
+      try {
+        const created = await prisma.braveKey.create({
+          data: {
+            label: currentLabel,
+            keyEncrypted: input.keyEncrypted,
+            keyMasked: input.keyMasked,
+            status: (input.status as any) ?? 'active'
+          }
+        });
+        return {
+          id: created.id,
+          labelUsed: currentLabel,
+          renamedFrom: currentLabel !== input.label ? input.label : undefined
+        };
+      } catch (err: any) {
+        if (isPrismaUniqueLabelError(err)) {
+          attempt++;
+          currentLabel = `${input.label} (import ${attempt + 1})`;
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error(`Failed to create key after ${maxRetries} rename attempts`);
+  }
+
+  app.get(p('/keys/export'), requireAdmin, asyncHandler(async (req, res) => {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? null;
+    const userAgent = req.headers['user-agent'] ?? null;
+
+    // Rate limiting
+    if (!exportLimiter.tryAcquire(ip ?? 'unknown')) {
+      res.status(429).json({ error: 'Rate limit exceeded', retryAfterMs: 60_000 });
+      return;
+    }
+
+    try {
+      const [tavilyKeys, braveKeys] = await Promise.all([
+        prisma.tavilyKey.findMany({ orderBy: { createdAt: 'desc' } }),
+        prisma.braveKey.findMany({ orderBy: { createdAt: 'desc' } })
+      ]);
+
+      const tavily = tavilyKeys.map((k) => {
+        const apiKey = decryptAes256Gcm(k.keyEncrypted, encryptionKey);
+        return {
+          id: k.id,
+          label: k.label,
+          apiKey,
+          maskedKey: k.keyMasked,
+          status: k.status,
+          cooldownUntil: toIsoOrNull(k.cooldownUntil),
+          lastUsedAt: toIsoOrNull(k.lastUsedAt),
+          failureScore: k.failureScore,
+          creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
+          creditsExpiresAt: toIsoOrNull(k.creditsExpiresAt),
+          creditsKeyUsage: k.creditsKeyUsage,
+          creditsKeyLimit: k.creditsKeyLimit,
+          creditsKeyRemaining: k.creditsKeyRemaining,
+          creditsAccountPlanUsage: k.creditsAccountPlanUsage,
+          creditsAccountPlanLimit: k.creditsAccountPlanLimit,
+          creditsAccountPaygoUsage: k.creditsAccountPaygoUsage,
+          creditsAccountPaygoLimit: k.creditsAccountPaygoLimit,
+          creditsAccountRemaining: k.creditsAccountRemaining,
+          creditsRemaining: k.creditsRemaining,
+          createdAt: k.createdAt.toISOString(),
+          updatedAt: k.updatedAt.toISOString()
+        };
+      });
+
+      const brave = braveKeys.map((k) => {
+        const apiKey = decryptAes256Gcm(k.keyEncrypted, encryptionKey);
+        return {
+          id: k.id,
+          label: k.label,
+          apiKey,
+          maskedKey: k.keyMasked,
+          status: k.status,
+          lastUsedAt: toIsoOrNull(k.lastUsedAt),
+          failureScore: k.failureScore,
+          createdAt: k.createdAt.toISOString(),
+          updatedAt: k.updatedAt.toISOString()
+        };
+      });
+
+      const exportData = {
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        tavily,
+        brave
+      };
+
+      await prisma.auditLog.create({
+        data: {
+          eventType: 'keys.export',
+          outcome: 'success',
+          ip,
+          userAgent,
+          detailsJson: { tavilyCount: tavily.length, braveCount: brave.length }
+        }
+      }).catch(() => {});
+
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      res.setHeader('Content-Disposition', `attachment; filename="mcp-nexus-keys-${timestamp}.json"`);
+      res.json(exportData);
+    } catch (err: any) {
+      await prisma.auditLog.create({
+        data: {
+          eventType: 'keys.export',
+          outcome: 'error',
+          ip,
+          userAgent,
+          detailsJson: { error: err instanceof Error ? err.message : String(err) }
+        }
+      }).catch(() => {});
+      res.status(500).json({ error: 'Failed to export keys' });
+    }
+  }));
+
+  app.post(p('/keys/import'), requireAdmin, asyncHandler(async (req, res) => {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket.remoteAddress ?? null;
+    const userAgent = req.headers['user-agent'] ?? null;
+
+    // Rate limiting
+    if (!importLimiter.tryAcquire(ip ?? 'unknown')) {
+      res.status(429).json({ error: 'Rate limit exceeded', retryAfterMs: 60_000 });
+      return;
+    }
+
+    const body = req.body ?? {};
+
+    // Validate payload
+    if (body.schemaVersion !== 1) {
+      res.status(400).json({ error: 'Invalid import file', details: 'schemaVersion must be 1' });
+      return;
+    }
+
+    if (!Array.isArray(body.tavily) || !Array.isArray(body.brave)) {
+      res.status(400).json({ error: 'Invalid import file', details: 'tavily and brave must be arrays' });
+      return;
+    }
+
+    const tavilyItems = body.tavily;
+    const braveItems = body.brave;
+
+    const summary = {
+      tavily: { total: tavilyItems.length, imported: 0, failed: 0, renamed: 0 },
+      brave: { total: braveItems.length, imported: 0, failed: 0, renamed: 0 },
+      total: 0,
+      imported: 0,
+      failed: 0,
+      renamed: 0
+    };
+
+    const renamed: Array<{ provider: 'tavily' | 'brave'; from: string; to: string }> = [];
+    const errors: Array<{ provider: 'tavily' | 'brave'; index: number; label: string; error: string }> = [];
+
+    // Import Tavily keys
+    for (let i = 0; i < tavilyItems.length; i++) {
+      const item = tavilyItems[i];
+      if (typeof item.label !== 'string' || !item.label.trim()) {
+        errors.push({ provider: 'tavily', index: i, label: item.label ?? '', error: 'label is required' });
+        summary.tavily.failed++;
+        continue;
+      }
+      if (typeof item.apiKey !== 'string' || !item.apiKey.trim()) {
+        errors.push({ provider: 'tavily', index: i, label: item.label, error: 'apiKey is required' });
+        summary.tavily.failed++;
+        continue;
+      }
+
+      try {
+        const keyEncrypted = encryptAes256Gcm(item.apiKey, encryptionKey);
+        const keyMasked = maskTavilyApiKey(item.apiKey);
+        const status = ['active', 'disabled', 'cooldown', 'invalid'].includes(item.status) ? item.status : 'active';
+        const cooldownUntil = item.status === 'cooldown' && item.cooldownUntil ? new Date(item.cooldownUntil) : null;
+
+        const result = await createTavilyKeyWithAutoRename({
+          label: item.label.trim(),
+          keyEncrypted: Uint8Array.from(keyEncrypted),
+          keyMasked,
+          status,
+          cooldownUntil
+        });
+
+        summary.tavily.imported++;
+        if (result.renamedFrom) {
+          summary.tavily.renamed++;
+          renamed.push({ provider: 'tavily', from: result.renamedFrom, to: result.labelUsed });
+        }
+      } catch (err: any) {
+        summary.tavily.failed++;
+        errors.push({ provider: 'tavily', index: i, label: item.label, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+
+    // Import Brave keys
+    for (let i = 0; i < braveItems.length; i++) {
+      const item = braveItems[i];
+      if (typeof item.label !== 'string' || !item.label.trim()) {
+        errors.push({ provider: 'brave', index: i, label: item.label ?? '', error: 'label is required' });
+        summary.brave.failed++;
+        continue;
+      }
+      if (typeof item.apiKey !== 'string' || !item.apiKey.trim()) {
+        errors.push({ provider: 'brave', index: i, label: item.label, error: 'apiKey is required' });
+        summary.brave.failed++;
+        continue;
+      }
+
+      try {
+        const keyEncrypted = encryptAes256Gcm(item.apiKey, encryptionKey);
+        const keyMasked = maskBraveApiKey(item.apiKey);
+        const status = ['active', 'disabled', 'invalid'].includes(item.status) ? item.status : 'active';
+
+        const result = await createBraveKeyWithAutoRename({
+          label: item.label.trim(),
+          keyEncrypted: Uint8Array.from(keyEncrypted),
+          keyMasked,
+          status
+        });
+
+        summary.brave.imported++;
+        if (result.renamedFrom) {
+          summary.brave.renamed++;
+          renamed.push({ provider: 'brave', from: result.renamedFrom, to: result.labelUsed });
+        }
+      } catch (err: any) {
+        summary.brave.failed++;
+        errors.push({ provider: 'brave', index: i, label: item.label, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+
+    summary.total = summary.tavily.total + summary.brave.total;
+    summary.imported = summary.tavily.imported + summary.brave.imported;
+    summary.failed = summary.tavily.failed + summary.brave.failed;
+    summary.renamed = summary.tavily.renamed + summary.brave.renamed;
+
+    const outcome = summary.failed > 0 ? 'partial' : 'success';
+    await prisma.auditLog.create({
+      data: {
+        eventType: 'keys.import',
+        outcome,
+        ip,
+        userAgent,
+        detailsJson: { summary, renamedCount: renamed.length, errorCount: errors.length }
+      }
+    }).catch(() => {});
+
+    res.json({
+      ok: true,
+      summary,
+      renamed,
+      errors
+    });
+  }));
 }

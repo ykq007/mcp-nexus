@@ -84,6 +84,46 @@ export type ServerInfoDto = {
   braveSearchEnabled: boolean;
 };
 
+export type KeyExportDto = {
+  schemaVersion: 1;
+  exportedAt: string;
+  tavily: Array<{
+    id: string;
+    label: string;
+    apiKey: string;
+    maskedKey: string | null;
+    status: TavilyKeyStatus;
+    cooldownUntil: string | null;
+    lastUsedAt: string | null;
+    createdAt: string;
+    [key: string]: any;
+  }>;
+  brave: Array<{
+    id: string;
+    label: string;
+    apiKey: string;
+    maskedKey: string | null;
+    status: BraveKeyStatus;
+    lastUsedAt: string | null;
+    createdAt: string;
+    [key: string]: any;
+  }>;
+};
+
+export type BatchImportResult = {
+  ok: boolean;
+  summary: {
+    tavily: { total: number; imported: number; failed: number; renamed: number };
+    brave: { total: number; imported: number; failed: number; renamed: number };
+    total: number;
+    imported: number;
+    failed: number;
+    renamed: number;
+  };
+  renamed: Array<{ provider: 'tavily' | 'brave'; from: string; to: string }>;
+  errors: Array<{ provider: 'tavily' | 'brave'; index: number; label: string; error: string }>;
+};
+
 export type AdminApiConfig = {
   baseUrl: string;
   adminToken: string;
@@ -124,6 +164,9 @@ export type AdminApi = {
 
   listUsage: (filters?: TavilyToolUsageFilters) => Promise<TavilyToolUsageResponseDto>;
   getUsageSummary: (filters?: { dateFrom?: string; dateTo?: string }) => Promise<TavilyToolUsageSummaryDto>;
+
+  exportKeys: () => Promise<KeyExportDto>;
+  importKeys: (payload: KeyExportDto) => Promise<BatchImportResult>;
 };
 
 export function createAdminApi(
@@ -264,7 +307,10 @@ export function createAdminApi(
       const queryString = params.toString();
       const path = queryString ? `/admin/api/usage/summary?${queryString}` : '/admin/api/usage/summary';
       return getJson(path);
-    }
+    },
+
+    exportKeys: () => getJson('/admin/api/keys/export'),
+    importKeys: (payload) => requestJson('/admin/api/keys/import', { method: 'POST', body: JSON.stringify(payload) })
   };
 }
 

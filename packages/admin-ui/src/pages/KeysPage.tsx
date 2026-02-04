@@ -16,6 +16,8 @@ import { KpiCard } from '../ui/KpiCard';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { EmptyState } from '../ui/EmptyState';
 import { DataTable, type DataTableColumn } from '../ui/DataTable';
+import { ImportExportActions } from '../ui/ImportExportActions';
+import { FileImportDialog } from '../components/FileImportDialog';
 
 type SortField = 'label' | 'status' | 'lastUsedAt' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
@@ -83,6 +85,10 @@ export function KeysPage({ api }: { api: AdminApi }) {
   const [braveTouched, setBraveTouched] = useState<{ label?: boolean; apiKey?: boolean }>({});
   const [braveKeyToDelete, setBraveKeyToDelete] = useState<BraveKeyDto | null>(null);
   const [braveDeleting, setBraveDeleting] = useState(false);
+
+  // Import/Export state
+  const [importOpen, setImportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -390,6 +396,39 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    toast.push({ title: t('export.preparing'), message: t('export.securityWarning'), variant: 'warning' });
+
+    try {
+      const data = await api.exportKeys();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.download = `mcp-nexus-keys-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const totalCount = data.tavily.length + data.brave.length;
+      toast.push({ title: t('export.success'), message: t('export.successMessage', { count: totalCount }), variant: 'success' });
+    } catch (e: any) {
+      toast.push({ title: t('export.failed'), message: typeof e?.message === 'string' ? e.message : tc('errors.unknownError'), variant: 'error' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleImport = async (data: any) => {
+    const result = await api.importKeys(data);
+    await load();
+    await loadBraveKeys();
+    return result;
+  };
+
   const hasFilters = searchQuery.trim() || statusFilter !== 'all';
 
   // Brave stats
@@ -461,6 +500,11 @@ export function KeysPage({ api }: { api: AdminApi }) {
               </div>
             </div>
             <div className="flex gap-3 items-center">
+              <ImportExportActions
+                onExport={handleExport}
+                onImport={() => setImportOpen(true)}
+                loading={exporting}
+              />
               <button className="btn" onClick={load} disabled={loading}>
                 <IconRefresh className={loading ? 'spin' : ''} />
                 {t('actions.refresh')}
@@ -1015,6 +1059,13 @@ export function KeysPage({ api }: { api: AdminApi }) {
         confirming={braveDeleting}
         onClose={() => (braveDeleting ? null : setBraveKeyToDelete(null))}
         onConfirm={onDeleteBraveKey}
+      />
+
+      {/* Import Dialog */}
+      <FileImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onConfirm={handleImport}
       />
     </div>
   );
