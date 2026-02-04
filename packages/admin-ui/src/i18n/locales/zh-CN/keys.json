@@ -96,6 +96,7 @@
     "invalid": "无效"
   },
   "sort": {
+    "label": "排序",
     "newestFirst": "最新优先",
     "oldestFirst": "最早优先",
     "labelAZ": "标签 A-Z",

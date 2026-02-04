@@ -96,6 +96,7 @@
     "invalid": "Invalid"
   },
   "sort": {
+    "label": "Sort",
     "newestFirst": "Newest first",
     "oldestFirst": "Oldest first",
     "labelAZ": "Label A-Z",

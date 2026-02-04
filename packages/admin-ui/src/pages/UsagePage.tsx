@@ -12,6 +12,41 @@ import { DataTable, type DataTableColumn } from '../ui/DataTable';
 
 const PAGE_SIZE = 20;
 
+/**
+ * Parse date input string (YYYY-MM-DD) into components
+ */
+function parseDateInput(value: string): { year: number; month: number; day: number } | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  return { year, month, day };
+}
+
+/**
+ * Convert date input to local start of day (00:00:00.000) in ISO format
+ */
+function toLocalStartOfDayIso(dateInput: string): string | null {
+  const parts = parseDateInput(dateInput);
+  if (!parts) return null;
+  const date = new Date(parts.year, parts.month - 1, parts.day, 0, 0, 0, 0);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
+/**
+ * Convert date input to local end of day (23:59:59.999) in ISO format
+ */
+function toLocalEndOfDayIso(dateInput: string): string | null {
+  const parts = parseDateInput(dateInput);
+  if (!parts) return null;
+  const date = new Date(parts.year, parts.month - 1, parts.day, 23, 59, 59, 999);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 export function UsagePage({ api }: { api: AdminApi }) {
   const { t } = useTranslation('usage');
   const { t: tc } = useTranslation('common');
@@ -42,11 +77,13 @@ export function UsagePage({ api }: { api: AdminApi }) {
     if (toolName) f.toolName = toolName;
     if (outcome) f.outcome = outcome;
     if (debouncedTokenPrefix) f.clientTokenPrefix = debouncedTokenPrefix;
-    if (dateFrom) f.dateFrom = new Date(dateFrom).toISOString();
+    if (dateFrom) {
+      const iso = toLocalStartOfDayIso(dateFrom);
+      if (iso) f.dateFrom = iso;
+    }
     if (dateTo) {
-      const end = new Date(dateTo);
-      end.setHours(23, 59, 59, 999);
-      f.dateTo = end.toISOString();
+      const iso = toLocalEndOfDayIso(dateTo);
+      if (iso) f.dateTo = iso;
     }
     return f;
   }, [currentPage, toolName, outcome, debouncedTokenPrefix, dateFrom, dateTo]);

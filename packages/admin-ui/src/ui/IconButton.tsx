@@ -15,10 +15,21 @@ export function IconButton({ icon, variant = 'ghost', size = 'md', loading, clas
     className
   ].filter(Boolean).join(' ');
 
+  // Auto-fallback: use title as aria-label if no aria-label or aria-labelledby provided
+  const ariaLabel =
+    typeof props['aria-label'] === 'string'
+      ? props['aria-label']
+      : typeof props['aria-labelledby'] === 'string'
+        ? undefined
+        : typeof props.title === 'string'
+          ? props.title
+          : undefined;
+
   return (
     <button
       className={classes}
       disabled={loading || props.disabled}
+      aria-label={ariaLabel}
       {...props}
     >
       {loading ? (

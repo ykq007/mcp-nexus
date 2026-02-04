@@ -803,7 +803,7 @@ export function registerAdminRoutes(
         const created = await prisma.tavilyKey.create({
           data: {
             label: currentLabel,
-            keyEncrypted: input.keyEncrypted,
+            keyEncrypted: Buffer.from(input.keyEncrypted),
             keyMasked: input.keyMasked,
             status: (input.status as any) ?? 'active',
             cooldownUntil: input.cooldownUntil ?? null
@@ -841,7 +841,7 @@ export function registerAdminRoutes(
         const created = await prisma.braveKey.create({
           data: {
             label: currentLabel,
-            keyEncrypted: input.keyEncrypted,
+            keyEncrypted: Buffer.from(input.keyEncrypted),
             keyMasked: input.keyMasked,
             status: (input.status as any) ?? 'active'
           }
@@ -880,7 +880,7 @@ export function registerAdminRoutes(
       ]);
 
       const tavily = tavilyKeys.map((k) => {
-        const apiKey = decryptAes256Gcm(k.keyEncrypted, encryptionKey);
+        const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
         return {
           id: k.id,
           label: k.label,
@@ -907,7 +907,7 @@ export function registerAdminRoutes(
       });
 
       const brave = braveKeys.map((k) => {
-        const apiKey = decryptAes256Gcm(k.keyEncrypted, encryptionKey);
+        const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
         return {
           id: k.id,
           label: k.label,

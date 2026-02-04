@@ -539,6 +539,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
                 type="search"
                 className="input"
                 placeholder={t('search.placeholder')}
+                aria-label={t('search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ paddingLeft: 40 }}
@@ -548,6 +549,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
             {/* Status filter */}
             <select
               className="select"
+              aria-label={t('table.status')}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | TavilyKeyStatus)}
               style={{ minWidth: 150 }}
@@ -562,6 +564,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
             {/* Sort selector */}
             <select
               className="select"
+              aria-label={t('sort.label')}
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => handleSortChange(e.target.value)}
               style={{ minWidth: 160 }}
@@ -722,6 +725,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
                       variant="ghost-danger"
                       onClick={() => setKeyToDelete(k)}
                       title={t('button.deleteKey')}
+                      aria-label={t('button.deleteKey')}
                     />
                   )
                 }
@@ -861,6 +865,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
                           variant="ghost-danger"
                           onClick={() => setBraveKeyToDelete(k)}
                           title={t('button.deleteKey')}
+                          aria-label={t('button.deleteKey')}
                         />
                       )
                     }

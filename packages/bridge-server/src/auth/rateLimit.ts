@@ -22,5 +22,10 @@ export class FixedWindowRateLimiter {
     bucket.count += 1;
     return { ok: true };
   }
+
+  tryAcquire(key: string, now = Date.now()): boolean {
+    const result = this.check(key, now);
+    return result.ok;
+  }
 }
 

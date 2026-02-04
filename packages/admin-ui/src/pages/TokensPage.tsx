@@ -138,7 +138,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
             <div>
               <div className="h2">{t('title')}</div>
               <div className="help">
-                {stats.total} {t('stats.total', { count: stats.total }).replace(`${stats.total} `, '')} • {stats.active} {t('stats.active', { count: stats.active }).replace(`${stats.active} `, '')}
+                {t('stats.summary', { total: stats.total, active: stats.active })}
               </div>
             </div>
             <div className="flex gap-3 items-center">
@@ -235,14 +235,15 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={t('setup.title')}>
         <div className="stack gap-6">
             <div className="stack">
-              <div className="label">{t('setup.mcpEndpoint')}</div>
-              <input className="input mono" value={mcpUrl} readOnly aria-label={t('setup.mcpEndpoint')} />
+              <label className="label" htmlFor="mcp-endpoint-input">{t('setup.mcpEndpoint')}</label>
+              <input id="mcp-endpoint-input" className="input mono" value={mcpUrl} readOnly />
               <div className="help" dangerouslySetInnerHTML={{ __html: t('setup.mcpEndpointHelp').replace(/<mono>/g, '<span class="mono">').replace(/<\/mono>/g, '</span>') }} />
             </div>
 
             <div className="stack">
-              <div className="label">{t('setup.clientToken')}</div>
+              <label className="label" htmlFor="mcp-client-token-input">{t('setup.clientToken')}</label>
               <input
+                id="mcp-client-token-input"
                 className="input mono"
                 type="password"
                 value={setupClientToken}
@@ -254,7 +255,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
             </div>
 
             <div className="stack gap-3">
-              <div className="label">{t('setup.configSnippets')}</div>
+              <label className="label" htmlFor="mcp-config-snippet">{t('setup.configSnippets')}</label>
               <div className="flex flex-wrap gap-2">
                 {MCP_SETUP_TARGETS.map((target) => (
                   <button
@@ -280,6 +281,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
                 />
               </div>
               <textarea
+                id="mcp-config-snippet"
                 className="textarea mono text-xs"
                 value={activeSnippet}
                 readOnly
