@@ -43,7 +43,8 @@
     "TAVILY_KEY_SELECTION_STRATEGY": "round_robin",
     "SEARCH_SOURCE_MODE": "brave_prefer_tavily_fallback",
     "TAVILY_USAGE_LOG_MODE": "preview",
-    "BRAVE_USAGE_LOG_MODE": "preview"
+    "BRAVE_USAGE_LOG_MODE": "preview",
+    "TAVILY_CREDITS_REFRESH_LOCK_MS": "15000"
   },
 
   // Static assets for Admin UI and landing page

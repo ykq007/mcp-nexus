@@ -694,15 +694,18 @@ export function registerAdminRoutes(
   }));
 
   app.get(p('/usage'), requireAdmin, asyncHandler(async (req, res) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const pageRaw = Number.parseInt(req.query.page as string, 10);
+    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const limitRaw = Number.parseInt(req.query.limit as string, 10);
+    const limit = Math.min(Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 50, 200);
     const toolName = req.query.toolName as string | undefined;
     const outcome = req.query.outcome as string | undefined;
     const clientTokenPrefix = req.query.clientTokenPrefix as string | undefined;
     const queryHash = req.query.queryHash as string | undefined;
     const dateFrom = req.query.dateFrom as string | undefined;
     const dateTo = req.query.dateTo as string | undefined;
-    const order = (req.query.order as 'asc' | 'desc') || 'desc';
+    const orderQuery = req.query.order as string | undefined;
+    const order: 'asc' | 'desc' = orderQuery === 'asc' ? 'asc' : 'desc';
 
     const where: any = {};
     if (toolName) where.toolName = toolName;
@@ -717,17 +720,32 @@ export function registerAdminRoutes(
     }
 
     const skip = (page - 1) * limit;
-    const [logs, totalItems] = await prisma.$transaction([
+    const fetchSize = skip + limit;
+    const [tavilyLogs, braveLogs, tavilyTotalItems, braveTotalItems] = await prisma.$transaction([
       prisma.tavilyToolUsage.findMany({
         where,
         orderBy: { timestamp: order },
-        skip,
-        take: limit
+        take: fetchSize
       }),
-      prisma.tavilyToolUsage.count({ where })
+      prisma.braveToolUsage.findMany({
+        where,
+        orderBy: { timestamp: order },
+        take: fetchSize
+      }),
+      prisma.tavilyToolUsage.count({ where }),
+      prisma.braveToolUsage.count({ where })
     ]);
 
+    const combinedLogs = [...tavilyLogs, ...braveLogs].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return order === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+
+    const logs = combinedLogs.slice(skip, skip + limit);
+    const totalItems = tavilyTotalItems + braveTotalItems;
     const totalPages = Math.ceil(totalItems / limit);
+
     res.json({
       logs,
       pagination: {
@@ -750,31 +768,78 @@ export function registerAdminRoutes(
       if (dateTo) where.timestamp.lte = new Date(dateTo);
     }
 
-    const [total, byTool, topQueries] = await prisma.$transaction([
+    const [tavilyTotal, braveTotal, tavilyByTool, braveByTool, tavilyTopQueries, braveTopQueries] = await prisma.$transaction([
       prisma.tavilyToolUsage.count({ where }),
+      prisma.braveToolUsage.count({ where }),
       prisma.tavilyToolUsage.groupBy({
         by: ['toolName'],
         where,
         _count: { toolName: true },
         orderBy: { _count: { toolName: 'desc' } }
       }),
+      prisma.braveToolUsage.groupBy({
+        by: ['toolName'],
+        where,
+        _count: { toolName: true },
+        orderBy: { _count: { toolName: 'desc' } }
+      }),
       prisma.tavilyToolUsage.groupBy({
-        by: ['queryHash', 'queryPreview'],
+        by: ['queryHash'],
         where: { ...where, queryHash: { not: null } },
+        _max: { queryPreview: true },
         _count: { queryHash: true },
         orderBy: { _count: { queryHash: 'desc' } },
-        take: 20
+      }),
+      prisma.braveToolUsage.groupBy({
+        by: ['queryHash'],
+        where: { ...where, queryHash: { not: null } },
+        _max: { queryPreview: true },
+        _count: { queryHash: true },
+        orderBy: { _count: { queryHash: 'desc' } },
       })
     ]);
 
+    const byToolMap = new Map<string, number>();
+    for (const row of [...tavilyByTool, ...braveByTool]) {
+      const count = (row as any)?._count?.toolName ?? 0;
+      byToolMap.set(row.toolName, (byToolMap.get(row.toolName) ?? 0) + count);
+    }
+
+    const byTool = Array.from(byToolMap.entries())
+      .map(([toolName, count]) => ({ toolName, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const topQueriesMap = new Map<string, { queryHash: string; queryPreview: string | null; count: number }>();
+    for (const row of [...tavilyTopQueries, ...braveTopQueries]) {
+      const queryHash = row.queryHash;
+      if (!queryHash) continue;
+
+      const count = (row as any)?._count?.queryHash ?? 0;
+      const queryPreview = (row as any)?._max?.queryPreview ?? null;
+      const existing = topQueriesMap.get(queryHash);
+
+      if (existing) {
+        existing.count += count;
+        if (!existing.queryPreview && queryPreview) {
+          existing.queryPreview = queryPreview;
+        }
+      } else {
+        topQueriesMap.set(queryHash, {
+          queryHash,
+          queryPreview,
+          count
+        });
+      }
+    }
+
+    const topQueries = Array.from(topQueriesMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 20);
+
     res.json({
-      total,
-      byTool: byTool.map((row) => ({ toolName: row.toolName, count: (row as any)?._count?.toolName ?? 0 })),
-      topQueries: topQueries.map((row) => ({
-        queryHash: row.queryHash,
-        queryPreview: row.queryPreview,
-        count: (row as any)?._count?.queryHash ?? 0
-      }))
+      total: tavilyTotal + braveTotal,
+      byTool,
+      topQueries
     });
   }));
 

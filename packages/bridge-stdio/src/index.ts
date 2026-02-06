@@ -20,7 +20,7 @@ import { parseStdioCliArgs, usage } from './args.js';
 import { createLoggingBraveClient } from './brave/loggingClient.js';
 
 async function main(): Promise<void> {
-  const parsed = parseStdioCliArgs(process.argv.slice(2));
+  const parsed = await parseStdioCliArgs(process.argv.slice(2));
   if (!parsed.ok) {
     console.error(parsed.error);
     process.exitCode = parsed.exitCode;

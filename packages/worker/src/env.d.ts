@@ -27,6 +27,7 @@ export interface Env {
   SEARCH_SOURCE_MODE?: string;
   TAVILY_USAGE_LOG_MODE: string;
   BRAVE_USAGE_LOG_MODE: string;
+  TAVILY_CREDITS_REFRESH_LOCK_MS?: string;
   ENVIRONMENT?: string;
   ADMIN_UI_URL?: string; // URL to Pages-hosted Admin UI
 }

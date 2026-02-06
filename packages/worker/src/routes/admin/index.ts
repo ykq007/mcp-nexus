@@ -121,6 +121,12 @@ async function fetchTavilyCredits(apiKey: string): Promise<TavilyCreditsSnapshot
   }
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.floor(parsed);
+}
+
 // Create admin router
 const adminRouter = new Hono<{ Bindings: Env }>();
 
@@ -148,8 +154,7 @@ adminRouter.get('/server-info', async (c) => {
   return c.json({
     tavilyKeySelectionStrategy: settingsMap.tavilyKeySelectionStrategy || c.env.TAVILY_KEY_SELECTION_STRATEGY || 'round_robin',
     searchSourceMode: parseSearchSourceMode(settingsMap.searchSourceMode || c.env.SEARCH_SOURCE_MODE, 'brave_prefer_tavily_fallback'),
-    braveSearchEnabled: activeBraveKeys > 0,
-    runtime: 'cloudflare-workers',
+    braveSearchEnabled: activeBraveKeys > 0
   });
 });
 
@@ -304,6 +309,13 @@ adminRouter.post('/keys/:id/refresh-credits', async (c) => {
     return c.json({ error: 'Key not found' }, 404);
   }
 
+  const lockMs = parsePositiveInt(c.env.TAVILY_CREDITS_REFRESH_LOCK_MS, 15_000);
+  const lockId = await db.tryAcquireTavilyCreditsRefreshLock(id, lockMs);
+
+  if (!lockId) {
+    return c.json({ error: 'Credits refresh already in progress' }, 409);
+  }
+
   try {
     const apiKey = await decrypt(new Uint8Array(key.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
     const snapshot = await fetchTavilyCredits(apiKey);
@@ -334,16 +346,30 @@ adminRouter.post('/keys/:id/refresh-credits', async (c) => {
 
     const message = error instanceof Error ? error.message : 'Failed to refresh credits';
     const status = error instanceof TavilyCreditsHttpError ? error.status : 500;
-    return c.json({ error: message }, status);
+    const safeStatus = status >= 400 && status <= 599 ? status : 500;
+    return new Response(JSON.stringify({ error: message }), {
+      status: safeStatus,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  } finally {
+    await db.releaseTavilyCreditsRefreshLock(id, lockId).catch(() => {});
   }
 });
 
 adminRouter.post('/keys/sync-credits', async (c) => {
   const db = new D1Client(c.env.DB);
   const keys = (await db.getTavilyKeys()).filter((key) => key.status === 'active');
+  const lockMs = parsePositiveInt(c.env.TAVILY_CREDITS_REFRESH_LOCK_MS, 15_000);
 
   const results = await Promise.all(
     keys.map(async (key): Promise<boolean> => {
+      const lockId = await db.tryAcquireTavilyCreditsRefreshLock(key.id, lockMs);
+      if (!lockId) {
+        return false;
+      }
+
       try {
         const apiKey = await decrypt(new Uint8Array(key.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
         const snapshot = await fetchTavilyCredits(apiKey);
@@ -368,6 +394,8 @@ adminRouter.post('/keys/sync-credits', async (c) => {
           await db.updateTavilyKey(key.id, { status: 'invalid' });
         }
         return false;
+      } finally {
+        await db.releaseTavilyCreditsRefreshLock(key.id, lockId).catch(() => {});
       }
     })
   );
@@ -683,60 +711,24 @@ adminRouter.get('/usage', async (c) => {
   const queryHash = c.req.query('queryHash');
   const dateFrom = c.req.query('dateFrom');
   const dateTo = c.req.query('dateTo');
-  const order = (c.req.query('order') || 'desc') as 'asc' | 'desc';
+  const order = c.req.query('order') === 'asc' ? 'asc' : 'desc';
 
   const db = new D1Client(c.env.DB);
-
-  // Calculate offset from page
   const offset = (page - 1) * limit;
 
-  // Fetch logs with filters
-  const tavilyLogs = await db.getTavilyUsageLogs(limit, offset);
-  const braveLogs = await db.getBraveUsageLogs(limit, offset);
-
-  // Combine and filter results
-  let results = [
-    ...tavilyLogs.map(log => ({ ...log, source: 'tavily' })),
-    ...braveLogs.map(log => ({ ...log, source: 'brave' }))
-  ];
-
-  // Apply filters
-  if (toolName) {
-    results = results.filter(log => log.toolName === toolName);
-  }
-  if (outcome) {
-    results = results.filter(log => log.outcome === outcome);
-  }
-  if (clientTokenPrefix) {
-    results = results.filter(log =>
-      log.clientTokenPrefix && log.clientTokenPrefix.includes(clientTokenPrefix)
-    );
-  }
-  if (queryHash) {
-    results = results.filter(log => log.queryHash === queryHash);
-  }
-  if (dateFrom) {
-    const fromDate = new Date(dateFrom);
-    results = results.filter(log => new Date(log.timestamp) >= fromDate);
-  }
-  if (dateTo) {
-    const toDate = new Date(dateTo);
-    results = results.filter(log => new Date(log.timestamp) <= toDate);
-  }
-
-  // Sort by timestamp
-  results.sort((a, b) => {
-    const timeA = new Date(a.timestamp).getTime();
-    const timeB = new Date(b.timestamp).getTime();
-    return order === 'desc' ? timeB - timeA : timeA - timeB;
+  const { logs, totalItems } = await db.getCombinedUsageLogs({
+    toolName: toolName || undefined,
+    outcome: outcome || undefined,
+    clientTokenPrefix: clientTokenPrefix || undefined,
+    queryHash: queryHash || undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    order,
+    limit,
+    offset
   });
 
-  // Get total count for pagination
-  const totalItems = results.length;
   const totalPages = Math.ceil(totalItems / limit);
-
-  // Paginate results
-  const logs = results.slice(0, limit);
 
   return c.json({
     logs,
@@ -755,59 +747,15 @@ adminRouter.get('/usage/summary', async (c) => {
 
   const db = new D1Client(c.env.DB);
 
-  // Get all logs and compute summary
-  const tavilyLogs = await db.getTavilyUsageLogs(1000, 0);
-  const braveLogs = await db.getBraveUsageLogs(1000, 0);
-
-  let allLogs = [...tavilyLogs, ...braveLogs];
-
-  // Apply date filters
-  if (dateFrom) {
-    const fromDate = new Date(dateFrom);
-    allLogs = allLogs.filter(log => new Date(log.timestamp) >= fromDate);
-  }
-  if (dateTo) {
-    const toDate = new Date(dateTo);
-    allLogs = allLogs.filter(log => new Date(log.timestamp) <= toDate);
-  }
-
-  // Compute summary stats
-  const total = allLogs.length;
-
-  // Tool breakdown
-  const toolCounts: Record<string, number> = {};
-  for (const log of allLogs) {
-    toolCounts[log.toolName] = (toolCounts[log.toolName] || 0) + 1;
-  }
-
-  const byTool = Object.entries(toolCounts)
-    .map(([toolName, count]) => ({ toolName, count }))
-    .sort((a, b) => b.count - a.count);
-
-  // Top queries (group by queryHash)
-  const queryCounts: Record<string, { queryHash: string | null; queryPreview: string | null; count: number }> = {};
-  for (const log of allLogs) {
-    if (log.queryHash) {
-      const key = log.queryHash;
-      if (!queryCounts[key]) {
-        queryCounts[key] = {
-          queryHash: log.queryHash,
-          queryPreview: log.queryPreview || null,
-          count: 0
-        };
-      }
-      queryCounts[key].count++;
-    }
-  }
-
-  const topQueries = Object.values(queryCounts)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 20);
+  const summary = await db.getCombinedUsageSummary({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined
+  });
 
   return c.json({
-    total,
-    byTool,
-    topQueries
+    total: summary.total,
+    byTool: summary.byTool,
+    topQueries: summary.topQueries
   });
 });
 

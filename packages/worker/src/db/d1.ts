@@ -26,6 +26,8 @@ export interface TavilyKey {
   creditsAccountPaygoUsage: number | null;
   creditsAccountPaygoLimit: number | null;
   creditsAccountRemaining: number | null;
+  creditsRefreshLockUntil: string | null;
+  creditsRefreshLockId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +92,28 @@ export interface BraveToolUsage {
   errorMessage: string | null;
 }
 
+export type CombinedUsageLog = TavilyToolUsage | BraveToolUsage;
+
+export interface UsageQueryFilters {
+  toolName?: string;
+  outcome?: string;
+  clientTokenPrefix?: string;
+  queryHash?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface CombinedUsageResult {
+  logs: CombinedUsageLog[];
+  totalItems: number;
+}
+
+export interface UsageSummaryResult {
+  total: number;
+  byTool: { toolName: string; count: number }[];
+  topQueries: { queryHash: string | null; queryPreview: string | null; count: number }[];
+}
+
 /**
  * Generate CUID-like IDs
  */
@@ -114,6 +138,7 @@ export class D1Client {
              creditsKeyUsage, creditsKeyLimit, creditsKeyRemaining,
              creditsAccountPlanUsage, creditsAccountPlanLimit,
              creditsAccountPaygoUsage, creditsAccountPaygoLimit, creditsAccountRemaining,
+             creditsRefreshLockUntil, creditsRefreshLockId,
              createdAt, updatedAt
       FROM TavilyKey
       ORDER BY createdAt DESC
@@ -222,6 +247,14 @@ export class D1Client {
       updates.push('creditsAccountRemaining = ?');
       values.push(data.creditsAccountRemaining);
     }
+    if (data.creditsRefreshLockUntil !== undefined) {
+      updates.push('creditsRefreshLockUntil = ?');
+      values.push(data.creditsRefreshLockUntil);
+    }
+    if (data.creditsRefreshLockId !== undefined) {
+      updates.push('creditsRefreshLockId = ?');
+      values.push(data.creditsRefreshLockId);
+    }
 
     updates.push('updatedAt = ?');
     values.push(new Date().toISOString());
@@ -231,6 +264,35 @@ export class D1Client {
       UPDATE TavilyKey SET ${updates.join(', ')} WHERE id = ?
     `).bind(...values).run();
   }
+
+  async tryAcquireTavilyCreditsRefreshLock(id: string, lockMs: number): Promise<string | null> {
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const lockUntilIso = new Date(now.getTime() + Math.max(1, lockMs)).toISOString();
+    const lockId = generateId();
+
+    await this.db.prepare(`
+      UPDATE TavilyKey
+      SET creditsRefreshLockUntil = ?, creditsRefreshLockId = ?, updatedAt = ?
+      WHERE id = ?
+        AND (creditsRefreshLockUntil IS NULL OR creditsRefreshLockUntil < ?)
+    `).bind(lockUntilIso, lockId, nowIso, id, nowIso).run();
+
+    const current = await this.db.prepare(`
+      SELECT creditsRefreshLockId FROM TavilyKey WHERE id = ?
+    `).bind(id).first<{ creditsRefreshLockId: string | null }>();
+
+    return current?.creditsRefreshLockId === lockId ? lockId : null;
+  }
+
+  async releaseTavilyCreditsRefreshLock(id: string, lockId: string): Promise<void> {
+    await this.db.prepare(`
+      UPDATE TavilyKey
+      SET creditsRefreshLockUntil = NULL, creditsRefreshLockId = NULL, updatedAt = ?
+      WHERE id = ? AND creditsRefreshLockId = ?
+    `).bind(new Date().toISOString(), id, lockId).run();
+  }
+
 
   async deleteTavilyKey(id: string): Promise<void> {
     await this.db.prepare(`DELETE FROM TavilyKey WHERE id = ?`).bind(id).run();
@@ -391,9 +453,131 @@ export class D1Client {
     return result.results;
   }
 
+  private buildUsageWhere(filters: UsageQueryFilters): { clause: string; params: unknown[] } {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (filters.toolName) {
+      conditions.push('toolName = ?');
+      params.push(filters.toolName);
+    }
+    if (filters.outcome) {
+      conditions.push('outcome = ?');
+      params.push(filters.outcome);
+    }
+    if (filters.clientTokenPrefix) {
+      conditions.push('instr(clientTokenPrefix, ?) > 0');
+      params.push(filters.clientTokenPrefix);
+    }
+    if (filters.queryHash) {
+      conditions.push('queryHash = ?');
+      params.push(filters.queryHash);
+    }
+    if (filters.dateFrom) {
+      conditions.push('datetime(timestamp) >= datetime(?)');
+      params.push(filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      conditions.push('datetime(timestamp) <= datetime(?)');
+      params.push(filters.dateTo);
+    }
+
+    return {
+      clause: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
+      params
+    };
+  }
+
+  async getCombinedUsageLogs(
+    filters: UsageQueryFilters & { limit?: number; offset?: number; order?: 'asc' | 'desc' } = {}
+  ): Promise<CombinedUsageResult> {
+    const { limit = 100, offset = 0, order = 'desc', ...whereFilters } = filters;
+    const { clause, params } = this.buildUsageWhere(whereFilters);
+    const orderDirection = order === 'asc' ? 'ASC' : 'DESC';
+
+    const logsResult = await this.db.prepare(`
+      SELECT id, timestamp, toolName, outcome, latencyMs,
+             clientTokenId, clientTokenPrefix, upstreamKeyId,
+             queryHash, queryPreview, argsJson, errorMessage
+      FROM (
+        SELECT id, timestamp, toolName, outcome, latencyMs,
+               clientTokenId, clientTokenPrefix, upstreamKeyId,
+               queryHash, queryPreview, argsJson, errorMessage
+        FROM TavilyToolUsage
+        ${clause}
+        UNION ALL
+        SELECT id, timestamp, toolName, outcome, latencyMs,
+               clientTokenId, clientTokenPrefix, upstreamKeyId,
+               queryHash, queryPreview, argsJson, errorMessage
+        FROM BraveToolUsage
+        ${clause}
+      ) AS merged
+      ORDER BY timestamp ${orderDirection}
+      LIMIT ? OFFSET ?
+    `).bind(...params, ...params, limit, offset).all<CombinedUsageLog>();
+
+    const totalResult = await this.db.prepare(`
+      SELECT
+        (
+          (SELECT COUNT(*) FROM TavilyToolUsage ${clause})
+          +
+          (SELECT COUNT(*) FROM BraveToolUsage ${clause})
+        ) AS totalItems
+    `).bind(...params, ...params).first<{ totalItems: number | string | null }>();
+
+    return {
+      logs: logsResult.results,
+      totalItems: Number(totalResult?.totalItems ?? 0)
+    };
+  }
+
+  async getCombinedUsageSummary(filters: UsageQueryFilters = {}): Promise<UsageSummaryResult> {
+    const { clause, params } = this.buildUsageWhere(filters);
+
+    const totalResult = await this.db.prepare(`
+      SELECT
+        (
+          (SELECT COUNT(*) FROM TavilyToolUsage ${clause})
+          +
+          (SELECT COUNT(*) FROM BraveToolUsage ${clause})
+        ) AS totalItems
+    `).bind(...params, ...params).first<{ totalItems: number | string | null }>();
+
+    const byToolResult = await this.db.prepare(`
+      SELECT toolName, COUNT(*) AS count
+      FROM (
+        SELECT toolName FROM TavilyToolUsage ${clause}
+        UNION ALL
+        SELECT toolName FROM BraveToolUsage ${clause}
+      ) AS merged
+      GROUP BY toolName
+      ORDER BY count DESC
+    `).bind(...params, ...params).all<{ toolName: string; count: number | string }>();
+
+    const topQueriesResult = await this.db.prepare(`
+      SELECT queryHash, MAX(queryPreview) AS queryPreview, COUNT(*) AS count
+      FROM (
+        SELECT queryHash, queryPreview FROM TavilyToolUsage ${clause}
+        UNION ALL
+        SELECT queryHash, queryPreview FROM BraveToolUsage ${clause}
+      ) AS merged
+      WHERE queryHash IS NOT NULL
+      GROUP BY queryHash
+      ORDER BY count DESC
+      LIMIT 20
+    `).bind(...params, ...params).all<{ queryHash: string | null; queryPreview: string | null; count: number | string }>();
+
+    return {
+      total: Number(totalResult?.totalItems ?? 0),
+      byTool: byToolResult.results.map((row) => ({ toolName: row.toolName, count: Number(row.count) })),
+      topQueries: topQueriesResult.results.map((row) => ({ queryHash: row.queryHash, queryPreview: row.queryPreview, count: Number(row.count) }))
+    };
+  }
+
   // ============ Audit Logs ============
 
   async createAuditLog(input: {
+    actorAdminId?: string | null;
     eventType: string;
     outcome: string;
     resourceType?: string | null;
@@ -403,15 +587,18 @@ export class D1Client {
     detailsJson: string;
   }): Promise<void> {
     const id = generateId();
+    const timestamp = new Date().toISOString();
     await this.db.prepare(`
-      INSERT INTO AuditLog (id, eventType, outcome, resourceType, resourceId, ip, userAgent, detailsJson)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO AuditLog (id, timestamp, actorAdminId, eventType, resourceType, resourceId, outcome, ip, userAgent, detailsJson)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
+      timestamp,
+      input.actorAdminId ?? null,
       input.eventType,
-      input.outcome,
       input.resourceType ?? null,
       input.resourceId ?? null,
+      input.outcome,
       input.ip ?? null,
       input.userAgent ?? null,
       input.detailsJson

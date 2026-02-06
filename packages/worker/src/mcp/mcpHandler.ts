@@ -19,7 +19,71 @@ interface JsonRpcResponse {
   jsonrpc: '2.0';
   id?: string | number;
   result?: unknown;
-  error?: { code: number; message: string };
+  error?: { code: number; message: string; data?: unknown };
+}
+
+/**
+ * Rate limiting helpers
+ */
+type RateLimitScope = 'global' | 'client';
+
+type RateLimitCheckResult =
+  | { ok: true }
+  | { ok: false; scope: RateLimitScope; retryAfterMs: number };
+
+type DurableRateLimitResponse = {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+};
+
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+function parsePositiveInt(raw: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(raw ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+async function checkLimit(
+  c: Context<{ Bindings: Env }>,
+  key: string,
+  limit: number
+): Promise<{ allowed: boolean; retryAfterMs: number }> {
+  const id = c.env.RATE_LIMITER.idFromName(key);
+  const stub = c.env.RATE_LIMITER.get(id);
+
+  const url = new URL('https://rate-limiter.internal/check');
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('window', String(RATE_LIMIT_WINDOW_MS));
+
+  const response = await stub.fetch(url.toString(), { method: 'GET' });
+  const payload = await response.json<DurableRateLimitResponse>();
+
+  const retryAfterMs = Math.max(0, (payload?.resetAt ?? Date.now()) - Date.now());
+  return {
+    allowed: Boolean(payload?.allowed),
+    retryAfterMs
+  };
+}
+
+async function enforceMcpRateLimits(
+  c: Context<{ Bindings: Env }>,
+  clientTokenId: string
+): Promise<RateLimitCheckResult> {
+  const globalLimit = parsePositiveInt(c.env.MCP_GLOBAL_RATE_LIMIT_PER_MINUTE, 600);
+  const perClientLimit = parsePositiveInt(c.env.MCP_RATE_LIMIT_PER_MINUTE, 60);
+
+  const clientCheck = await checkLimit(c, `client:${clientTokenId}`, perClientLimit);
+  if (!clientCheck.allowed) {
+    return { ok: false, scope: 'client', retryAfterMs: clientCheck.retryAfterMs };
+  }
+
+  const globalCheck = await checkLimit(c, 'global', globalLimit);
+  if (!globalCheck.allowed) {
+    return { ok: false, scope: 'global', retryAfterMs: globalCheck.retryAfterMs };
+  }
+
+  return { ok: true };
 }
 
 /**
@@ -29,6 +93,31 @@ export async function handleMcpRequest(c: Context<{ Bindings: Env }>): Promise<R
   try {
     const body = await c.req.json<JsonRpcRequest>();
     const { method, params, id } = body;
+
+    // clientAuth middleware should populate this, but validate defensively.
+    const clientTokenId = c.get('clientTokenId');
+    if (!clientTokenId) {
+      return c.json(
+        {
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32600, message: 'Authorization required' }
+        },
+        401
+      );
+    }
+
+    const rateLimitResult = await enforceMcpRateLimits(c, clientTokenId);
+    if (!rateLimitResult.ok) {
+      return c.json(
+        {
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32029, message: 'Rate limit exceeded', data: { scope: rateLimitResult.scope, retryAfterMs: rateLimitResult.retryAfterMs } }
+        },
+        429
+      );
+    }
 
     let response: JsonRpcResponse;
 

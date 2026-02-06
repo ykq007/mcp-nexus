@@ -20,7 +20,7 @@ export async function validateClientToken(prisma: PrismaClient, raw: string): Pr
   | { ok: false; error: string }
 > {
   const parsed = parseClientToken(raw);
-  if (!parsed.ok) return parsed;
+  if (!parsed.ok) return { ok: false, error: parsed.error };
 
   const record = await prisma.clientToken.findUnique({ where: { tokenPrefix: parsed.prefix } });
   if (!record) return { ok: false, error: 'Invalid token' };

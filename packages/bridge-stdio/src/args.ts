@@ -10,7 +10,7 @@ export type ParseStdioCliArgsResult =
   | { ok: true; value: StdioCliArgs }
   | { ok: false; error: string; exitCode: 1 | 2 };
 
-export function parseStdioCliArgs(argv: string[]): ParseStdioCliArgsResult {
+export async function parseStdioCliArgs(argv: string[]): Promise<ParseStdioCliArgsResult> {
   const parsed = parseArgs({
     args: argv,
     strict: false,
