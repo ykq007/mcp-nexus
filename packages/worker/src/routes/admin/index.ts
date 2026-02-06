@@ -6,6 +6,121 @@ import { D1Client, generateId } from '../../db/d1.js';
 import { encrypt, decrypt, maskApiKey, generateToken } from '../../crypto/crypto.js';
 import { parseSearchSourceMode } from '../../mcp/searchSource.js';
 
+// Tavily credits types and helpers
+type TavilyCreditsSnapshot = {
+  creditsRemaining: number | null;
+  creditsKeyUsage: number | null;
+  creditsKeyLimit: number | null;
+  creditsKeyRemaining: number | null;
+  creditsAccountPlanUsage: number | null;
+  creditsAccountPlanLimit: number | null;
+  creditsAccountPaygoUsage: number | null;
+  creditsAccountPaygoLimit: number | null;
+  creditsAccountRemaining: number | null;
+};
+
+class TavilyCreditsHttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'TavilyCreditsHttpError';
+    this.status = status;
+  }
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function diffOrNull(limit: number | null, usage: number | null): number | null {
+  if (limit === null || usage === null) return null;
+  return limit - usage;
+}
+
+function sumNonNegative(a: number | null, b: number | null): number | null {
+  if (a === null && b === null) return null;
+  const av = a === null ? 0 : Math.max(0, a);
+  const bv = b === null ? 0 : Math.max(0, b);
+  return av + bv;
+}
+
+function minDefined(a: number | null, b: number | null): number | null {
+  if (a === null && b === null) return null;
+  if (a === null) return b;
+  if (b === null) return a;
+  return Math.min(a, b);
+}
+
+function safeJson(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text };
+  }
+}
+
+async function fetchTavilyCredits(apiKey: string): Promise<TavilyCreditsSnapshot> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const response = await fetch('https://api.tavily.com/credits', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`
+      },
+      signal: controller.signal
+    });
+
+    const text = await response.text();
+    const body = safeJson(text);
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new TavilyCreditsHttpError('Invalid API key', response.status);
+      }
+      const message = typeof body?.message === 'string' ? body.message : response.statusText || 'Failed to fetch credits';
+      throw new TavilyCreditsHttpError(message, response.status);
+    }
+
+    const creditsKeyUsage = numberOrNull(body?.credits_key_usage ?? body?.key?.usage);
+    const creditsKeyLimit = numberOrNull(body?.credits_key_limit ?? body?.key?.limit);
+    const creditsKeyRemaining =
+      numberOrNull(body?.credits_key_remaining) ?? diffOrNull(creditsKeyLimit, creditsKeyUsage);
+
+    const creditsAccountPlanUsage = numberOrNull(body?.credits_account_plan_usage ?? body?.account?.plan_usage);
+    const creditsAccountPlanLimit = numberOrNull(body?.credits_account_plan_limit ?? body?.account?.plan_limit);
+    const creditsAccountPaygoUsage = numberOrNull(body?.credits_account_paygo_usage ?? body?.account?.paygo_usage);
+    const creditsAccountPaygoLimit = numberOrNull(body?.credits_account_paygo_limit ?? body?.account?.paygo_limit);
+
+    const planRemaining = diffOrNull(creditsAccountPlanLimit, creditsAccountPlanUsage);
+    const paygoRemaining = diffOrNull(creditsAccountPaygoLimit, creditsAccountPaygoUsage);
+    const creditsAccountRemaining = numberOrNull(body?.credits_account_remaining) ?? sumNonNegative(planRemaining, paygoRemaining);
+    const creditsRemaining = numberOrNull(body?.credits_remaining) ?? minDefined(creditsKeyRemaining, creditsAccountRemaining);
+
+    return {
+      creditsRemaining,
+      creditsKeyUsage,
+      creditsKeyLimit,
+      creditsKeyRemaining,
+      creditsAccountPlanUsage,
+      creditsAccountPlanLimit,
+      creditsAccountPaygoUsage,
+      creditsAccountPaygoLimit,
+      creditsAccountRemaining
+    };
+  } catch (error: unknown) {
+    if (error instanceof TavilyCreditsHttpError) throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new TavilyCreditsHttpError('Tavily credits request timed out', 504);
+    }
+    throw new TavilyCreditsHttpError(error instanceof Error ? error.message : 'Failed to fetch credits', 502);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // Create admin router
 const adminRouter = new Hono<{ Bindings: Env }>();
 
@@ -57,7 +172,23 @@ adminRouter.patch('/server-info', async (c) => {
     await db.upsertServerSetting('searchSourceMode', body.searchSourceMode);
   }
 
-  return c.json({ success: true });
+  // Return updated values with ok: true
+  const settings = await db.getServerSettings();
+  const settingsMap: Record<string, string> = {};
+  for (const setting of settings) {
+    settingsMap[setting.key] = setting.value;
+  }
+
+  const tavilyKeys = await db.getTavilyKeys();
+  const braveKeys = await db.getBraveKeys();
+  const activeBraveKeys = braveKeys.filter(k => k.status === 'active').length;
+
+  return c.json({
+    ok: true,
+    tavilyKeySelectionStrategy: settingsMap.tavilyKeySelectionStrategy || c.env.TAVILY_KEY_SELECTION_STRATEGY || 'round_robin',
+    searchSourceMode: parseSearchSourceMode(settingsMap.searchSourceMode || c.env.SEARCH_SOURCE_MODE, 'brave_prefer_tavily_fallback'),
+    braveSearchEnabled: activeBraveKeys > 0,
+  });
 });
 
 // ============ Keys (alias for Tavily Keys - for Admin UI compatibility) ============
@@ -69,15 +200,14 @@ adminRouter.get('/keys', async (c) => {
   return c.json(keys.map(k => ({
     id: k.id,
     label: k.label,
-    keyMasked: k.keyMasked,
+    maskedKey: k.keyMasked ?? null,
     status: k.status,
     cooldownUntil: k.cooldownUntil,
     lastUsedAt: k.lastUsedAt,
-    failureScore: k.failureScore,
-    creditsRemaining: k.creditsRemaining,
-    creditsCheckedAt: k.creditsCheckedAt,
     createdAt: k.createdAt,
-    updatedAt: k.updatedAt,
+    remainingCredits: k.creditsRemaining,
+    totalCredits: null,
+    lastCheckedAt: k.creditsCheckedAt,
   })));
 });
 
@@ -165,13 +295,86 @@ adminRouter.get('/keys/:id/reveal', async (c) => {
   }
 });
 
-// Credit refresh stubs (not implemented in worker)
 adminRouter.post('/keys/:id/refresh-credits', async (c) => {
-  return c.json({ success: true, message: 'Credit refresh not implemented in worker' });
+  const id = c.req.param('id');
+  const db = new D1Client(c.env.DB);
+
+  const key = await db.getTavilyKeyById(id);
+  if (!key) {
+    return c.json({ error: 'Key not found' }, 404);
+  }
+
+  try {
+    const apiKey = await decrypt(new Uint8Array(key.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+    const snapshot = await fetchTavilyCredits(apiKey);
+    const now = new Date().toISOString();
+
+    await db.updateTavilyKey(id, {
+      creditsCheckedAt: now,
+      creditsRemaining: snapshot.creditsRemaining,
+      creditsKeyUsage: snapshot.creditsKeyUsage,
+      creditsKeyLimit: snapshot.creditsKeyLimit,
+      creditsKeyRemaining: snapshot.creditsKeyRemaining,
+      creditsAccountPlanUsage: snapshot.creditsAccountPlanUsage,
+      creditsAccountPlanLimit: snapshot.creditsAccountPlanLimit,
+      creditsAccountPaygoUsage: snapshot.creditsAccountPaygoUsage,
+      creditsAccountPaygoLimit: snapshot.creditsAccountPaygoLimit,
+      creditsAccountRemaining: snapshot.creditsAccountRemaining
+    });
+
+    return c.json({
+      remainingCredits: snapshot.creditsRemaining ?? 0,
+      totalCredits: snapshot.creditsKeyLimit ?? 0
+    });
+  } catch (error: unknown) {
+    if (error instanceof TavilyCreditsHttpError && (error.status === 401 || error.status === 403)) {
+      await db.updateTavilyKey(id, { status: 'invalid' });
+      return c.json({ error: 'Invalid API key' }, error.status);
+    }
+
+    const message = error instanceof Error ? error.message : 'Failed to refresh credits';
+    const status = error instanceof TavilyCreditsHttpError ? error.status : 500;
+    return c.json({ error: message }, status);
+  }
 });
 
 adminRouter.post('/keys/sync-credits', async (c) => {
-  return c.json({ success: true, message: 'Credit sync not implemented in worker' });
+  const db = new D1Client(c.env.DB);
+  const keys = (await db.getTavilyKeys()).filter((key) => key.status === 'active');
+
+  const results = await Promise.all(
+    keys.map(async (key): Promise<boolean> => {
+      try {
+        const apiKey = await decrypt(new Uint8Array(key.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+        const snapshot = await fetchTavilyCredits(apiKey);
+        const now = new Date().toISOString();
+
+        await db.updateTavilyKey(key.id, {
+          creditsCheckedAt: now,
+          creditsRemaining: snapshot.creditsRemaining,
+          creditsKeyUsage: snapshot.creditsKeyUsage,
+          creditsKeyLimit: snapshot.creditsKeyLimit,
+          creditsKeyRemaining: snapshot.creditsKeyRemaining,
+          creditsAccountPlanUsage: snapshot.creditsAccountPlanUsage,
+          creditsAccountPlanLimit: snapshot.creditsAccountPlanLimit,
+          creditsAccountPaygoUsage: snapshot.creditsAccountPaygoUsage,
+          creditsAccountPaygoLimit: snapshot.creditsAccountPaygoLimit,
+          creditsAccountRemaining: snapshot.creditsAccountRemaining
+        });
+
+        return true;
+      } catch (error: unknown) {
+        if (error instanceof TavilyCreditsHttpError && (error.status === 401 || error.status === 403)) {
+          await db.updateTavilyKey(key.id, { status: 'invalid' });
+        }
+        return false;
+      }
+    })
+  );
+
+  const success = results.filter(Boolean).length;
+  const failed = keys.length - success;
+  return c.json({ ok: true, total: keys.length, success, failed });
 });
 
 // ============ Tavily Keys ============
@@ -183,15 +386,14 @@ adminRouter.get('/tavily-keys', async (c) => {
   return c.json(keys.map(k => ({
     id: k.id,
     label: k.label,
-    keyMasked: k.keyMasked,
+    maskedKey: k.keyMasked ?? null,
     status: k.status,
     cooldownUntil: k.cooldownUntil,
     lastUsedAt: k.lastUsedAt,
-    failureScore: k.failureScore,
-    creditsRemaining: k.creditsRemaining,
-    creditsCheckedAt: k.creditsCheckedAt,
     createdAt: k.createdAt,
-    updatedAt: k.updatedAt,
+    remainingCredits: k.creditsRemaining,
+    totalCredits: null,
+    lastCheckedAt: k.creditsCheckedAt,
   })));
 });
 
@@ -282,12 +484,10 @@ adminRouter.get('/brave-keys', async (c) => {
   return c.json(keys.map(k => ({
     id: k.id,
     label: k.label,
-    keyMasked: k.keyMasked,
+    maskedKey: k.keyMasked ?? null,
     status: k.status,
     lastUsedAt: k.lastUsedAt,
-    failureScore: k.failureScore,
     createdAt: k.createdAt,
-    updatedAt: k.updatedAt,
   })));
 });
 

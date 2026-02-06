@@ -17,6 +17,15 @@ export interface TavilyKey {
   failureScore: number;
   creditsRemaining: number | null;
   creditsCheckedAt: string | null;
+  creditsExpiresAt: string | null;
+  creditsKeyUsage: number | null;
+  creditsKeyLimit: number | null;
+  creditsKeyRemaining: number | null;
+  creditsAccountPlanUsage: number | null;
+  creditsAccountPlanLimit: number | null;
+  creditsAccountPaygoUsage: number | null;
+  creditsAccountPaygoLimit: number | null;
+  creditsAccountRemaining: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -101,7 +110,10 @@ export class D1Client {
   async getTavilyKeys(): Promise<TavilyKey[]> {
     const result = await this.db.prepare(`
       SELECT id, label, keyEncrypted, keyMasked, status, cooldownUntil,
-             lastUsedAt, failureScore, creditsRemaining, creditsCheckedAt,
+             lastUsedAt, failureScore, creditsRemaining, creditsCheckedAt, creditsExpiresAt,
+             creditsKeyUsage, creditsKeyLimit, creditsKeyRemaining,
+             creditsAccountPlanUsage, creditsAccountPlanLimit,
+             creditsAccountPaygoUsage, creditsAccountPaygoLimit, creditsAccountRemaining,
              createdAt, updatedAt
       FROM TavilyKey
       ORDER BY createdAt DESC
@@ -165,6 +177,50 @@ export class D1Client {
     if (data.cooldownUntil !== undefined) {
       updates.push('cooldownUntil = ?');
       values.push(data.cooldownUntil);
+    }
+    if (data.creditsCheckedAt !== undefined) {
+      updates.push('creditsCheckedAt = ?');
+      values.push(data.creditsCheckedAt);
+    }
+    if (data.creditsExpiresAt !== undefined) {
+      updates.push('creditsExpiresAt = ?');
+      values.push(data.creditsExpiresAt);
+    }
+    if (data.creditsRemaining !== undefined) {
+      updates.push('creditsRemaining = ?');
+      values.push(data.creditsRemaining);
+    }
+    if (data.creditsKeyUsage !== undefined) {
+      updates.push('creditsKeyUsage = ?');
+      values.push(data.creditsKeyUsage);
+    }
+    if (data.creditsKeyLimit !== undefined) {
+      updates.push('creditsKeyLimit = ?');
+      values.push(data.creditsKeyLimit);
+    }
+    if (data.creditsKeyRemaining !== undefined) {
+      updates.push('creditsKeyRemaining = ?');
+      values.push(data.creditsKeyRemaining);
+    }
+    if (data.creditsAccountPlanUsage !== undefined) {
+      updates.push('creditsAccountPlanUsage = ?');
+      values.push(data.creditsAccountPlanUsage);
+    }
+    if (data.creditsAccountPlanLimit !== undefined) {
+      updates.push('creditsAccountPlanLimit = ?');
+      values.push(data.creditsAccountPlanLimit);
+    }
+    if (data.creditsAccountPaygoUsage !== undefined) {
+      updates.push('creditsAccountPaygoUsage = ?');
+      values.push(data.creditsAccountPaygoUsage);
+    }
+    if (data.creditsAccountPaygoLimit !== undefined) {
+      updates.push('creditsAccountPaygoLimit = ?');
+      values.push(data.creditsAccountPaygoLimit);
+    }
+    if (data.creditsAccountRemaining !== undefined) {
+      updates.push('creditsAccountRemaining = ?');
+      values.push(data.creditsAccountRemaining);
     }
 
     updates.push('updatedAt = ?');
@@ -347,10 +403,9 @@ export class D1Client {
     detailsJson: string;
   }): Promise<void> {
     const id = generateId();
-    const now = new Date().toISOString();
     await this.db.prepare(`
-      INSERT INTO AuditLog (id, eventType, outcome, resourceType, resourceId, ip, userAgent, detailsJson, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO AuditLog (id, eventType, outcome, resourceType, resourceId, ip, userAgent, detailsJson)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       input.eventType,
@@ -359,8 +414,7 @@ export class D1Client {
       input.resourceId ?? null,
       input.ip ?? null,
       input.userAgent ?? null,
-      input.detailsJson,
-      now
+      input.detailsJson
     ).run();
   }
 }

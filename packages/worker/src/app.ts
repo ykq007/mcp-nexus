@@ -5,6 +5,7 @@ import { logger } from 'hono/logger';
 import type { Env } from './env.js';
 import { adminRouter } from './routes/admin/index.js';
 import { handleMcpRequest } from './mcp/mcpHandler.js';
+import { clientAuth } from './middleware/clientAuth.js';
 
 // Create the main Hono app
 const app = new Hono<{ Bindings: Env }>();
@@ -36,8 +37,8 @@ app.get('/health', (c) => {
   });
 });
 
-// MCP endpoint - handle JSON-RPC requests directly
-app.post('/mcp', async (c) => {
+// MCP endpoint - handle JSON-RPC requests directly with authentication
+app.post('/mcp', clientAuth, async (c) => {
   return handleMcpRequest(c);
 });
 
@@ -50,8 +51,8 @@ app.get('/mcp', (c) => {
   });
 });
 
-// MCP SSE endpoint - forwards to Durable Object for session management
-app.get('/mcp/sse', async (c) => {
+// MCP SSE endpoint - forwards to Durable Object for session management with authentication
+app.get('/mcp/sse', clientAuth, async (c) => {
   const authHeader = c.req.header('Authorization');
   const sessionId = authHeader
     ? authHeader.replace('Bearer ', '').substring(0, 16)
