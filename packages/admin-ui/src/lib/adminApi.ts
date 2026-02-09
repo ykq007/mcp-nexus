@@ -19,6 +19,8 @@ export type ClientTokenDto = {
   id: string;
   tokenPrefix: string;
   description: string | null;
+  allowedTools: string[] | null;
+  rateLimit: { requestsPerMinute: number } | null;
   revokedAt: string | null;
   expiresAt: string | null;
   createdAt: string;
@@ -218,7 +220,12 @@ export type AdminApi = {
   deleteBraveKey: (id: string) => Promise<{ ok: true }>;
 
   listTokens: () => Promise<ClientTokenDto[]>;
-  createToken: (input: { description?: string; expiresInSeconds?: number }) => Promise<{ id: string; token: string }>;
+  createToken: (input: {
+    description?: string;
+    expiresInSeconds?: number;
+    allowedTools?: string[];
+    rateLimit?: { requestsPerMinute: number };
+  }) => Promise<{ id: string; token: string }>;
   revokeToken: (id: string) => Promise<{ ok: true }>;
   deleteToken: (id: string) => Promise<{ ok: true }>;
 

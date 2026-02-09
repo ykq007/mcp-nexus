@@ -17,6 +17,16 @@ import { DataTable, type DataTableColumn } from '../ui/DataTable';
 
 const PAGE_SIZE = 10;
 
+const ALL_TOOLS = [
+  'tavily_search',
+  'tavily_extract',
+  'tavily_crawl',
+  'tavily_map',
+  'tavily_research',
+  'brave_web_search',
+  'brave_local_search'
+];
+
 export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: string }) {
   const { t } = useTranslation('tokens');
   const { t: tc } = useTranslation('common');
@@ -33,6 +43,11 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   const [creating, setCreating] = useState(false);
   const [description, setDescription] = useState('');
   const [expiresInSeconds, setExpiresInSeconds] = useState<number | ''>('');
+  
+  const [restrictTools, setRestrictTools] = useState(false);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [restrictRate, setRestrictRate] = useState(false);
+  const [rateLimitRpm, setRateLimitRpm] = useState<number | ''>('');
 
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [setupClientToken, setSetupClientToken] = useState('');
@@ -96,13 +111,19 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     try {
       const res = await api.createToken({
         description: description.trim() ? description.trim() : undefined,
-        expiresInSeconds: typeof expiresInSeconds === 'number' ? expiresInSeconds : undefined
+        expiresInSeconds: typeof expiresInSeconds === 'number' ? expiresInSeconds : undefined,
+        allowedTools: restrictTools ? selectedTools : undefined,
+        rateLimit: restrictRate && typeof rateLimitRpm === 'number' ? { requestsPerMinute: rateLimitRpm } : undefined
       });
       setCreateOpen(false);
       setCreatedToken(res.token);
       setSetupClientToken(res.token);
       setDescription('');
       setExpiresInSeconds('');
+      setRestrictTools(false);
+      setSelectedTools([]);
+      setRestrictRate(false);
+      setRateLimitRpm('');
       toast.push({ title: t('toast.created'), message: t('toast.createdMessage') });
       await load();
     } catch (e: any) {
@@ -318,6 +339,81 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
                 {typeof expiresInSeconds === 'number' && expiresInSeconds > 0 ? `≈ ${formatRelativeSeconds(expiresInSeconds, (key, opts) => tc(`time.${key}`, opts))}` : t('form.expiresInHelp')}
               </div>
             </div>
+          </div>
+
+          <div className="stack gap-3">
+             <div className="row">
+               <div className="label">{t('form.allowedTools')}</div>
+               <div className="flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    id="restrict-tools-check"
+                    checked={restrictTools}
+                    onChange={(e) => {
+                       setRestrictTools(e.target.checked);
+                       if (e.target.checked && selectedTools.length === 0) {
+                         setSelectedTools([...ALL_TOOLS]);
+                       }
+                    }}
+                  />
+                  <label htmlFor="restrict-tools-check" className="text-sm cursor-pointer">{t('form.restrictTools')}</label>
+               </div>
+             </div>
+             {restrictTools && (
+               <div className="grid2 p-3 border rounded-lg bg-surface-2" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                 {ALL_TOOLS.map(tool => (
+                   <div key={tool} className="flex gap-2 items-center">
+                     <input
+                       type="checkbox"
+                       id={`tool-${tool}`}
+                       checked={selectedTools.includes(tool)}
+                       onChange={(e) => {
+                         if (e.target.checked) {
+                           setSelectedTools(prev => [...prev, tool]);
+                         } else {
+                           setSelectedTools(prev => prev.filter(t => t !== tool));
+                         }
+                       }}
+                     />
+                     <label htmlFor={`tool-${tool}`} className="text-sm mono cursor-pointer">{tool}</label>
+                   </div>
+                 ))}
+               </div>
+             )}
+          </div>
+
+          <div className="stack gap-3">
+             <div className="row">
+               <div className="label">{t('form.rateLimit')}</div>
+               <div className="flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    id="restrict-rate-check"
+                    checked={restrictRate}
+                    onChange={(e) => setRestrictRate(e.target.checked)}
+                  />
+                  <label htmlFor="restrict-rate-check" className="text-sm cursor-pointer">{t('form.enableRateLimit')}</label>
+               </div>
+             </div>
+             {restrictRate && (
+               <div className="stack">
+                  <div className="flex items-center gap-2">
+                    <input
+                      className="input mono"
+                      type="number"
+                      min="1"
+                      placeholder="60"
+                      value={rateLimitRpm}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setRateLimitRpm(isNaN(val) ? '' : Math.max(1, val));
+                      }}
+                      style={{ width: '120px' }}
+                    />
+                    <span className="text-sm text-muted">{t('form.requestsPerMinute')}</span>
+                  </div>
+               </div>
+             )}
           </div>
 
           <div className="flex justify-end gap-3">
