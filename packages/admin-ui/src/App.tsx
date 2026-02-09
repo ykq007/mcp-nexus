@@ -13,6 +13,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TokensPage } from './pages/TokensPage';
 import { UsagePage } from './pages/UsagePage';
+import { PlaygroundPage } from './pages/PlaygroundPage';
 import { ToastProvider, useToast } from './ui/toast';
 import type { AdminApi } from './lib/adminApi';
 
@@ -133,6 +134,7 @@ function AppInner() {
           <Route path="/keys" element={<KeysPage api={api} />} />
           <Route path="/tokens" element={<TokensPage api={api} apiBaseUrl={prefs.apiBaseUrl} />} />
           <Route path="/usage" element={<UsagePage api={api} />} />
+          <Route path="/playground" element={<PlaygroundPage apiBaseUrl={prefs.apiBaseUrl} />} />
         </Route>
       </Route>
 

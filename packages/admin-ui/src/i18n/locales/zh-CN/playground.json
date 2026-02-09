@@ -1,0 +1,24 @@
+{
+  "title": "测试场",
+  "description": "直接测试 MCP 工具。您需要一个有效的客户端令牌。",
+  "request": "请求",
+  "clientToken": "客户端令牌",
+  "clientTokenPlaceholder": "mcp_client_...",
+  "clientTokenDescription": "在“令牌”页面上创建一个令牌。",
+  "tool": "工具",
+  "toolParameters": "工具参数 (JSON)",
+  "toolParametersInvalid": "无效的 JSON 格式。",
+  "run": "运行",
+  "response": "响应",
+  "noResponse": "运行一个请求以在此处查看响应。",
+  "history": "历史记录",
+  "noHistory": "尚无请求。",
+  "historyTable": {
+    "timestamp": "时间戳",
+    "tool": "工具",
+    "status": "状态",
+    "duration": "持续时间"
+  },
+  "statusSuccess": "成功",
+  "statusError": "错误"
+}

@@ -11,6 +11,7 @@ import enSettings from './locales/en/settings.json';
 import enLogin from './locales/en/login.json';
 import enOverview from './locales/en/overview.json';
 import enUsage from './locales/en/usage.json';
+import enPlayground from './locales/en/playground.json';
 
 // Chinese translations
 import zhCommon from './locales/zh-CN/common.json';
@@ -21,6 +22,7 @@ import zhSettings from './locales/zh-CN/settings.json';
 import zhLogin from './locales/zh-CN/login.json';
 import zhOverview from './locales/zh-CN/overview.json';
 import zhUsage from './locales/zh-CN/usage.json';
+import zhPlayground from './locales/zh-CN/playground.json';
 
 export const supportedLanguages = [
   { code: 'en', name: 'English' },
@@ -38,7 +40,8 @@ const resources = {
     settings: enSettings,
     login: enLogin,
     overview: enOverview,
-    usage: enUsage
+    usage: enUsage,
+    playground: enPlayground
   },
   'zh-CN': {
     common: zhCommon,
@@ -48,7 +51,8 @@ const resources = {
     settings: zhSettings,
     login: zhLogin,
     overview: zhOverview,
-    usage: zhUsage
+    usage: zhUsage,
+    playground: zhPlayground
   }
 };
 
@@ -59,7 +63,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'nav', 'keys', 'tokens', 'settings', 'login', 'overview', 'usage'],
+    ns: ['common', 'nav', 'keys', 'tokens', 'settings', 'login', 'overview', 'usage', 'playground'],
     interpolation: {
       escapeValue: false // React already escapes values
     },

@@ -1,10 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { BeakerIcon } from '@heroicons/react/24/outline';
 import { IconChevronLeft, IconChevronRight, IconKey, IconMoon, IconSearch, IconSettings, IconShield, IconSun, IconToken } from '../ui/icons';
 import type { Theme } from './prefs';
 
-export type PageId = 'overview' | 'keys' | 'tokens' | 'usage' | 'settings' | 'login';
+export type PageId = 'overview' | 'keys' | 'tokens' | 'usage' | 'settings' | 'login' | 'playground';
 
 interface NavItemDef {
   path: string;
@@ -18,6 +19,7 @@ const navItems: NavItemDef[] = [
   { path: '/keys', icon: <IconKey />, labelKey: 'pages.keys', requiresAuth: true },
   { path: '/tokens', icon: <IconToken />, labelKey: 'pages.tokens', requiresAuth: true },
   { path: '/usage', icon: <IconSearch />, labelKey: 'pages.usage', requiresAuth: true },
+  { path: '/playground', icon: <BeakerIcon />, labelKey: 'pages.playground', requiresAuth: true },
   { path: '/settings', icon: <IconSettings />, labelKey: 'pages.settings', requiresAuth: false }
 ];
 
@@ -26,6 +28,7 @@ const pageInfoKeys: Record<string, { titleKey: string; subtitleKey: string }> = 
   '/keys': { titleKey: 'pages.keys', subtitleKey: 'pageSubtitles.keys' },
   '/tokens': { titleKey: 'pages.tokens', subtitleKey: 'pageSubtitles.tokens' },
   '/usage': { titleKey: 'pages.usage', subtitleKey: 'pageSubtitles.usage' },
+  '/playground': { titleKey: 'pages.playground', subtitleKey: 'pageSubtitles.playground' },
   '/settings': { titleKey: 'pages.settings', subtitleKey: 'pageSubtitles.settings' }
 };
 

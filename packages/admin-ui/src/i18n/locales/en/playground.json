@@ -1,0 +1,24 @@
+{
+  "title": "Playground",
+  "description": "Test MCP tools directly. You will need a valid client token.",
+  "request": "Request",
+  "clientToken": "Client Token",
+  "clientTokenPlaceholder": "mcp_client_...",
+  "clientTokenDescription": "Create a token on the Tokens page.",
+  "tool": "Tool",
+  "toolParameters": "Tool Parameters (JSON)",
+  "toolParametersInvalid": "Invalid JSON format.",
+  "run": "Run",
+  "response": "Response",
+  "noResponse": "Run a request to see the response here.",
+  "history": "History",
+  "noHistory": "No requests yet.",
+  "historyTable": {
+    "timestamp": "Timestamp",
+    "tool": "Tool",
+    "status": "Status",
+    "duration": "Duration"
+  },
+  "statusSuccess": "Success",
+  "statusError": "Error"
+}

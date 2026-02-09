@@ -6,6 +6,7 @@
     "keys": "Keys",
     "tokens": "Tokens",
     "usage": "Usage",
+    "playground": "Playground",
     "settings": "Settings"
   },
   "pageSubtitles": {
@@ -13,6 +14,7 @@
     "keys": "Manage API key pool",
     "tokens": "Manage access tokens",
     "usage": "What Tavily is used for",
+    "playground": "Test MCP tools",
     "settings": "Preferences and configuration"
   },
   "theme": {

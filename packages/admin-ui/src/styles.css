@@ -1934,24 +1934,24 @@ html {
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 
-/* Typography - Transform */
-.uppercase { text-transform: uppercase; }
-.lowercase { text-transform: lowercase; }
-.capitalize { text-transform: capitalize; }
 
-/* ========================================
-   Accessibility Enhancements
-   ======================================== */
-
-/* Focus-visible for links (fix from audit) */
-a:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 70%, transparent);
-  outline-offset: 2px;
-  border-radius: 4px;
+/* JSON Viewer */
+.json-viewer {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--panel-solid);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-/* Navigation links remove underline */
-.navItem,
-.mobileNavItem {
-  text-decoration: none;
-}
+.json-key { color: var(--primary); font-weight: 600; }
+.json-string { color: var(--success); }
+.json-number { color: var(--warning); }
+.json-boolean { color: var(--danger); }
+.json-null { color: var(--muted); }
