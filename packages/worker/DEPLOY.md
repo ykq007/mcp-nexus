@@ -43,12 +43,15 @@ Copy the database_id from the output and update `wrangler.jsonc`:
 ]
 ```
 
-### 3. Run Database Migration
+### 3. Run Database Migrations
 
 ```bash
-# Apply schema to remote database
+# Apply all migrations to remote database
 wrangler d1 execute mcp-nexus-db --remote --file=migrations/0001_init.sql
+wrangler d1 execute mcp-nexus-db --remote --file=migrations/0002_add_token_scoping_and_rate_limit.sql
 ```
+
+**Note**: Migration 0002 adds support for Phase 3.4 (scoped client tokens) and Phase 3.5 (fine-grained rate limiting).
 
 ### 4. Set Secrets
 
