@@ -148,7 +148,7 @@ export type CostEstimateDto = {
 export type KeyExportDto = {
   schemaVersion: 1;
   exportedAt: string;
-  tavily: Array<{
+  tavily?: Array<{
     id: string;
     label: string;
     apiKey: string;
@@ -159,7 +159,7 @@ export type KeyExportDto = {
     createdAt: string;
     [key: string]: any;
   }>;
-  brave: Array<{
+  brave?: Array<{
     id: string;
     label: string;
     apiKey: string;

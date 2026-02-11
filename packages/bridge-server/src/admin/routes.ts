@@ -1076,13 +1076,18 @@ export function registerAdminRoutes(
       return;
     }
 
-    if (!Array.isArray(body.tavily) || !Array.isArray(body.brave)) {
-      res.status(400).json({ error: 'Invalid import file', details: 'tavily and brave must be arrays' });
+    if ((body.tavily !== undefined && !Array.isArray(body.tavily)) || (body.brave !== undefined && !Array.isArray(body.brave))) {
+      res.status(400).json({ error: 'Invalid import file', details: 'tavily and brave must be arrays if provided' });
       return;
     }
 
-    const tavilyItems = body.tavily;
-    const braveItems = body.brave;
+    if (!Array.isArray(body.tavily) && !Array.isArray(body.brave)) {
+      res.status(400).json({ error: 'Invalid import file', details: 'at least one of tavily or brave must be provided' });
+      return;
+    }
+
+    const tavilyItems = body.tavily ?? [];
+    const braveItems = body.brave ?? [];
 
     const summary = {
       tavily: { total: tavilyItems.length, imported: 0, failed: 0, renamed: 0 },

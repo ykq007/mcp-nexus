@@ -42,17 +42,26 @@ export function FileImportDialog({
         return;
       }
 
-      if (!Array.isArray(data.tavily) || !Array.isArray(data.brave)) {
-        setError('Invalid file format: tavily and brave must be arrays');
+      if ((data.tavily !== undefined && !Array.isArray(data.tavily)) || (data.brave !== undefined && !Array.isArray(data.brave))) {
+        setError('Invalid file format: tavily and brave must be arrays if provided');
         setParsing(false);
         return;
       }
+
+      if (!Array.isArray(data.tavily) && !Array.isArray(data.brave)) {
+        setError('Invalid file format: at least one of tavily or brave must be provided');
+        setParsing(false);
+        return;
+      }
+
+      const tavilyItems = data.tavily ?? [];
+      const braveItems = data.brave ?? [];
 
       // Count valid items
       let valid = 0;
       let invalid = 0;
 
-      for (const item of data.tavily) {
+      for (const item of tavilyItems) {
         if (typeof item.label === 'string' && item.label.trim() && typeof item.apiKey === 'string' && item.apiKey.trim()) {
           valid++;
         } else {
@@ -60,7 +69,7 @@ export function FileImportDialog({
         }
       }
 
-      for (const item of data.brave) {
+      for (const item of braveItems) {
         if (typeof item.label === 'string' && item.label.trim() && typeof item.apiKey === 'string' && item.apiKey.trim()) {
           valid++;
         } else {
@@ -71,8 +80,8 @@ export function FileImportDialog({
       setPreview({
         valid,
         invalid,
-        tavilyCount: data.tavily.length,
-        braveCount: data.brave.length
+        tavilyCount: tavilyItems.length,
+        braveCount: braveItems.length
       });
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to parse JSON file');
