@@ -2,6 +2,7 @@ import type { PrismaClient, TavilyKey } from '@mcp-nexus/db';
 import { orderKeyCandidates, type TavilyKeySelectionStrategy } from '@mcp-nexus/core';
 import { decryptAes256Gcm } from '../crypto/crypto.js';
 import { fetchTavilyCredits, releaseCreditsRefreshLock, tryAcquireCreditsRefreshLock } from './credits.js';
+import { calculateOperationCost, isExpensiveOperation, type OperationType, type OperationParams } from './creditCosts.js';
 
 const CREDITS_TTL_MS = Number(process.env.TAVILY_CREDITS_CACHE_TTL_MS ?? String(60_000));
 const CREDITS_STALE_GRACE_MS = Number(process.env.TAVILY_CREDITS_STALE_GRACE_MS ?? String(5 * 60_000));
@@ -42,7 +43,10 @@ export class TavilyKeyPool {
     this.getSelectionStrategy = opts.getSelectionStrategy;
   }
 
-  async preflightCreditsCheck(): Promise<
+  async preflightCreditsCheck(
+    operation?: OperationType,
+    params?: OperationParams
+  ): Promise<
     | { ok: true }
     | {
         ok: false;
@@ -53,12 +57,15 @@ export class TavilyKeyPool {
   > {
     const now = new Date();
 
+    // Calculate required credits if operation is provided
+    const requiredCredits = operation ? calculateOperationCost(operation, params).estimated : CREDITS_MIN_REMAINING;
+
     const cached = await this.prisma.tavilyKey.findFirst({
       where: {
         status: { in: ['active', 'cooldown'] },
         OR: [{ cooldownUntil: null }, { cooldownUntil: { lte: now } }],
         creditsExpiresAt: { gt: now },
-        creditsRemaining: { gt: CREDITS_MIN_REMAINING }
+        creditsRemaining: { gt: requiredCredits }
       },
       select: { id: true }
     });
@@ -78,8 +85,23 @@ export class TavilyKeyPool {
     const refreshed = await this.refreshCredits(candidate, now, { force: true });
     if (refreshed.ok) {
       const remaining = refreshed.updated.creditsRemaining;
-      if (typeof remaining === 'number' && remaining > CREDITS_MIN_REMAINING) return { ok: true };
-      if (typeof remaining === 'number' && remaining <= CREDITS_MIN_REMAINING) {
+      if (typeof remaining === 'number' && remaining > requiredCredits) return { ok: true };
+      if (typeof remaining === 'number' && remaining <= requiredCredits) {
+        // Hybrid blocking: block expensive operations, allow cheap operations with warning
+        if (operation && isExpensiveOperation(operation)) {
+          return {
+            ok: false,
+            status: 429,
+            error: `Insufficient credits for ${operation} operation (requires ${requiredCredits}, available ${remaining})`,
+            retryAfterMs: CREDITS_COOLDOWN_MS
+          };
+        } else if (operation && remaining >= CREDITS_MIN_REMAINING) {
+          // Allow cheap operations even if below required threshold
+          console.warn(
+            `[TavilyKeyPool] Allowing ${operation} operation with low credits (requires ${requiredCredits}, available ${remaining})`
+          );
+          return { ok: true };
+        }
         return { ok: false, status: 429, error: 'Upstream quota exhausted', retryAfterMs: CREDITS_COOLDOWN_MS };
       }
     }
@@ -87,7 +109,10 @@ export class TavilyKeyPool {
     return { ok: false, status: 503, error: 'Unable to refresh upstream credits', retryAfterMs: 10_000 };
   }
 
-  async selectEligibleKey(): Promise<EligibleKey | null> {
+  async selectEligibleKey(
+    operation?: OperationType,
+    params?: OperationParams
+  ): Promise<EligibleKey | null> {
     return await this.mutex.runExclusive(async () => {
       const selectionStrategy = await this.getSelectionStrategy();
       const now = new Date();
@@ -101,15 +126,35 @@ export class TavilyKeyPool {
       });
       if (keys.length === 0) return null;
 
+      // Calculate required credits if operation is provided
+      const requiredCredits = operation ? calculateOperationCost(operation, params).estimated : CREDITS_MIN_REMAINING;
+
       for (const candidate of orderKeyCandidates(keys, selectionStrategy)) {
         const refreshed = await this.refreshCredits(candidate, now, { force: false });
         if (!refreshed.ok) continue;
 
         const remaining = refreshed.updated.creditsRemaining;
         if (typeof remaining !== 'number' || !Number.isFinite(remaining)) continue;
-        if (remaining <= CREDITS_MIN_REMAINING) {
-          await this.markCooldown(candidate.id, new Date(Date.now() + CREDITS_COOLDOWN_MS));
-          continue;
+
+        // Check if key has sufficient credits for the operation
+        if (remaining < requiredCredits) {
+          // Hybrid logic: skip expensive operations, allow cheap operations
+          if (operation && isExpensiveOperation(operation)) {
+            console.log(
+              `[TavilyKeyPool] Skipping key ${candidate.id.slice(0, 8)} for ${operation}: insufficient credits (requires ${requiredCredits}, available ${remaining})`
+            );
+            await this.markCooldown(candidate.id, new Date(Date.now() + CREDITS_COOLDOWN_MS));
+            continue;
+          } else if (operation && remaining >= CREDITS_MIN_REMAINING) {
+            console.log(
+              `[TavilyKeyPool] Allowing key ${candidate.id.slice(0, 8)} for ${operation} with low credits (requires ${requiredCredits}, available ${remaining})`
+            );
+            // Allow cheap operations to proceed
+          } else {
+            // No operation specified or credits below minimum
+            await this.markCooldown(candidate.id, new Date(Date.now() + CREDITS_COOLDOWN_MS));
+            continue;
+          }
         }
 
         const data: any = { lastUsedAt: now };

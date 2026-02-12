@@ -4,6 +4,7 @@ import { requestContext } from '../context.js';
 import { createTavilyHttpClient } from './httpClient.js';
 import { TavilyKeyPool } from './keyPool.js';
 import { logTavilyToolUsage } from './usageLog.js';
+import type { OperationType, OperationParams } from './creditCosts.js';
 
 export class RotatingTavilyClient implements TavilyClient {
   private readonly pool: TavilyKeyPool;
@@ -46,25 +47,25 @@ export class RotatingTavilyClient implements TavilyClient {
       exclude_domains_count: Array.isArray((cleaned as any).exclude_domains) ? (cleaned as any).exclude_domains.length : 0,
       country: (cleaned as any).country
     } as Record<string, unknown>;
-    return await this.withRotation('tavily_search', { query, argsSummary }, (client) => client.search(cleaned));
+    return await this.withRotation('tavily_search', 'search', { search_depth: (cleaned as any).search_depth }, { query, argsSummary }, (client) => client.search(cleaned));
   }
 
   async extract(params: Record<string, unknown>): Promise<any> {
     const urls = Array.isArray((params as any).urls) ? (params as any).urls : [];
     const argsSummary = { urls_count: Array.isArray(urls) ? urls.length : 0, extract_depth: (params as any).extract_depth, format: (params as any).format };
-    return await this.withRotation('tavily_extract', { argsSummary }, (client) => client.extract(params));
+    return await this.withRotation('tavily_extract', 'extract', { extract_depth: (params as any).extract_depth, urls }, { argsSummary }, (client) => client.extract(params));
   }
 
   async crawl(params: Record<string, unknown>): Promise<any> {
     const url = typeof (params as any).url === 'string' ? String((params as any).url) : undefined;
     const argsSummary = { url, max_depth: (params as any).max_depth, limit: (params as any).limit };
-    return await this.withRotation('tavily_crawl', { argsSummary }, (client) => client.crawl(params));
+    return await this.withRotation('tavily_crawl', 'crawl', { extract_depth: (params as any).extract_depth, limit: (params as any).limit, max_depth: (params as any).max_depth }, { argsSummary }, (client) => client.crawl(params));
   }
 
   async map(params: Record<string, unknown>): Promise<any> {
     const url = typeof (params as any).url === 'string' ? String((params as any).url) : undefined;
     const argsSummary = { url, max_depth: (params as any).max_depth, limit: (params as any).limit };
-    return await this.withRotation('tavily_map', { argsSummary }, (client) => client.map(params));
+    return await this.withRotation('tavily_map', 'map', { limit: (params as any).limit, max_depth: (params as any).max_depth }, { argsSummary }, (client) => client.map(params));
   }
 
   async research(params: { input: string; model?: 'mini' | 'pro' | 'auto' } & Record<string, unknown>): Promise<any> {
@@ -80,7 +81,7 @@ export class RotatingTavilyClient implements TavilyClient {
     let attempt = 0;
     while (attempt <= this.maxRetries) {
       attempt += 1;
-      const key = await this.pool.selectEligibleKey();
+      const key = await this.pool.selectEligibleKey('research', { model: params.model });
       if (!key) return { error: 'No request_id returned from research endpoint' };
 
       const client = createTavilyHttpClient(key.apiKey);
@@ -194,13 +195,15 @@ export class RotatingTavilyClient implements TavilyClient {
 
   private async withRotation<T>(
     toolName: string,
+    operation: OperationType,
+    operationParams: OperationParams,
     meta: { query?: string; argsSummary?: Record<string, unknown> },
     fn: (client: ReturnType<typeof createTavilyHttpClient>) => Promise<T>
   ): Promise<T> {
     let attempt = 0;
     while (attempt <= this.maxRetries) {
       attempt += 1;
-      const key = await this.pool.selectEligibleKey();
+      const key = await this.pool.selectEligibleKey(operation, operationParams);
       if (!key) {
         void logTavilyToolUsage(this.prisma, {
           toolName,
