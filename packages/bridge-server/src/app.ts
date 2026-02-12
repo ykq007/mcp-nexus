@@ -75,8 +75,16 @@ export function createBridgeApp(options: CreateBridgeAppOptions = {}): express.E
   const app = createMcpExpressApp({ host });
   app.set('trust proxy', true);
 
-  // Serve the built admin UI at /admin if present.
+  // Serve static assets
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+  // Serve the built landing page at / if present
+  const landingPagePublic = path.resolve(__dirname, '../public');
+  if (fs.existsSync(landingPagePublic)) {
+    app.use('/', express.static(landingPagePublic, { index: 'index.html' }));
+  }
+
+  // Serve the built admin UI at /admin if present
   const adminUiDist = path.resolve(__dirname, '../../admin-ui/dist');
   if (fs.existsSync(adminUiDist)) {
     app.get(['/admin-ui', '/admin-ui/'], (_req, res) => res.redirect(302, '/admin'));
@@ -84,6 +92,7 @@ export function createBridgeApp(options: CreateBridgeAppOptions = {}): express.E
     app.use('/admin', express.static(adminUiDist));
   }
 
+  // Fallback landing page if static files not found
   app.get('/', (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

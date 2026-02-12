@@ -70,54 +70,13 @@ app.get('/mcp/sse', clientAuth, async (c) => {
   }));
 });
 
-// Landing page
+// Landing page - serve static files from public directory
+// Note: Static assets are served automatically by Cloudflare Workers
+// This route is kept as fallback but should rarely be hit
 app.get('/', (c) => {
-  const baseUrl = new URL(c.req.url).origin;
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Nexus - Tavily Bridge</title>
-  <style>
-    :root { --bg: #0f172a; --fg: #e2e8f0; --accent: #3b82f6; }
-    @media (prefers-color-scheme: light) { :root { --bg: #f8fafc; --fg: #1e293b; } }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); max-width: 800px; margin: 0 auto; padding: 2rem; }
-    h1 { color: var(--accent); }
-    a { color: var(--accent); }
-    pre { background: #1e293b; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
-    code { font-family: 'Fira Code', monospace; }
-  </style>
-</head>
-<body>
-  <h1>MCP Nexus</h1>
-  <p>A unified MCP bridge server for Tavily and Brave Search APIs.</p>
-
-  <h2>Endpoints</h2>
-  <ul>
-    <li><strong>MCP:</strong> <code>/mcp</code> (SSE transport)</li>
-    <li><strong>Admin UI:</strong> <a href="/admin">/admin</a></li>
-    <li><strong>Health:</strong> <a href="/health">/health</a></li>
-  </ul>
-
-  <h2>Connect with MCP Client</h2>
-  <pre><code>{
-  "mcpServers": {
-    "mcp-nexus": {
-      "url": "${baseUrl}/mcp",
-      "headers": {
-        "Authorization": "Bearer &lt;client_token&gt;"
-      }
-    }
-  }
-}</code></pre>
-
-  <p>Running on Cloudflare Workers</p>
-</body>
-</html>`;
-
-  return c.html(html);
+  // In production, static files from public/ are served automatically
+  // This is a fallback that shouldn't normally execute
+  return c.redirect('/index.html');
 });
 
 // Mount admin API routes

@@ -1,0 +1,117 @@
+:root {
+  /* ========================================
+     Design Tokens (2026 Design System)
+     ======================================== */
+
+  /* Spacing Scale (4px Grid) */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Fira Sans', Arial, sans-serif;
+  --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Font Size */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+
+  /* Font Weight */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* Line Height */
+  --lh-tight: 1.25;
+  --lh-base: 1.5;
+  --lh-loose: 1.75;
+
+  /* Semantic Colors (Light Mode) */
+  --color-bg: #fafafa;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f5f5f5;
+  --color-surface-hover: rgba(0, 0, 0, 0.03);
+
+  --color-text: #171717;
+  --color-text-muted: #737373;
+  --color-text-inverse: #fafafa;
+
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-subtle: rgba(0, 0, 0, 0.04);
+
+  --color-primary: #0369a1;
+  --color-primary-hover: #0284c7;
+  --color-primary-light: rgba(3, 105, 161, 0.12);
+  --color-primary-dark: #0c4a6e;
+
+  --color-cta: #22c55e;
+  --color-cta-hover: #16a34a;
+
+  --color-success: #22c55e;
+  --color-success-light: rgba(34, 197, 94, 0.14);
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.16);
+  --color-danger: #ef4444;
+  --color-danger-light: rgba(239, 68, 68, 0.14);
+
+  /* Z-Index Layers */
+  --z-base: 0;
+  --z-sticky: 40;
+  --z-dropdown: 50;
+  --z-drawer: 100;
+  --z-modal: 120;
+  --z-toast: 140;
+
+  /* Shadows with depth levels */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* Border Radius */
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-base: 150ms ease;
+  --transition-slow: 200ms ease;
+}
+
+html[data-theme='dark'] {
+  /* Semantic Colors (Dark Mode) */
+  --color-bg: #0a0a0a;
+  --color-surface-1: #141414;
+  --color-surface-2: #1a1a1a;
+  --color-surface-hover: rgba(255, 255, 255, 0.04);
+
+  --color-text: #ededed;
+  --color-text-muted: #a3a3a3;
+  --color-text-inverse: #0a0a0a;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+
+  --color-primary-light: rgba(14, 165, 233, 0.18);
+  --color-success-light: rgba(34, 197, 94, 0.16);
+  --color-warning-light: rgba(245, 158, 11, 0.18);
+  --color-danger-light: rgba(239, 68, 68, 0.16);
+
+  /* Shadow adjustments for dark mode */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.20);
+}
