@@ -50,6 +50,8 @@ export interface ClientToken {
   tokenPrefix: string;
   tokenHash: ArrayBuffer;
   scopesJson: string;
+  allowedTools: string | null;
+  rateLimit: number | null;
   expiresAt: string | null;
   revokedAt: string | null;
   createdAt: string;
@@ -374,6 +376,7 @@ export class D1Client {
   async getClientTokens(): Promise<ClientToken[]> {
     const result = await this.db.prepare(`
       SELECT id, description, tokenPrefix, tokenHash, scopesJson,
+             allowedTools, rateLimit,
              expiresAt, revokedAt, createdAt
       FROM ClientToken
       ORDER BY createdAt DESC

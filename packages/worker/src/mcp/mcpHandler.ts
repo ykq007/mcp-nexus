@@ -1,5 +1,4 @@
-import type { Context } from 'hono';
-import type { Env } from '../env.js';
+import type { WorkerContext } from '../context.js';
 import { D1Client } from '../db/d1.js';
 import { selectTavilyKey, selectBraveKey, markTavilyKeyCooldown, markTavilyKeyInvalid, markBraveKeyInvalid } from '../services/keyPool.js';
 import { tavilySearch, tavilyExtract, tavilyCrawl, tavilyMap, tavilyResearch, TavilyError } from '../services/tavilyClient.js';
@@ -21,6 +20,11 @@ interface JsonRpcResponse {
   result?: unknown;
   error?: { code: number; message: string; data?: unknown };
 }
+
+type McpToolResult = {
+  content: Array<{ type: 'text'; text: string }>;
+  isError?: boolean;
+};
 
 /**
  * Rate limiting helpers
@@ -45,7 +49,7 @@ function parsePositiveInt(raw: string | undefined, fallback: number): number {
 }
 
 async function checkLimit(
-  c: Context<{ Bindings: Env }>,
+  c: WorkerContext,
   key: string,
   limit: number
 ): Promise<{ allowed: boolean; retryAfterMs: number }> {
@@ -67,14 +71,14 @@ async function checkLimit(
 }
 
 async function enforceMcpRateLimits(
-  c: Context<{ Bindings: Env }>,
+  c: WorkerContext,
   clientTokenId: string
 ): Promise<RateLimitCheckResult> {
   const globalLimit = parsePositiveInt(c.env.MCP_GLOBAL_RATE_LIMIT_PER_MINUTE, 600);
   const defaultPerClientLimit = parsePositiveInt(c.env.MCP_RATE_LIMIT_PER_MINUTE, 60);
 
   // Phase 3.5: Use per-token rate limit if set, otherwise use global default
-  const tokenRateLimit = c.get('clientTokenRateLimit') as number | null | undefined;
+  const tokenRateLimit = c.get('clientTokenRateLimit');
   const perClientLimit = tokenRateLimit ?? defaultPerClientLimit;
 
   const clientCheck = await checkLimit(c, `client:${clientTokenId}`, perClientLimit);
@@ -93,7 +97,7 @@ async function enforceMcpRateLimits(
 /**
  * Handle MCP JSON-RPC requests
  */
-export async function handleMcpRequest(c: Context<{ Bindings: Env }>): Promise<Response> {
+export async function handleMcpRequest(c: WorkerContext): Promise<Response> {
   try {
     const body = await c.req.json<JsonRpcRequest>();
     const { method, params, id } = body;
@@ -174,7 +178,7 @@ export async function handleMcpRequest(c: Context<{ Bindings: Env }>): Promise<R
 }
 
 async function handleToolCall(
-  c: Context<{ Bindings: Env }>,
+  c: WorkerContext,
   params: Record<string, unknown> | undefined,
   id: string | number | undefined
 ): Promise<JsonRpcResponse> {
@@ -207,7 +211,7 @@ async function handleToolCall(
   }
 
   try {
-    let result: { content: Array<{ type: 'text'; text: string }> };
+    let result: McpToolResult;
 
     // Route to appropriate handler
     if (toolName.startsWith('tavily_')) {
@@ -241,10 +245,10 @@ async function handleToolCall(
 }
 
 async function handleTavilyTool(
-  c: Context<{ Bindings: Env }>,
+  c: WorkerContext,
   toolName: string,
   args: Record<string, unknown>
-): Promise<{ content: Array<{ type: 'text'; text: string }> }> {
+): Promise<McpToolResult> {
   const db = new D1Client(c.env.DB);
   const keyInfo = await selectTavilyKey(db, c.env.KEY_ENCRYPTION_SECRET);
 
@@ -299,10 +303,10 @@ async function handleTavilyTool(
 }
 
 async function handleBraveTool(
-  c: Context<{ Bindings: Env }>,
+  c: WorkerContext,
   toolName: string,
   args: Record<string, unknown>
-): Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }> {
+): Promise<McpToolResult> {
   const db = new D1Client(c.env.DB);
 
   // Get search source mode
@@ -560,7 +564,7 @@ async function handleBraveTool(
   }
 }
 
-function getToolsList(c: Context<{ Bindings: Env }>) {
+function getToolsList(c: WorkerContext) {
   const researchEnabled = c.env.TAVILY_RESEARCH_ENABLED !== 'false';
   const tools = [
     {

@@ -1,12 +1,12 @@
-import type { Context, Next } from 'hono';
+import type { Next } from 'hono';
 
-import type { Env } from '../env.js';
 import { D1Client } from '../db/d1.js';
+import type { WorkerContext } from '../context.js';
 
 /**
  * Middleware to validate MCP client token
  */
-export async function clientAuth(c: Context<{ Bindings: Env }>, next: Next): Promise<Response | void> {
+export async function clientAuth(c: WorkerContext, next: Next): Promise<Response | void> {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader) {

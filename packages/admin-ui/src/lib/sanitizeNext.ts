@@ -3,7 +3,7 @@
  * Prevents open redirect vulnerabilities by only allowing known internal paths.
  */
 
-const ALLOWED_PATHS = new Set(['/', '/keys', '/tokens', '/usage']);
+import { NEXT_ALLOWED_PATHS_SET } from '../app/routePaths';
 
 export function sanitizeNext(rawNext: string | null | undefined): string {
   if (!rawNext) return '/';
@@ -17,7 +17,7 @@ export function sanitizeNext(rawNext: string | null | undefined): string {
   const path = questionIndex === -1 ? rawNext : rawNext.slice(0, questionIndex);
   const query = questionIndex === -1 ? '' : rawNext.slice(questionIndex);
 
-  if (!ALLOWED_PATHS.has(path)) return '/';
+  if (!NEXT_ALLOWED_PATHS_SET.has(path)) return '/';
 
   return query ? `${path}${query}` : path;
 }

@@ -87,8 +87,15 @@ export function LoginPage({
                 type="password"
                 value={adminToken}
                 onChange={(e) => setAdminToken(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void testAndContinue();
+                  }
+                }}
                 placeholder={t('form.tokenPlaceholder')}
                 autoComplete="off"
+                autoFocus
               />
               <div className="help">
                 {t('form.tokenHelp')} {masked ? <span className="mono">({masked})</span> : null}

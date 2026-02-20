@@ -4,6 +4,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BeakerIcon } from '@heroicons/react/24/outline';
 import { IconChevronLeft, IconChevronRight, IconKey, IconMoon, IconSearch, IconSettings, IconShield, IconSun, IconToken } from '../ui/icons';
 import type { Theme } from './prefs';
+import { ROUTE_PATHS } from './routePaths';
+import { buildLoginUrl } from './loginUrl';
 
 export type PageId = 'overview' | 'keys' | 'tokens' | 'usage' | 'settings' | 'login' | 'playground';
 
@@ -15,21 +17,21 @@ interface NavItemDef {
 }
 
 const navItems: NavItemDef[] = [
-  { path: '/', icon: <IconShield />, labelKey: 'pages.overview', requiresAuth: true },
-  { path: '/keys', icon: <IconKey />, labelKey: 'pages.keys', requiresAuth: true },
-  { path: '/tokens', icon: <IconToken />, labelKey: 'pages.tokens', requiresAuth: true },
-  { path: '/usage', icon: <IconSearch />, labelKey: 'pages.usage', requiresAuth: true },
-  { path: '/playground', icon: <BeakerIcon />, labelKey: 'pages.playground', requiresAuth: true },
-  { path: '/settings', icon: <IconSettings />, labelKey: 'pages.settings', requiresAuth: false }
+  { path: ROUTE_PATHS.overview, icon: <IconShield />, labelKey: 'pages.overview', requiresAuth: true },
+  { path: ROUTE_PATHS.keys, icon: <IconKey />, labelKey: 'pages.keys', requiresAuth: true },
+  { path: ROUTE_PATHS.tokens, icon: <IconToken />, labelKey: 'pages.tokens', requiresAuth: true },
+  { path: ROUTE_PATHS.usage, icon: <IconSearch />, labelKey: 'pages.usage', requiresAuth: true },
+  { path: ROUTE_PATHS.playground, icon: <BeakerIcon />, labelKey: 'pages.playground', requiresAuth: true },
+  { path: ROUTE_PATHS.settings, icon: <IconSettings />, labelKey: 'pages.settings', requiresAuth: false }
 ];
 
 const pageInfoKeys: Record<string, { titleKey: string; subtitleKey: string }> = {
-  '/': { titleKey: 'pages.overview', subtitleKey: 'pageSubtitles.overview' },
-  '/keys': { titleKey: 'pages.keys', subtitleKey: 'pageSubtitles.keys' },
-  '/tokens': { titleKey: 'pages.tokens', subtitleKey: 'pageSubtitles.tokens' },
-  '/usage': { titleKey: 'pages.usage', subtitleKey: 'pageSubtitles.usage' },
-  '/playground': { titleKey: 'pages.playground', subtitleKey: 'pageSubtitles.playground' },
-  '/settings': { titleKey: 'pages.settings', subtitleKey: 'pageSubtitles.settings' }
+  [ROUTE_PATHS.overview]: { titleKey: 'pages.overview', subtitleKey: 'pageSubtitles.overview' },
+  [ROUTE_PATHS.keys]: { titleKey: 'pages.keys', subtitleKey: 'pageSubtitles.keys' },
+  [ROUTE_PATHS.tokens]: { titleKey: 'pages.tokens', subtitleKey: 'pageSubtitles.tokens' },
+  [ROUTE_PATHS.usage]: { titleKey: 'pages.usage', subtitleKey: 'pageSubtitles.usage' },
+  [ROUTE_PATHS.playground]: { titleKey: 'pages.playground', subtitleKey: 'pageSubtitles.playground' },
+  [ROUTE_PATHS.settings]: { titleKey: 'pages.settings', subtitleKey: 'pageSubtitles.settings' }
 };
 
 export function ShellLayout({
@@ -37,6 +39,7 @@ export function ShellLayout({
   theme,
   onToggleTheme,
   signedIn,
+  onSignOut,
   sidebarCollapsed,
   onToggleSidebar
 }: {
@@ -44,17 +47,19 @@ export function ShellLayout({
   theme: Theme;
   onToggleTheme: () => void;
   signedIn: boolean;
+  onSignOut: () => void;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
 }) {
   const { t } = useTranslation('nav');
+  const { t: tc } = useTranslation('common');
   const location = useLocation();
   const infoKeys = pageInfoKeys[location.pathname] || { titleKey: 'pages.overview', subtitleKey: '' };
   const title = t(infoKeys.titleKey);
   const subtitle = infoKeys.subtitleKey ? t(infoKeys.subtitleKey) : '';
 
-  // Filter nav items based on auth state
-  const visibleNavItems = navItems.filter((item) => signedIn || !item.requiresAuth);
+  const currentPath = `${location.pathname}${location.search}`;
+  const loginUrlForCurrent = buildLoginUrl(currentPath);
 
   const themeModeLabel = theme === 'light' ? t('theme.dark') : t('theme.light');
   const themeSwitchLabel = t('theme.switchTo', { mode: theme === 'light' ? t('theme.dark') : t('theme.light') });
@@ -77,12 +82,13 @@ export function ShellLayout({
             </div>
           </div>
           <nav className="nav" aria-label="Admin navigation">
-            {visibleNavItems.map((item) => {
+            {navItems.map((item) => {
               const label = t(item.labelKey);
+              const to = !item.requiresAuth || signedIn ? item.path : buildLoginUrl(item.path);
               return (
                 <NavLink
                   key={item.path}
-                  to={item.path}
+                  to={to}
                   className={({ isActive }) => `navItem${isActive ? ' navItem--active' : ''}`}
                   data-active={location.pathname === item.path}
                   end={item.path === '/'}
@@ -124,6 +130,17 @@ export function ShellLayout({
                 {connectionSummary}
               </span>
             </div>
+            <div className="appHeaderMeta">
+              {signedIn ? (
+                <button className="btn" data-variant="ghost" onClick={onSignOut}>
+                  {tc('actions.signOut')}
+                </button>
+              ) : (
+                <NavLink className="btn" data-variant="primary" to={loginUrlForCurrent}>
+                  {tc('actions.signIn')}
+                </NavLink>
+              )}
+            </div>
           </header>
           <div className="mainBody">
             <Outlet />
@@ -133,12 +150,13 @@ export function ShellLayout({
 
       {/* Mobile Bottom Navigation */}
       <nav className="mobileNav" aria-label="Mobile navigation">
-        {visibleNavItems.map((item) => {
+        {navItems.map((item) => {
           const label = t(item.labelKey);
+          const to = !item.requiresAuth || signedIn ? item.path : buildLoginUrl(item.path);
           return (
             <NavLink
               key={item.path}
-              to={item.path}
+              to={to}
               className="mobileNavItem"
               data-active={location.pathname === item.path}
               aria-label={label}

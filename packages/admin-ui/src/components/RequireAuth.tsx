@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { sanitizeNext } from '../lib/sanitizeNext';
+import { buildLoginUrl } from '../app/loginUrl';
 
 interface RequireAuthProps {
   adminToken: string;
@@ -17,8 +17,7 @@ export function RequireAuth({ adminToken }: RequireAuthProps) {
   }
 
   const currentPath = `${location.pathname}${location.search}`;
-  const safeNext = sanitizeNext(currentPath);
-  const loginUrl = `/login?next=${encodeURIComponent(safeNext)}`;
+  const loginUrl = buildLoginUrl(currentPath);
 
   return <Navigate to={loginUrl} replace />;
 }
