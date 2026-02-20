@@ -4,6 +4,8 @@
 
 One-click deployment of MCP Nexus to Cloudflare's free tier. This provides a unified MCP server for Tavily and Brave Search APIs with automatic API key rotation.
 
+> Note: Cloudflare hosting can be $0 on the Workers Free plan (within free-tier limits). Tavily/Brave API usage may still cost money depending on your upstream plan.
+
 ## Features
 
 - **Zero-cost hosting** on Cloudflare Workers free tier
@@ -44,6 +46,8 @@ npx wrangler secret put KEY_ENCRYPTION_SECRET
 # Run migrations and deploy
 npm run deploy
 ```
+
+`npm run deploy` applies all D1 migrations in `migrations/` before deploying the Worker.
 
 ## Post-Deployment Setup
 

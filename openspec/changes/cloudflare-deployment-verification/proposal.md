@@ -56,8 +56,10 @@ User requested verification of whether the mcp-tavily-bridge project supports on
 
 **Evidence**:
 - `wrangler.jsonc` includes D1 database binding configuration (lines 9-15)
-- `package.json` deploy script runs migrations: `wrangler d1 execute DB --remote --file=migrations/0001_init.sql --yes && wrangler deploy`
-- Migration file exists at `packages/worker/migrations/0001_init.sql`
+- `package.json` deploy script applies D1 migrations then deploys: `wrangler d1 migrations apply DB --remote && wrangler deploy`
+- Migration files exist at:
+  - `packages/worker/migrations/0001_init.sql`
+  - `packages/worker/migrations/0002_add_token_scoping_and_rate_limit.sql`
 
 ### REQ-4: Secret Management
 **Priority**: VERIFIED ✓
@@ -121,9 +123,10 @@ User requested verification of whether the mcp-tavily-bridge project supports on
 1. **Node.js 18+**: Required for local development and manual deployment
 2. **Wrangler CLI**: Required for manual deployment (not needed for one-click)
 3. **Free Tier Limits**:
-   - Workers: 100,000 requests/day
-   - D1: 500MB storage, 5M reads/day, 100K writes/day
-   - Durable Objects: Free in 2025
+   - Workers Free plan limits apply (requests/CPU/etc.)
+   - D1 Free plan limits apply (reads/writes/storage/etc.)
+   - Durable Objects Free plan limits apply
+   - See Cloudflare’s current limits documentation (do not hardcode numbers here to avoid drift)
 
 ### Dependencies
 
@@ -157,7 +160,7 @@ User requested verification of whether the mcp-tavily-bridge project supports on
 ### Functional Criteria (Requires Manual Testing)
 
 1. **Actual Deployment**: Click deploy button and complete workflow successfully
-2. **Worker Responds**: Health check endpoint returns `{"ok": true}`
+2. **Worker Responds**: Health check endpoint returns `{ "status": "ok", ... }`
 3. **Admin API Works**: Can add API keys and create tokens via admin API
 4. **MCP Tools Work**: Can call MCP tools after configuration
 5. **Admin UI Loads**: Can access admin UI at `/admin/`

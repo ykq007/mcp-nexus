@@ -30,7 +30,7 @@ export interface Env {
   BRAVE_USAGE_LOG_MODE: string;
   TAVILY_CREDITS_REFRESH_LOCK_MS?: string;
   ENVIRONMENT?: string;
-  ADMIN_UI_URL?: string; // URL to Pages-hosted Admin UI
+  ADMIN_UI_URL?: string; // If set, its origin is allowed for cross-origin Admin API calls (CORS)
 }
 
 declare module 'hono' {

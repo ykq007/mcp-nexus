@@ -13,19 +13,49 @@ const app = new Hono<{ Bindings: Env }>();
 // Global middleware
 app.use('*', logger());
 
-// CORS for Admin UI (adjust origin in production)
-app.use('/admin/api/*', cors({
-  origin: (origin) => {
-    // Allow localhost in dev, specific Pages domain in production
-    if (!origin) return '*';
-    if (origin.includes('localhost')) return origin;
-    if (origin.includes('.pages.dev')) return origin;
+function originHostname(origin: string): string | null {
+  try {
+    return new URL(origin).hostname;
+  } catch {
     return null;
-  },
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
+  }
+}
+
+function isLocalhostOrigin(origin: string): boolean {
+  const hostname = originHostname(origin);
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+// CORS for Admin API (only relevant when hosting the Admin UI on a different origin)
+app.use('/admin/api/*', (c, next) => {
+  const allowedOrigins = new Set<string>();
+
+  if (c.env.ADMIN_UI_URL) {
+    try {
+      allowedOrigins.add(new URL(c.env.ADMIN_UI_URL).origin);
+    } catch {
+      // ignore invalid config
+    }
+  }
+
+  return cors({
+    origin: (origin) => {
+      // Non-browser clients often omit Origin; allow.
+      if (!origin) return '*';
+
+      // Allow local dev UIs.
+      if (isLocalhostOrigin(origin)) return origin;
+
+      // Allow explicitly configured Admin UI origin.
+      if (allowedOrigins.has(origin)) return origin;
+
+      return null;
+    },
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    credentials: false,
+  })(c, next);
+});
 
 // Health check endpoint
 app.get('/health', (c) => {

@@ -12,9 +12,9 @@ This guide covers deploying MCP Nexus to Cloudflare's free tier.
 
 The deployment uses:
 - **Cloudflare Workers** - Main API and MCP server
-- **Cloudflare D1** - SQLite database (500MB free)
-- **Cloudflare Durable Objects** - Session management (free in 2025)
-- **Cloudflare Pages** (optional) - Admin UI static hosting
+- **Cloudflare D1** - SQLite database (included on Workers Free; limits apply)
+- **Cloudflare Durable Objects (SQLite-backed)** - Session management + rate limiting (included on Workers Free; limits apply)
+- **Workers static assets** - Admin UI and landing page are served from the Worker (no Pages required)
 
 ## Deployment Steps
 
@@ -46,12 +46,14 @@ Copy the database_id from the output and update `wrangler.jsonc`:
 ### 3. Run Database Migrations
 
 ```bash
-# Apply all migrations to remote database
-wrangler d1 execute mcp-nexus-db --remote --file=migrations/0001_init.sql
-wrangler d1 execute mcp-nexus-db --remote --file=migrations/0002_add_token_scoping_and_rate_limit.sql
+# Apply all unapplied migrations to the remote D1 database
+# (This will prompt for confirmation in an interactive shell.)
+wrangler d1 migrations apply DB --remote
 ```
 
-**Note**: Migration 0002 adds support for Phase 3.4 (scoped client tokens) and Phase 3.5 (fine-grained rate limiting).
+This ensures the schema includes:
+- scoped client tokens (allowed tool list)
+- per-token rate limiting overrides
 
 ### 4. Set Secrets
 
@@ -72,22 +74,10 @@ wrangler deploy
 
 The worker will be available at: `https://mcp-nexus.<your-subdomain>.workers.dev`
 
-### 6. (Optional) Deploy Admin UI to Pages
+### 6. (Optional) Host Admin UI on a different origin
 
-```bash
-cd ../admin-ui
-npm run build
-
-# Deploy to Pages
-wrangler pages deploy dist --project-name mcp-nexus-admin
-```
-
-Then set the ADMIN_UI_URL environment variable:
-
-```bash
-cd ../worker
-wrangler vars put ADMIN_UI_URL https://mcp-nexus-admin.pages.dev/admin
-```
+Not required. By default the Worker serves the Admin UI from `packages/worker/public/` using Wrangler `assets`.
+If you *choose* to host the Admin UI elsewhere, you can point `ADMIN_UI_URL` at that external origin (used for CORS/origin allowlisting).
 
 ## Configuration
 
@@ -157,14 +147,17 @@ Add to your MCP client configuration:
 
 ## Free Tier Limits
 
-| Resource | Limit |
-|----------|-------|
-| Workers requests | 100,000/day |
-| Workers CPU time | 10ms/request |
-| D1 storage | 500MB |
-| D1 reads | 5M/day |
-| D1 writes | 100K/day |
-| Durable Objects | Free in 2025 |
+Cloudflare’s Workers Free plan includes usage limits (requests, CPU time, D1 reads/writes/storage, Durable Objects, etc.) that can change over time.
+
+**$0 hosting expectation (Cloudflare):** On the Free plan, Cloudflare does not bill overages—when you hit included limits, requests may be throttled or start failing until limits reset (or you upgrade).
+
+Check the current official limits here:
+
+```text
+Workers limits: https://developers.cloudflare.com/workers/platform/limits/
+D1 limits:      https://developers.cloudflare.com/d1/platform/limits/
+DO limits:      https://developers.cloudflare.com/durable-objects/platform/limits/
+```
 
 ## Local Development
 
@@ -172,7 +165,7 @@ Add to your MCP client configuration:
 cd packages/worker
 
 # Create local D1 database
-wrangler d1 execute mcp-nexus-db --local --file=migrations/0001_init.sql
+wrangler d1 migrations apply DB --local
 
 # Start dev server
 npm run dev

@@ -8,4 +8,5 @@
 
 # Build output
 dist/
+dist-test*/
 node_modules/

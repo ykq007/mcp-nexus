@@ -102,7 +102,7 @@ try {
 
   const dryRun = await run(
     NPX,
-    ['wrangler', 'deploy', '--dry-run', '--env=', '--outdir', 'dist-test'],
+    ['wrangler', 'deploy', '--dry-run', '--outdir', 'dist-test'],
     { cwd: tempRoot }
   );
   if (dryRun.code !== 0) {

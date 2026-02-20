@@ -18,6 +18,21 @@ export class RateLimiter extends DurableObject<Env> {
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
+
+    // Restore persisted state on startup so rate limits survive Durable Object evictions.
+    // (If restore fails or state is missing/corrupt, we fall back to an empty window.)
+    this.ctx.blockConcurrencyWhile(async () => {
+      const stored = await this.ctx.storage.get<RateLimitState>('state');
+      if (
+        stored &&
+        typeof stored.count === 'number' &&
+        Number.isFinite(stored.count) &&
+        typeof stored.windowStart === 'number' &&
+        Number.isFinite(stored.windowStart)
+      ) {
+        this.state = stored;
+      }
+    });
   }
 
   /**

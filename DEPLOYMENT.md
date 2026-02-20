@@ -253,8 +253,7 @@ wrangler d1 create mcp-nexus-db
 # Update wrangler.jsonc with database_id
 
 # Run migrations
-wrangler d1 execute mcp-nexus-db --remote --file=migrations/0001_init.sql
-wrangler d1 execute mcp-nexus-db --remote --file=migrations/0002_add_token_scoping_and_rate_limit.sql
+wrangler d1 migrations apply DB --remote
 
 # Set secrets
 wrangler secret put ADMIN_API_TOKEN
@@ -270,7 +269,7 @@ wrangler deploy
 
 ```bash
 curl https://mcp.yourdomain.com/health
-# Expected: {"ok": true, ...}
+# Expected: {"status": "ok", ...}
 ```
 
 ### 2. Admin API Test

@@ -3,7 +3,6 @@
   "name": "mcp-nexus",
   "main": "./src/index.ts",
   "compatibility_date": "2026-01-01",
-  "compatibility_flags": ["nodejs_compat"],
 
   // D1 Database binding - auto-provisioned by Deploy Button
   "d1_databases": [
@@ -55,19 +54,5 @@
     "binding": "ASSETS",
     "not_found_handling": "none",
     "html_handling": "auto-trailing-slash"
-  },
-
-  // Development environment overrides
-  "env": {
-    "dev": {
-      "vars": {
-        "ENVIRONMENT": "development"
-      }
-    },
-    "production": {
-      "vars": {
-        "ENVIRONMENT": "production"
-      }
-    }
   }
 }
