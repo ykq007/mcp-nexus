@@ -611,13 +611,23 @@ body {
 }
 
 .footer__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   border: 1px solid var(--color-border);
+  background: var(--color-surface-1);
   padding: 8px 10px;
   border-radius: var(--landing-radius-sm);
   transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.footer__link--button {
+  appearance: none;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .footer__link:hover {
@@ -685,12 +695,147 @@ body {
   background: var(--color-surface-hover);
 }
 
+.btn:disabled {
+  opacity: 0.66;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ========================================
+   Admin Login Modal
+   ======================================== */
+
+.landingLoginModal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-modal) + 2);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 28px);
+  background: rgba(2, 8, 7, 0.64);
+}
+
+.landingLoginModal {
+  width: min(560px, 100%);
+  margin-top: clamp(48px, 10vh, 110px);
+  border-radius: var(--landing-radius-md);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-1) 96%, transparent);
+  box-shadow: var(--landing-shadow-strong);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.landingLoginModal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.landingLoginModal__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.8vw, 1.5rem);
+  letter-spacing: -0.01em;
+}
+
+.landingLoginModal__description {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.landingLoginModal__close {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+}
+
+.landingLoginModal__close:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary-light) 30%, var(--color-surface-2));
+}
+
+.landingLoginModal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.landingLoginModal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landingLoginModal__label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+}
+
+.landingLoginModal__input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--landing-radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  padding: 11px 12px;
+}
+
+.landingLoginModal__input::placeholder {
+  color: color-mix(in srgb, var(--color-text-muted) 76%, transparent);
+}
+
+.landingLoginModal__remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.landingLoginModal__remember input {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.landingLoginModal__error {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  border-radius: var(--landing-radius-sm);
+  background: color-mix(in srgb, var(--color-danger-light) 70%, var(--color-surface-1));
+  color: color-mix(in srgb, var(--color-danger) 78%, var(--color-text));
+  font-size: var(--text-sm);
+  padding: 10px 12px;
+}
+
+.landingLoginModal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 /* ========================================
    Accessibility
    ======================================== */
 
 button:focus-visible,
 a:focus-visible,
+.landingLoginModal__input:focus-visible,
 .btn:focus-visible {
   outline: 2px solid var(--landing-ring);
   outline-offset: 2px;

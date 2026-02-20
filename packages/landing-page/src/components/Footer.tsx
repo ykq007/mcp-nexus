@@ -1,4 +1,4 @@
-export function Footer() {
+export function Footer({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,9 +10,9 @@ export function Footer() {
         </div>
 
         <nav className="footer__links" aria-label="Footer links">
-          <a href="/admin" className="footer__link">
+          <button type="button" className="footer__link footer__link--button" onClick={onOpenDashboard}>
             Admin Dashboard
-          </a>
+          </button>
           <a href="/health" className="footer__link">
             Health Status
           </a>

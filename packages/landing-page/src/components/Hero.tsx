@@ -10,7 +10,7 @@ const highlights = [
   'Operational visibility across requests, credits, and errors'
 ];
 
-export function Hero() {
+export function Hero({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   return (
     <section className="hero" aria-labelledby="landing-hero-title">
       <div className="landing-shell hero__container">
@@ -25,9 +25,9 @@ export function Hero() {
           </p>
 
           <div className="hero__cta">
-            <a href="/admin" className="btn btn--primary">
+            <button type="button" className="btn btn--primary" onClick={onOpenDashboard}>
               Get Started
-            </a>
+            </button>
             <a
               href="https://github.com/anthropics/mcp-nexus"
               className="btn btn--secondary"

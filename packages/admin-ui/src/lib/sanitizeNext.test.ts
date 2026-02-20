@@ -16,9 +16,9 @@ describe('sanitizeNext', () => {
     expect(sanitizeNext('/keys?foo=bar')).toBe('/keys?foo=bar');
   });
 
-  it('rejects unknown routes and login route', () => {
+  it('rejects unknown routes and legacy login route', () => {
     expect(sanitizeNext('/unknown')).toBe('/');
-    expect(sanitizeNext(ROUTE_PATHS.login)).toBe('/');
+    expect(sanitizeNext('/login')).toBe('/');
   });
 
   it('rejects open-redirect forms', () => {
@@ -27,4 +27,3 @@ describe('sanitizeNext', () => {
     expect(sanitizeNext('evil.example')).toBe('/');
   });
 });
-

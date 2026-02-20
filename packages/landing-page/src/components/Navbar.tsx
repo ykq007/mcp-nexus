@@ -8,7 +8,7 @@ const navLinks = [
 
 const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export function Navbar() {
+export function Navbar({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   const mobileMenuId = useId();
   const mobileMenuTitleId = useId();
   const mobileMenuDescriptionId = useId();
@@ -65,7 +65,7 @@ export function Navbar() {
       const menu = mobileMenuRef.current;
       if (!menu) return;
 
-      const focusable = Array.from(menu.querySelectorAll<HTMLElement>(focusableSelector)).filter((el) => !(el as any).disabled);
+      const focusable = Array.from(menu.querySelectorAll<HTMLElement>(focusableSelector)).filter((element) => !(element as any).disabled);
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -132,9 +132,9 @@ export function Navbar() {
 
           <div className="navbar__actions">
             <span className="navbar__status">Realtime telemetry</span>
-            <a href="/admin" className="btn btn--primary">
+            <button type="button" className="btn btn--primary" onClick={onOpenDashboard}>
               Open Dashboard
-            </a>
+            </button>
           </div>
 
           <button
@@ -213,9 +213,16 @@ export function Navbar() {
                   </a>
                 )
               )}
-              <a href="/admin" className="btn btn--primary navbar__mobileCta" onClick={closeMenu}>
+              <button
+                type="button"
+                className="btn btn--primary navbar__mobileCta"
+                onClick={() => {
+                  closeMenu();
+                  onOpenDashboard();
+                }}
+              >
                 Open Dashboard
-              </a>
+              </button>
             </div>
           </div>
         </div>

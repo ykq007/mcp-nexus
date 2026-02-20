@@ -5,9 +5,9 @@ import { BeakerIcon } from '@heroicons/react/24/outline';
 import { IconChevronLeft, IconChevronRight, IconKey, IconMoon, IconSearch, IconSettings, IconShield, IconSun, IconToken } from '../ui/icons';
 import type { Theme } from './prefs';
 import { ROUTE_PATHS } from './routePaths';
-import { buildLoginUrl } from './loginUrl';
+import { buildLandingLoginUrl } from './loginUrl';
 
-export type PageId = 'overview' | 'keys' | 'tokens' | 'usage' | 'settings' | 'login' | 'playground';
+export type PageId = 'overview' | 'keys' | 'tokens' | 'usage' | 'settings' | 'playground';
 
 interface NavItemDef {
   path: string;
@@ -22,7 +22,7 @@ const navItems: NavItemDef[] = [
   { path: ROUTE_PATHS.tokens, icon: <IconToken />, labelKey: 'pages.tokens', requiresAuth: true },
   { path: ROUTE_PATHS.usage, icon: <IconSearch />, labelKey: 'pages.usage', requiresAuth: true },
   { path: ROUTE_PATHS.playground, icon: <BeakerIcon />, labelKey: 'pages.playground', requiresAuth: true },
-  { path: ROUTE_PATHS.settings, icon: <IconSettings />, labelKey: 'pages.settings', requiresAuth: false }
+  { path: ROUTE_PATHS.settings, icon: <IconSettings />, labelKey: 'pages.settings', requiresAuth: true }
 ];
 
 const pageInfoKeys: Record<string, { titleKey: string; subtitleKey: string }> = {
@@ -59,7 +59,7 @@ export function ShellLayout({
   const subtitle = infoKeys.subtitleKey ? t(infoKeys.subtitleKey) : '';
 
   const currentPath = `${location.pathname}${location.search}`;
-  const loginUrlForCurrent = buildLoginUrl(currentPath);
+  const landingLoginUrlForCurrent = buildLandingLoginUrl(currentPath);
 
   const themeModeLabel = theme === 'light' ? t('theme.dark') : t('theme.light');
   const themeSwitchLabel = t('theme.switchTo', { mode: theme === 'light' ? t('theme.dark') : t('theme.light') });
@@ -84,11 +84,25 @@ export function ShellLayout({
           <nav className="nav" aria-label="Admin navigation">
             {navItems.map((item) => {
               const label = t(item.labelKey);
-              const to = !item.requiresAuth || signedIn ? item.path : buildLoginUrl(item.path);
+              const signedOutHref = buildLandingLoginUrl(item.path);
+              if (item.requiresAuth && !signedIn) {
+                return (
+                  <a
+                    key={item.path}
+                    href={signedOutHref}
+                    className={`navItem${location.pathname === item.path ? ' navItem--active' : ''}`}
+                    data-active={location.pathname === item.path}
+                    title={sidebarCollapsed ? label : undefined}
+                  >
+                    <span className="navItemIcon">{item.icon}</span>
+                    <span className="navItemLabel">{label}</span>
+                  </a>
+                );
+              }
               return (
                 <NavLink
                   key={item.path}
-                  to={to}
+                  to={item.path}
                   className={({ isActive }) => `navItem${isActive ? ' navItem--active' : ''}`}
                   data-active={location.pathname === item.path}
                   end={item.path === '/'}
@@ -136,9 +150,9 @@ export function ShellLayout({
                   {tc('actions.signOut')}
                 </button>
               ) : (
-                <NavLink className="btn" data-variant="primary" to={loginUrlForCurrent}>
+                <a className="btn" data-variant="primary" href={landingLoginUrlForCurrent}>
                   {tc('actions.signIn')}
-                </NavLink>
+                </a>
               )}
             </div>
           </header>
@@ -152,11 +166,26 @@ export function ShellLayout({
       <nav className="mobileNav" aria-label="Mobile navigation">
         {navItems.map((item) => {
           const label = t(item.labelKey);
-          const to = !item.requiresAuth || signedIn ? item.path : buildLoginUrl(item.path);
+          const signedOutHref = buildLandingLoginUrl(item.path);
+          if (item.requiresAuth && !signedIn) {
+            return (
+              <a
+                key={item.path}
+                href={signedOutHref}
+                className="mobileNavItem"
+                data-active={location.pathname === item.path}
+                aria-label={label}
+                aria-current={location.pathname === item.path ? 'page' : undefined}
+              >
+                {item.icon}
+                <span>{label}</span>
+              </a>
+            );
+          }
           return (
             <NavLink
               key={item.path}
-              to={to}
+              to={item.path}
               className="mobileNavItem"
               data-active={location.pathname === item.path}
               aria-label={label}
