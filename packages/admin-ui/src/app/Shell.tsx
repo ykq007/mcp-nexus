@@ -115,6 +115,12 @@ export function ShellLayout({
               <div className="h1">{title}</div>
               <div className="help">{subtitle}</div>
             </div>
+            <div className="appHeaderMeta">
+              <span className="help">{t('connection')}</span>
+              <span className="headerConnection mono" title={connectionSummary}>
+                {connectionSummary}
+              </span>
+            </div>
           </header>
           <div className="mainBody">
             <Outlet />

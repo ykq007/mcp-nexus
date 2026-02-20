@@ -1,4 +1,3 @@
-import React from 'react';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { Features } from '../components/Features';
@@ -9,8 +8,10 @@ export function LandingPage() {
   return (
     <div className="landing">
       <Navbar />
-      <Hero />
-      <Features />
+      <main className="landing__main">
+        <Hero />
+        <Features />
+      </main>
       <Footer />
     </div>
   );
