@@ -18,12 +18,6 @@
     "changeToken": "Change token",
     "help": "Sign in (or Change token) uses the server ADMIN_API_TOKEN. Client tokens are for MCP clients and are managed in Tokens."
   },
-  "theme": {
-    "label": "Theme",
-    "light": "Light",
-    "dark": "Dark",
-    "help": "Matches OS by default."
-  },
   "language": {
     "label": "Language",
     "help": "Select your preferred language."

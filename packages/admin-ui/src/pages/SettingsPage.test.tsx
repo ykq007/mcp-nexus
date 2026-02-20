@@ -9,7 +9,7 @@ function renderSettingsPage(opts: { signedIn: boolean }): string {
     <ToastProvider>
       <SettingsPage
         api={{} as any}
-        value={{ apiBaseUrl: '', theme: 'light', locale: 'en' }}
+        value={{ apiBaseUrl: '', locale: 'en' }}
         signedIn={opts.signedIn}
         onChange={vi.fn()}
         onGoToLogin={vi.fn()}

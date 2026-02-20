@@ -2,7 +2,8 @@ import { readJson, writeJson } from '../lib/storage';
 import { loadAdminToken, persistAdminToken } from './adminAuth';
 import type { SupportedLocale } from '../i18n';
 
-export type Theme = 'light' | 'dark';
+// Admin dashboard is dark-mode only.
+export type Theme = 'dark';
 
 export type AdminUiPrefs = {
   apiBaseUrl: string;
@@ -28,14 +29,8 @@ export function loadPrefs(defaults: Partial<AdminUiPrefs> = {}): AdminUiPrefs {
           ? defaults.apiBaseUrl
           : '';
 
-  const theme: Theme =
-    savedV2?.theme === 'dark' || savedV2?.theme === 'light'
-      ? savedV2.theme
-      : savedV1?.theme === 'dark' || savedV1?.theme === 'light'
-        ? savedV1.theme
-        : defaults.theme === 'dark' || defaults.theme === 'light'
-          ? defaults.theme
-          : inferTheme();
+  // Ignore stored theme preferences (including legacy `theme: "light"`).
+  const theme: Theme = 'dark';
 
   const rememberAdminToken =
     typeof savedV2?.rememberAdminToken === 'boolean'
@@ -68,11 +63,6 @@ export function loadPrefs(defaults: Partial<AdminUiPrefs> = {}): AdminUiPrefs {
 
 export function savePrefs(next: AdminUiPrefs): void {
   writeJson(STORAGE_KEY_V2, next);
-}
-
-function inferTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function inferLocale(): SupportedLocale {

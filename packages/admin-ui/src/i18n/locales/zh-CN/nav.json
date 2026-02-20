@@ -17,12 +17,6 @@
     "playground": "测试 MCP 工具",
     "settings": "偏好设置和配置"
   },
-  "theme": {
-    "toggle": "主题",
-    "light": "浅色模式",
-    "dark": "深色模式",
-    "switchTo": "切换到{{mode}}"
-  },
   "sidebar": {
     "expand": "展开",
     "collapse": "收起",

@@ -806,29 +806,6 @@ html[data-theme='dark'] .navItem:hover {
   margin-top: auto;
 }
 
-/* Theme Toggle Button */
-.themeToggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--muted);
-  cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.themeToggle svg,
-.sidebarToggle svg {
-  display: block;
-}
-
-.themeToggle:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--text);
-}
-
 /* Sidebar Toggle Button */
 .sidebarToggle {
   display: flex;
@@ -838,7 +815,6 @@ html[data-theme='dark'] .navItem:hover {
   padding: 8px 10px;
   border-radius: var(--radius-sm);
   color: var(--muted);
-  margin-top: 8px;
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
@@ -848,12 +824,12 @@ html[data-theme='dark'] .navItem:hover {
   color: var(--text);
 }
 
-html[data-theme='dark'] .themeToggle:hover,
 html[data-theme='dark'] .sidebarToggle:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
 .sidebarToggle svg {
+  display: block;
   transition: transform var(--transition-base);
 }
 
@@ -875,12 +851,10 @@ html[data-theme='dark'] .sidebarToggle:hover {
 .appFrame.sidebar-collapsed .navItemLabel,
 .appFrame.sidebar-collapsed .navTitleText,
 .appFrame.sidebar-collapsed .navConnectionInfo,
-.appFrame.sidebar-collapsed .themeToggle span,
 .appFrame.sidebar-collapsed .sidebarToggle span,
 .container.sidebar-collapsed .navItemLabel,
 .container.sidebar-collapsed .navTitleText,
 .container.sidebar-collapsed .navConnectionInfo,
-.container.sidebar-collapsed .themeToggle span,
 .container.sidebar-collapsed .sidebarToggle span {
   display: none;
 }
@@ -905,19 +879,11 @@ html[data-theme='dark'] .sidebarToggle:hover {
   color: var(--text);
 }
 
-.appFrame.sidebar-collapsed .themeToggle svg,
-.container.sidebar-collapsed .themeToggle svg,
 .appFrame.sidebar-collapsed .sidebarToggle svg,
 .container.sidebar-collapsed .sidebarToggle svg {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-}
-
-.appFrame.sidebar-collapsed .themeToggle,
-.container.sidebar-collapsed .themeToggle {
-  justify-content: center;
-  padding: 8px;
 }
 
 .appFrame.sidebar-collapsed .sidebarToggle,
@@ -2417,21 +2383,18 @@ body {
   background: color-mix(in srgb, var(--panel) 75%, transparent);
 }
 
-.themeToggle,
 .sidebarToggle {
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: 9px 10px;
 }
 
-.themeToggle:hover,
 .sidebarToggle:hover {
   border-color: color-mix(in srgb, var(--primary) 22%, transparent);
   background: color-mix(in srgb, var(--primary) 8%, transparent);
   color: var(--text);
 }
 
-.themeToggle:focus-visible,
 .sidebarToggle:focus-visible,
 .mobileNavItem:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--primary) 68%, #ffffff 32%);
@@ -2453,8 +2416,6 @@ body {
 
 .appFrame.sidebar-collapsed .navItem,
 .container.sidebar-collapsed .navItem,
-.appFrame.sidebar-collapsed .themeToggle,
-.container.sidebar-collapsed .themeToggle,
 .appFrame.sidebar-collapsed .sidebarToggle,
 .container.sidebar-collapsed .sidebarToggle {
   padding: 10px 8px;

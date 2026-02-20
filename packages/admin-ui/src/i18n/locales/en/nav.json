@@ -17,12 +17,6 @@
     "playground": "Test MCP tools",
     "settings": "Preferences and configuration"
   },
-  "theme": {
-    "toggle": "Theme",
-    "light": "Light mode",
-    "dark": "Dark mode",
-    "switchTo": "Switch to {{mode}} mode"
-  },
   "sidebar": {
     "expand": "Expand",
     "collapse": "Collapse",

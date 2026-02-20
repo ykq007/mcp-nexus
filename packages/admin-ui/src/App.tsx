@@ -56,10 +56,6 @@ function AppInner() {
     persistAdminToken(adminToken, prefs.rememberAdminToken);
   }, [adminToken, prefs.rememberAdminToken]);
 
-  const toggleTheme = useCallback(() => {
-    setPrefs((prev) => ({ ...prev, theme: prev.theme === 'light' ? 'dark' : 'light' }));
-  }, []);
-
   const toggleSidebar = useCallback(() => {
     setPrefs((prev) => ({ ...prev, sidebarCollapsed: !prev.sidebarCollapsed }));
   }, []);
@@ -122,8 +118,6 @@ function AppInner() {
           element={
             <ShellLayout
               connectionSummary={connectionSummary}
-              theme={prefs.theme}
-              onToggleTheme={toggleTheme}
               signedIn={Boolean(adminToken.trim())}
               onSignOut={signOutToLanding}
               sidebarCollapsed={prefs.sidebarCollapsed}
@@ -210,7 +204,7 @@ function SettingsPageWrapper({
   return (
     <SettingsPage
       api={api}
-      value={{ apiBaseUrl: prefs.apiBaseUrl, theme: prefs.theme, locale: prefs.locale }}
+      value={{ apiBaseUrl: prefs.apiBaseUrl, locale: prefs.locale }}
       signedIn={signedIn}
       onChange={(next) => setPrefs((prev) => ({ ...prev, ...next }))}
       onGoToLogin={handleGoToLogin}

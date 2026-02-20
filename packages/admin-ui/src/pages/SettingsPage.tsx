@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminApiError, type AdminApi, type SearchSourceMode, type ServerInfoDto } from '../lib/adminApi';
-import type { Theme } from '../app/prefs';
 import { IconLogout, IconRefresh, IconSettings } from '../ui/icons';
 import { useToast } from '../ui/toast';
 import { supportedLanguages, changeLanguage, getCurrentLanguage, type SupportedLocale } from '../i18n';
@@ -15,9 +14,9 @@ export function SettingsPage({
   onSignOut
 }: {
   api: AdminApi;
-  value: { apiBaseUrl: string; theme: Theme; locale: SupportedLocale };
+  value: { apiBaseUrl: string; locale: SupportedLocale };
   signedIn: boolean;
-  onChange: (next: { apiBaseUrl: string; theme: Theme; locale: SupportedLocale }) => void;
+  onChange: (next: { apiBaseUrl: string; locale: SupportedLocale }) => void;
   onGoToLogin: () => void;
   onSignOut: () => void;
 }) {
@@ -226,31 +225,21 @@ export function SettingsPage({
               </div>
             </div>
 
-            <div className="grid2">
-              <div className="stack">
-                <label htmlFor="theme-select" className="label">{t('theme.label')}</label>
-                <select id="theme-select" className="select" value={value.theme} onChange={(e) => onChange({ ...value, theme: e.target.value as Theme })}>
-                  <option value="light">{t('theme.light')}</option>
-                  <option value="dark">{t('theme.dark')}</option>
-                </select>
-                <div className="help">{t('theme.help')}</div>
-              </div>
-              <div className="stack">
-                <label htmlFor="language-select" className="label">{t('language.label')}</label>
-                <select
-                  id="language-select"
-                  className="select"
-                  value={getCurrentLanguage()}
-                  onChange={(e) => handleLanguageChange(e.target.value as SupportedLocale)}
-                >
-                  {supportedLanguages.map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="help">{t('language.help')}</div>
-              </div>
+            <div className="stack">
+              <label htmlFor="language-select" className="label">{t('language.label')}</label>
+              <select
+                id="language-select"
+                className="select"
+                value={getCurrentLanguage()}
+                onChange={(e) => handleLanguageChange(e.target.value as SupportedLocale)}
+              >
+                {supportedLanguages.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+              <div className="help">{t('language.help')}</div>
             </div>
 
             <div className="grid2">

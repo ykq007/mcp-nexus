@@ -18,12 +18,6 @@
     "changeToken": "更换令牌",
     "help": "登录（或更换令牌）使用服务器 ADMIN_API_TOKEN。客户端令牌用于 MCP 客户端，在令牌页面管理。"
   },
-  "theme": {
-    "label": "主题",
-    "light": "浅色",
-    "dark": "深色",
-    "help": "默认跟随系统。"
-  },
   "language": {
     "label": "语言",
     "help": "选择您偏好的语言。"

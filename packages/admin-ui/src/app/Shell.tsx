@@ -2,8 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BeakerIcon } from '@heroicons/react/24/outline';
-import { IconChevronLeft, IconChevronRight, IconKey, IconMoon, IconSearch, IconSettings, IconShield, IconSun, IconToken } from '../ui/icons';
-import type { Theme } from './prefs';
+import { IconChevronLeft, IconChevronRight, IconKey, IconSearch, IconSettings, IconShield, IconToken } from '../ui/icons';
 import { ROUTE_PATHS } from './routePaths';
 import { buildLandingLoginUrl } from './loginUrl';
 
@@ -36,16 +35,12 @@ const pageInfoKeys: Record<string, { titleKey: string; subtitleKey: string }> = 
 
 export function ShellLayout({
   connectionSummary,
-  theme,
-  onToggleTheme,
   signedIn,
   onSignOut,
   sidebarCollapsed,
   onToggleSidebar
 }: {
   connectionSummary: string;
-  theme: Theme;
-  onToggleTheme: () => void;
   signedIn: boolean;
   onSignOut: () => void;
   sidebarCollapsed: boolean;
@@ -60,9 +55,6 @@ export function ShellLayout({
 
   const currentPath = `${location.pathname}${location.search}`;
   const landingLoginUrlForCurrent = buildLandingLoginUrl(currentPath);
-
-  const themeModeLabel = theme === 'light' ? t('theme.dark') : t('theme.light');
-  const themeSwitchLabel = t('theme.switchTo', { mode: theme === 'light' ? t('theme.dark') : t('theme.light') });
 
   return (
     <div className={`appFrame${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
@@ -115,10 +107,6 @@ export function ShellLayout({
             })}
           </nav>
           <div className="navFooter">
-            <button className="themeToggle" onClick={onToggleTheme} aria-label={themeSwitchLabel} title={sidebarCollapsed ? themeModeLabel : undefined}>
-              {theme === 'light' ? <IconMoon /> : <IconSun />}
-              <span>{themeModeLabel}</span>
-            </button>
             <button className="sidebarToggle" onClick={onToggleSidebar} aria-label={sidebarCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')} title={sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}>
               {sidebarCollapsed ? <IconChevronRight /> : <IconChevronLeft />}
               <span>{sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}</span>
@@ -197,14 +185,6 @@ export function ShellLayout({
             </NavLink>
           );
         })}
-        <button
-          className="mobileNavItem"
-          onClick={onToggleTheme}
-          aria-label={themeSwitchLabel}
-        >
-          {theme === 'light' ? <IconMoon /> : <IconSun />}
-          <span>{t('theme.toggle')}</span>
-        </button>
       </nav>
     </div>
   );
