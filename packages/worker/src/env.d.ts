@@ -29,6 +29,7 @@ export interface Env {
   TAVILY_USAGE_LOG_MODE: string;
   BRAVE_USAGE_LOG_MODE: string;
   TAVILY_CREDITS_REFRESH_LOCK_MS?: string;
+  ADMIN_KEY_REVEAL_RATE_LIMIT_PER_MINUTE?: string;
   ENVIRONMENT?: string;
   ADMIN_UI_URL?: string; // If set, its origin is allowed for cross-origin Admin API calls (CORS)
 }

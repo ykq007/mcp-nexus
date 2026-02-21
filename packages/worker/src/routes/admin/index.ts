@@ -127,6 +127,31 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return Math.floor(parsed);
 }
 
+type DurableRateLimitResponse = {
+  allowed: boolean;
+  remaining: number;
+  resetAt: number;
+};
+
+async function checkAdminRevealRateLimit(
+  env: Env,
+  key: string,
+  limitPerMinute: number
+): Promise<{ allowed: boolean; retryAfterMs: number }> {
+  const id = env.RATE_LIMITER.idFromName(key);
+  const stub = env.RATE_LIMITER.get(id);
+
+  const url = new URL('https://rate-limiter.internal/check');
+  url.searchParams.set('limit', String(limitPerMinute));
+  url.searchParams.set('window', String(60_000));
+
+  const response = await stub.fetch(url.toString(), { method: 'GET' });
+  const payload = await response.json<DurableRateLimitResponse>();
+
+  const retryAfterMs = Math.max(0, (payload?.resetAt ?? Date.now()) - Date.now());
+  return { allowed: Boolean(payload?.allowed), retryAfterMs };
+}
+
 // Create admin router
 const adminRouter = new Hono<{ Bindings: Env }>();
 
@@ -639,6 +664,18 @@ adminRouter.post('/tokens', async (c) => {
   const tokenData = encoder.encode(token);
   const hashBuffer = await crypto.subtle.digest('SHA-256', tokenData);
 
+  // Encrypt the token for future admin-only reveal
+  let tokenEncrypted: Uint8Array;
+  try {
+    tokenEncrypted = await encrypt(token, c.env.KEY_ENCRYPTION_SECRET);
+  } catch (encryptError) {
+    console.error('Encryption failed for /tokens:', encryptError);
+    return c.json(
+      { error: 'Failed to encrypt token. Please check KEY_ENCRYPTION_SECRET configuration.' },
+      500
+    );
+  }
+
   // Phase 3.4: Validate allowedTools if provided
   const allowedToolsValue = Array.isArray(body.allowedTools) && body.allowedTools.length > 0
     ? JSON.stringify(body.allowedTools)
@@ -654,19 +691,103 @@ adminRouter.post('/tokens', async (c) => {
     description: body.description,
     tokenPrefix,
     tokenHash: hashBuffer,
+    tokenEncrypted: tokenEncrypted.buffer as ArrayBuffer,
     expiresAt: body.expiresAt,
     allowedTools: allowedToolsValue,
     rateLimit: rateLimitValue,
   });
 
-  // Return the full token only once (it can't be retrieved later)
   return c.json({
     id,
-    token, // Only returned on creation
+    token,
     tokenPrefix,
     description: body.description,
     expiresAt: body.expiresAt,
   }, 201);
+});
+
+adminRouter.get('/tokens/:id/reveal', async (c) => {
+  const id = c.req.param('id');
+  const ip = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For') ?? null;
+  const userAgent = c.req.header('User-Agent') ?? null;
+  const db = new D1Client(c.env.DB);
+
+  const limitPerMinute = parsePositiveInt(c.env.ADMIN_KEY_REVEAL_RATE_LIMIT_PER_MINUTE, 20);
+  const limitKey = `token.reveal:${ip ?? 'unknown'}`;
+  const limitCheck = await checkAdminRevealRateLimit(c.env, limitKey, limitPerMinute);
+  if (!limitCheck.allowed) {
+    await db.createAuditLog({
+      eventType: 'token.reveal',
+      outcome: 'rate_limited',
+      resourceType: 'client_token',
+      resourceId: id,
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ retryAfterMs: limitCheck.retryAfterMs })
+    }).catch(() => {});
+    return c.json(
+      { error: 'Rate limit exceeded', retryAfterMs: limitCheck.retryAfterMs },
+      429,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+
+  const tokenRecord = await db.getClientTokenById(id);
+  if (!tokenRecord) {
+    await db.createAuditLog({
+      eventType: 'token.reveal',
+      outcome: 'not_found',
+      resourceType: 'client_token',
+      resourceId: id,
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({})
+    }).catch(() => {});
+    return c.json({ error: 'Token not found' }, 404, { 'Cache-Control': 'no-store' });
+  }
+
+  if (!tokenRecord.tokenEncrypted) {
+    await db.createAuditLog({
+      eventType: 'token.reveal',
+      outcome: 'non_recoverable',
+      resourceType: 'client_token',
+      resourceId: id,
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ tokenPrefix: tokenRecord.tokenPrefix })
+    }).catch(() => {});
+    return c.json(
+      { error: 'Token cannot be revealed because it was created before token reveal support existed. Create a new token to enable reveal.' },
+      409,
+      { 'Cache-Control': 'no-store' }
+    );
+  }
+
+  try {
+    const token = await decrypt(new Uint8Array(tokenRecord.tokenEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+    await db.createAuditLog({
+      eventType: 'token.reveal',
+      outcome: 'success',
+      resourceType: 'client_token',
+      resourceId: id,
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ tokenPrefix: tokenRecord.tokenPrefix })
+    }).catch(() => {});
+    return c.json({ token }, 200, { 'Cache-Control': 'no-store' });
+  } catch (err: unknown) {
+    await db.createAuditLog({
+      eventType: 'token.reveal',
+      outcome: 'error',
+      resourceType: 'client_token',
+      resourceId: id,
+      ip,
+      userAgent,
+      detailsJson: JSON.stringify({ error: err instanceof Error ? err.message : String(err) })
+    }).catch(() => {});
+    console.error(`Failed to decrypt client token ${id}:`, err);
+    return c.json({ error: 'Failed to reveal token' }, 500, { 'Cache-Control': 'no-store' });
+  }
 });
 
 adminRouter.delete('/tokens/:id', async (c) => {

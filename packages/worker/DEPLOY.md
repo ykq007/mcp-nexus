@@ -126,7 +126,7 @@ curl -X POST https://your-worker.workers.dev/admin/api/tokens \
   -d '{"description": "My MCP Client"}'
 ```
 
-Save the returned token - it's only shown once!
+Save the returned token securely. Admins can re-reveal newly created tokens later via `GET /admin/api/tokens/:id/reveal`.
 
 ### Configure MCP Client
 

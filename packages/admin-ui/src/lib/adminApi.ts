@@ -227,6 +227,7 @@ export type AdminApi = {
     allowedTools?: string[];
     rateLimit?: { requestsPerMinute: number };
   }) => Promise<{ id: string; token: string }>;
+  revealToken: (id: string) => Promise<{ token: string }>;
   revokeToken: (id: string) => Promise<{ ok: true }>;
   deleteToken: (id: string) => Promise<{ ok: true }>;
 
@@ -351,6 +352,7 @@ export function createAdminApi(
 
     listTokens: () => getJson('/admin/api/tokens'),
     createToken: (input) => requestJson('/admin/api/tokens', { method: 'POST', body: JSON.stringify(input) }),
+    revealToken: (id) => getJson(`/admin/api/tokens/${encodeURIComponent(id)}/reveal`),
     revokeToken: (id) => requestJson(`/admin/api/tokens/${encodeURIComponent(id)}/revoke`, { method: 'POST', body: '{}' }),
     deleteToken: (id) => requestJson(`/admin/api/tokens/${encodeURIComponent(id)}`, { method: 'DELETE', body: '{}' }),
 

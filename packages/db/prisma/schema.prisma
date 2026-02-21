@@ -65,6 +65,7 @@ model ClientToken {
   description String?
   tokenPrefix String      @unique
   tokenHash   Bytes
+  tokenEncrypted Bytes?   // Encrypted plaintext token for admin reveal (nullable for legacy tokens)
   scopesJson  Json        @default(dbgenerated("'[]'"))
   allowedTools Json?      // Phase 3.4: Array of allowed tool names, null = all tools allowed
   rateLimit   Int?        // Phase 3.5: Per-token rate limit (requests per minute), null = use global default

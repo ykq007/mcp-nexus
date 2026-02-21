@@ -138,4 +138,18 @@ describe('adminApi', () => {
     expect(init.method).toBe('POST');
     expect(init.headers.authorization).toBe('Bearer t0k');
   });
+
+  it('reveals a token by id', async () => {
+    const fetchImpl = vi.fn(async () => jsonResponse(200, { token: 'tok_plaintext' }));
+    const api = createAdminApi({ baseUrl: '', adminToken: 't0k' }, { fetchImpl: fetchImpl as any });
+
+    const res = await api.revealToken('tok_123');
+    expect(res).toEqual({ token: 'tok_plaintext' });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as any[];
+    expect(url).toBe('/admin/api/tokens/tok_123/reveal');
+    expect(init.method).toBe('GET');
+    expect(init.headers.authorization).toBe('Bearer t0k');
+  });
 });

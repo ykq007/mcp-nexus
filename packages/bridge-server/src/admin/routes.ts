@@ -616,11 +616,14 @@ export function registerAdminRoutes(
       ? Math.floor(rateLimit)
       : undefined;
 
+    const tokenEncrypted = encryptAes256Gcm(token, encryptionKey);
+
     const created = await prisma.clientToken.create({
       data: {
         description: typeof description === 'string' ? description : null,
         tokenPrefix: prefix,
         tokenHash: Uint8Array.from(sha256Bytes(secret)),
+        tokenEncrypted: Uint8Array.from(tokenEncrypted),
         expiresAt,
         allowedTools: allowedToolsValue,
         rateLimit: rateLimitValue
@@ -632,6 +635,101 @@ export function registerAdminRoutes(
     });
 
     res.json({ id: created.id, token });
+  }));
+
+  app.get(p('/tokens/:id/reveal'), requireAdmin, asyncHandler(async (req, res) => {
+    const ip = typeof req.ip === 'string' ? req.ip : null;
+    const userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : null;
+
+    const limitKey = `token.reveal:${ip ?? 'unknown'}`;
+    const check = revealLimiter.check(limitKey);
+    if (!check.ok) {
+      const retryAfter = check.retryAfterMs;
+      await prisma.auditLog.create({
+        data: {
+          eventType: 'token.reveal',
+          outcome: 'rate_limited',
+          resourceType: 'client_token',
+          resourceId: req.params.id,
+          ip,
+          userAgent,
+          detailsJson: { retryAfterMs: retryAfter }
+        }
+      }).catch(() => {});
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(429).json({ error: 'Rate limit exceeded', retryAfterMs: retryAfter });
+      return;
+    }
+
+    try {
+      const record = await prisma.clientToken.findUnique({ where: { id: req.params.id } });
+      if (!record) {
+        await prisma.auditLog.create({
+          data: {
+            eventType: 'token.reveal',
+            outcome: 'not_found',
+            resourceType: 'client_token',
+            resourceId: req.params.id,
+            ip,
+            userAgent,
+            detailsJson: {}
+          }
+        });
+        res.setHeader('Cache-Control', 'no-store');
+        res.status(404).json({ error: 'Token not found' });
+        return;
+      }
+
+      if (!record.tokenEncrypted) {
+        await prisma.auditLog.create({
+          data: {
+            eventType: 'token.reveal',
+            outcome: 'non_recoverable',
+            resourceType: 'client_token',
+            resourceId: record.id,
+            ip,
+            userAgent,
+            detailsJson: { tokenPrefix: record.tokenPrefix }
+          }
+        });
+        res.setHeader('Cache-Control', 'no-store');
+        res.status(409).json({
+          error: 'Token cannot be revealed because it was created before token reveal support existed. Create a new token to enable reveal.'
+        });
+        return;
+      }
+
+      const token = decryptAes256Gcm(Buffer.from(record.tokenEncrypted), encryptionKey);
+
+      await prisma.auditLog.create({
+        data: {
+          eventType: 'token.reveal',
+          outcome: 'success',
+          resourceType: 'client_token',
+          resourceId: record.id,
+          ip,
+          userAgent,
+          detailsJson: { tokenPrefix: record.tokenPrefix }
+        }
+      });
+
+      res.setHeader('Cache-Control', 'no-store');
+      res.json({ token });
+    } catch (err) {
+      await prisma.auditLog.create({
+        data: {
+          eventType: 'token.reveal',
+          outcome: 'error',
+          resourceType: 'client_token',
+          resourceId: req.params.id,
+          ip,
+          userAgent,
+          detailsJson: { error: err instanceof Error ? err.message : 'Unknown error' }
+        }
+      }).catch(() => {});
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(500).json({ error: 'Failed to reveal token' });
+    }
   }));
 
   app.post(p('/tokens/:id/revoke'), requireAdmin, asyncHandler(async (req, res) => {

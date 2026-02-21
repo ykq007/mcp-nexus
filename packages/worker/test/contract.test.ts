@@ -202,6 +202,7 @@ describe('Worker Contract Compliance', () => {
         'description',
         'tokenPrefix',
         'tokenHash',
+        'tokenEncrypted',
         'scopesJson',
         'allowedTools',  // Phase 3.4: JSON column
         'rateLimit',     // Phase 3.5: INTEGER column

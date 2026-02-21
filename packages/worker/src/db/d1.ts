@@ -49,6 +49,7 @@ export interface ClientToken {
   description: string | null;
   tokenPrefix: string;
   tokenHash: ArrayBuffer;
+  tokenEncrypted: ArrayBuffer | null;
   scopesJson: string;
   allowedTools: string | null;
   rateLimit: number | null;
@@ -376,12 +377,19 @@ export class D1Client {
   async getClientTokens(): Promise<ClientToken[]> {
     const result = await this.db.prepare(`
       SELECT id, description, tokenPrefix, tokenHash, scopesJson,
-             allowedTools, rateLimit,
+             allowedTools, rateLimit, tokenEncrypted,
              expiresAt, revokedAt, createdAt
       FROM ClientToken
       ORDER BY createdAt DESC
     `).all<ClientToken>();
     return result.results;
+  }
+
+  async getClientTokenById(id: string): Promise<ClientToken | null> {
+    const result = await this.db.prepare(`
+      SELECT * FROM ClientToken WHERE id = ?
+    `).bind(id).first<ClientToken>();
+    return result;
   }
 
   async getClientTokenByPrefix(prefix: string): Promise<ClientToken | null> {
@@ -396,19 +404,21 @@ export class D1Client {
     description?: string;
     tokenPrefix: string;
     tokenHash: ArrayBuffer;
+    tokenEncrypted?: ArrayBuffer | null;
     expiresAt?: string;
     allowedTools?: string | null;  // Phase 3.4: JSON string or null
     rateLimit?: number | null;     // Phase 3.5: requests per minute or null
   }): Promise<void> {
     const now = new Date().toISOString();
     await this.db.prepare(`
-      INSERT INTO ClientToken (id, description, tokenPrefix, tokenHash, scopesJson, allowedTools, rateLimit, expiresAt, createdAt)
-      VALUES (?, ?, ?, ?, '[]', ?, ?, ?, ?)
+      INSERT INTO ClientToken (id, description, tokenPrefix, tokenHash, tokenEncrypted, scopesJson, allowedTools, rateLimit, expiresAt, createdAt)
+      VALUES (?, ?, ?, ?, ?, '[]', ?, ?, ?, ?)
     `).bind(
       data.id,
       data.description || null,
       data.tokenPrefix,
       data.tokenHash,
+      data.tokenEncrypted ?? null,
       data.allowedTools || null,
       data.rateLimit || null,
       data.expiresAt || null,

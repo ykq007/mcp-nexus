@@ -8,7 +8,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CopyButton } from '../ui/CopyButton';
 import { Dialog } from '../ui/Dialog';
 import { Drawer } from '../ui/Drawer';
-import { IconPlus, IconRefresh, IconToken } from '../ui/icons';
+import { IconEye, IconPlus, IconRefresh, IconToken } from '../ui/icons';
 import { Pagination } from '../ui/Pagination';
 import { useToast } from '../ui/toast';
 import { ErrorBanner } from '../ui/ErrorBanner';
@@ -52,6 +52,10 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [setupClientToken, setSetupClientToken] = useState('');
   const [activeTargetId, setActiveTargetId] = useState(() => MCP_SETUP_TARGETS[0]?.id ?? 'http-curl');
+
+  const [revealTokenRow, setRevealTokenRow] = useState<ClientTokenDto | null>(null);
+  const [revealedToken, setRevealedToken] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState(false);
 
   const [tokenToDelete, setTokenToDelete] = useState<ClientTokenDto | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -151,6 +155,48 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   const activeTarget = useMemo(() => MCP_SETUP_TARGETS.find((target) => target.id === activeTargetId) ?? MCP_SETUP_TARGETS[0]!, [activeTargetId]);
   const activeSnippet = useMemo(() => activeTarget.render({ apiBaseUrl, origin, clientToken: setupClientToken }), [activeTarget, apiBaseUrl, origin, setupClientToken]);
 
+  const clearRevealedToken = useCallback(() => {
+    setRevealTokenRow(null);
+    setRevealedToken(null);
+    setRevealing(false);
+  }, []);
+
+  useEffect(() => {
+    if (!revealedToken) return;
+
+    const timeout = window.setTimeout(() => {
+      clearRevealedToken();
+    }, 30_000);
+
+    const onVisibilityChange = () => {
+      if (document.hidden) clearRevealedToken();
+    };
+
+    window.addEventListener('blur', clearRevealedToken);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener('blur', clearRevealedToken);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [clearRevealedToken, revealedToken]);
+
+  async function onRevealToken(tok: ClientTokenDto) {
+    setRevealTokenRow(tok);
+    setRevealedToken(null);
+    setRevealing(true);
+    try {
+      const res = await api.revealToken(tok.id);
+      setRevealedToken(res.token);
+    } catch (e: any) {
+      clearRevealedToken();
+      toast.push({ title: t('toast.revealFailed'), message: typeof e?.message === 'string' ? e.message : tc('errors.unknownError') });
+    } finally {
+      setRevealing(false);
+    }
+  }
+
   return (
     <div className="stack">
       <div className="card">
@@ -220,19 +266,31 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
                 {
                   id: 'actions',
                   header: t('table.actions'),
-                  headerStyle: { width: 100, textAlign: 'right' },
+                  headerStyle: { width: 190, textAlign: 'right' },
                   headerAlign: 'right',
                   dataLabel: t('table.actions'),
                   cellAlign: 'right',
                   cell: (tok: ClientTokenDto) => (
-                    <button
-                      className="btn"
-                      data-variant="danger"
-                      onClick={() => setTokenToDelete(tok)}
-                      style={{ padding: '6px 12px', fontSize: 13 }}
-                    >
-                      {tc('actions.delete')}
-                    </button>
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        className="btn"
+                        data-variant="ghost"
+                        onClick={() => void onRevealToken(tok)}
+                        disabled={revealing && revealTokenRow?.id === tok.id}
+                        style={{ padding: '6px 10px', fontSize: 13 }}
+                      >
+                        <IconEye />
+                        {t('actions.reveal')}
+                      </button>
+                      <button
+                        className="btn"
+                        data-variant="danger"
+                        onClick={() => setTokenToDelete(tok)}
+                        style={{ padding: '6px 12px', fontSize: 13 }}
+                      >
+                        {tc('actions.delete')}
+                      </button>
+                    </div>
                   )
                 }
               ] satisfies DataTableColumn<ClientTokenDto>[]
@@ -441,6 +499,29 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
               label={t('copyDialog.copyToken')}
               buttonText={tc('actions.copy')}
               disabled={!createdToken}
+            />
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog title={t('dialog.revealTitle')} open={Boolean(revealTokenRow)} onClose={clearRevealedToken}>
+        <div className="stack">
+          <div className="help">
+            {t('revealDialog.warning')}
+          </div>
+          <div className="flex gap-3 items-center">
+            <input
+              className="input mono"
+              value={revealedToken ?? ''}
+              readOnly
+              aria-label={t('revealDialog.token')}
+            />
+            <CopyButton
+              text={revealedToken ?? ''}
+              variant="primary"
+              label={t('revealDialog.copyToken')}
+              buttonText={tc('actions.copy')}
+              disabled={!revealedToken || revealing}
             />
           </div>
         </div>
