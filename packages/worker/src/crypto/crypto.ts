@@ -49,8 +49,62 @@ export async function decrypt(encrypted: Uint8Array, keyBase64: string): Promise
 /**
  * Import a base64-encoded key for AES-256-GCM
  */
-async function importKey(keyBase64: string): Promise<CryptoKey> {
-  const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+function decodeAes256KeyBytes(keyEncoded: string): Uint8Array {
+  const raw = keyEncoded.trim();
+  if (!raw) {
+    throw new Error('Invalid KEY_ENCRYPTION_SECRET: value is empty.');
+  }
+
+  const unquoted =
+    (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+      ? raw.slice(1, -1).trim()
+      : raw;
+
+  const normalized = unquoted.replace(/\s+/g, '');
+
+  // Support hex (common in Node deployments). 32 bytes => 64 hex chars.
+  const hexMatch = /^(?:0x)?[0-9a-fA-F]{64}$/.test(normalized);
+  if (hexMatch) {
+    const hex = normalized.startsWith('0x') ? normalized.slice(2) : normalized;
+    const bytes = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+
+  // Support base64url ('-' '_' no padding) as well as standard base64.
+  let b64 = normalized.replace(/-/g, '+').replace(/_/g, '/');
+  const mod = b64.length % 4;
+  if (mod === 1) {
+    throw new Error(
+      'Invalid KEY_ENCRYPTION_SECRET: not valid base64/base64url (bad length). Generate one with `openssl rand -base64 32`.'
+    );
+  }
+  if (mod !== 0) b64 += '='.repeat(4 - mod);
+
+  let decoded: string;
+  try {
+    decoded = atob(b64);
+  } catch (err) {
+    // atob() throws a very technical error; surface something actionable.
+    throw new Error(
+      'Invalid KEY_ENCRYPTION_SECRET: not valid base64/base64url. Generate one with `openssl rand -base64 32`.'
+    );
+  }
+
+  const bytes = Uint8Array.from(decoded, (c) => c.charCodeAt(0));
+  if (bytes.length !== 32) {
+    throw new Error(
+      `Invalid KEY_ENCRYPTION_SECRET: must decode to 32 bytes (got ${bytes.length}). Generate one with \`openssl rand -base64 32\`.`
+    );
+  }
+
+  return bytes;
+}
+
+async function importKey(keyEncoded: string): Promise<CryptoKey> {
+  const keyBytes = decodeAes256KeyBytes(keyEncoded);
 
   return crypto.subtle.importKey(
     'raw',
