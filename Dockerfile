@@ -25,4 +25,4 @@ COPY --from=build /app /app
 
 EXPOSE 8787
 
-CMD ["node", "packages/bridge-server/dist/index.js"]
+CMD ["sh", "docker/entrypoint.sh"]
