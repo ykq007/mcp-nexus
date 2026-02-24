@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mcp-nexus",
+  "account_id": "06cf238221dc166fdbf7828996a845ff",
   "main": "./src/index.ts",
   "compatibility_date": "2026-01-01",
 
@@ -9,7 +10,7 @@
     {
       "binding": "DB",
       "database_name": "mcp-nexus-db",
-      "database_id": "placeholder"
+      "database_id": "43123549-0298-4ea4-9d0f-f9ae6df89b83"
     }
   ],
 
