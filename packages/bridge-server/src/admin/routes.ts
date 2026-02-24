@@ -185,7 +185,31 @@ export function registerAdminRoutes(
         return;
       }
 
-      const apiKey = decryptAes256Gcm(Buffer.from(key.keyEncrypted), encryptionKey);
+      let apiKey: string;
+      try {
+        apiKey = decryptAes256Gcm(Buffer.from(key.keyEncrypted), encryptionKey);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        await prisma.auditLog.create({
+          data: {
+            eventType: 'key.reveal',
+            outcome: 'decrypt_error',
+            resourceType: 'tavily_key',
+            resourceId: key.id,
+            ip,
+            userAgent,
+            detailsJson: { label: key.label, error: msg }
+          }
+        }).catch(() => {});
+
+        res.setHeader('Cache-Control', 'no-store');
+        res.status(409).json({
+          error: 'Key cannot be decrypted',
+          details:
+            'This key was encrypted with a different KEY_ENCRYPTION_SECRET (or the ciphertext is corrupted). Restore the original KEY_ENCRYPTION_SECRET to recover it, or delete and recreate the key.'
+        });
+        return;
+      }
 
       await prisma.auditLog.create({
         data: {
@@ -197,7 +221,7 @@ export function registerAdminRoutes(
           userAgent,
           detailsJson: { label: key.label }
         }
-      });
+      }).catch(() => {});
 
       res.setHeader('Cache-Control', 'no-store');
       res.json({ apiKey });
@@ -499,11 +523,35 @@ export function registerAdminRoutes(
           }
         });
         res.setHeader('Cache-Control', 'no-store');
-        res.status(404).json({ error: 'Key not found' });
+      res.status(404).json({ error: 'Key not found' });
+      return;
+    }
+
+      let apiKey: string;
+      try {
+        apiKey = decryptAes256Gcm(Buffer.from(key.keyEncrypted), encryptionKey);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        await prisma.auditLog.create({
+          data: {
+            eventType: 'brave_key.reveal',
+            outcome: 'decrypt_error',
+            resourceType: 'brave_key',
+            resourceId: key.id,
+            ip,
+            userAgent,
+            detailsJson: { label: key.label, error: msg }
+          }
+        }).catch(() => {});
+
+        res.setHeader('Cache-Control', 'no-store');
+        res.status(409).json({
+          error: 'Key cannot be decrypted',
+          details:
+            'This key was encrypted with a different KEY_ENCRYPTION_SECRET (or the ciphertext is corrupted). Restore the original KEY_ENCRYPTION_SECRET to recover it, or delete and recreate the key.'
+        });
         return;
       }
-
-      const apiKey = decryptAes256Gcm(Buffer.from(key.keyEncrypted), encryptionKey);
 
       await prisma.auditLog.create({
         data: {
@@ -515,7 +563,7 @@ export function registerAdminRoutes(
           userAgent,
           detailsJson: { label: key.label }
         }
-      });
+      }).catch(() => {});
 
       res.setHeader('Cache-Control', 'no-store');
       res.json({ apiKey });
@@ -1078,62 +1126,93 @@ export function registerAdminRoutes(
         prisma.braveKey.findMany({ orderBy: { createdAt: 'desc' } })
       ]);
 
-      const tavily = tavilyKeys.map((k) => {
-        const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
-        return {
-          id: k.id,
-          label: k.label,
-          apiKey,
-          maskedKey: k.keyMasked,
-          status: k.status,
-          cooldownUntil: toIsoOrNull(k.cooldownUntil),
-          lastUsedAt: toIsoOrNull(k.lastUsedAt),
-          failureScore: k.failureScore,
-          creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
-          creditsExpiresAt: toIsoOrNull(k.creditsExpiresAt),
-          creditsKeyUsage: k.creditsKeyUsage,
-          creditsKeyLimit: k.creditsKeyLimit,
-          creditsKeyRemaining: k.creditsKeyRemaining,
-          creditsAccountPlanUsage: k.creditsAccountPlanUsage,
-          creditsAccountPlanLimit: k.creditsAccountPlanLimit,
-          creditsAccountPaygoUsage: k.creditsAccountPaygoUsage,
-          creditsAccountPaygoLimit: k.creditsAccountPaygoLimit,
-          creditsAccountRemaining: k.creditsAccountRemaining,
-          creditsRemaining: k.creditsRemaining,
-          createdAt: k.createdAt.toISOString(),
-          updatedAt: k.updatedAt.toISOString()
-        };
+      const decryptErrors: Array<{ provider: 'tavily' | 'brave'; id: string; label: string; error: string }> = [];
+
+      // Decrypt per-key so a single bad row doesn't break the entire export.
+      // If decryption fails, the key is omitted (and recorded in decryptErrors).
+      const tavily = tavilyKeys.flatMap((k) => {
+        try {
+          const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
+          return [
+            {
+              id: k.id,
+              label: k.label,
+              apiKey,
+              maskedKey: k.keyMasked,
+              status: k.status,
+              cooldownUntil: toIsoOrNull(k.cooldownUntil),
+              lastUsedAt: toIsoOrNull(k.lastUsedAt),
+              failureScore: k.failureScore,
+              creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
+              creditsExpiresAt: toIsoOrNull(k.creditsExpiresAt),
+              creditsKeyUsage: k.creditsKeyUsage,
+              creditsKeyLimit: k.creditsKeyLimit,
+              creditsKeyRemaining: k.creditsKeyRemaining,
+              creditsAccountPlanUsage: k.creditsAccountPlanUsage,
+              creditsAccountPlanLimit: k.creditsAccountPlanLimit,
+              creditsAccountPaygoUsage: k.creditsAccountPaygoUsage,
+              creditsAccountPaygoLimit: k.creditsAccountPaygoLimit,
+              creditsAccountRemaining: k.creditsAccountRemaining,
+              creditsRemaining: k.creditsRemaining,
+              createdAt: k.createdAt.toISOString(),
+              updatedAt: k.updatedAt.toISOString()
+            }
+          ];
+        } catch (err) {
+          decryptErrors.push({
+            provider: 'tavily',
+            id: k.id,
+            label: k.label,
+            error: err instanceof Error ? err.message : String(err)
+          });
+          return [];
+        }
       });
 
-      const brave = braveKeys.map((k) => {
-        const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
-        return {
-          id: k.id,
-          label: k.label,
-          apiKey,
-          maskedKey: k.keyMasked,
-          status: k.status,
-          lastUsedAt: toIsoOrNull(k.lastUsedAt),
-          failureScore: k.failureScore,
-          createdAt: k.createdAt.toISOString(),
-          updatedAt: k.updatedAt.toISOString()
-        };
+      const brave = braveKeys.flatMap((k) => {
+        try {
+          const apiKey = decryptAes256Gcm(k.keyEncrypted as Buffer, encryptionKey);
+          return [
+            {
+              id: k.id,
+              label: k.label,
+              apiKey,
+              maskedKey: k.keyMasked,
+              status: k.status,
+              lastUsedAt: toIsoOrNull(k.lastUsedAt),
+              failureScore: k.failureScore,
+              createdAt: k.createdAt.toISOString(),
+              updatedAt: k.updatedAt.toISOString()
+            }
+          ];
+        } catch (err) {
+          decryptErrors.push({
+            provider: 'brave',
+            id: k.id,
+            label: k.label,
+            error: err instanceof Error ? err.message : String(err)
+          });
+          return [];
+        }
       });
 
       const exportData = {
         schemaVersion: 1,
         exportedAt: new Date().toISOString(),
         tavily,
-        brave
+        brave,
+        decryptErrors
       };
+
+      const outcome = decryptErrors.length > 0 ? 'partial' : 'success';
 
       await prisma.auditLog.create({
         data: {
           eventType: 'keys.export',
-          outcome: 'success',
+          outcome,
           ip,
           userAgent,
-          detailsJson: { tavilyCount: tavily.length, braveCount: brave.length }
+          detailsJson: { tavilyCount: tavily.length, braveCount: brave.length, decryptErrorCount: decryptErrors.length }
         }
       }).catch(() => {});
 
