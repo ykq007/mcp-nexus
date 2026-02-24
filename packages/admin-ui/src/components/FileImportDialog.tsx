@@ -17,6 +17,7 @@ export function FileImportDialog({
   const { t: tc } = useTranslation('common');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [importData, setImportData] = useState<KeyExportDto | null>(null);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<BatchImportResult | null>(null);
@@ -28,6 +29,7 @@ export function FileImportDialog({
 
     setFile(selectedFile);
     setPreview(null);
+    setImportData(null);
     setError(null);
     setResult(null);
     setParsing(true);
@@ -44,6 +46,7 @@ export function FileImportDialog({
 
       const previewData = validateImportData(data);
       setPreview(previewData);
+      setImportData(data as KeyExportDto);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to parse JSON file');
     } finally {
@@ -52,15 +55,13 @@ export function FileImportDialog({
   };
 
   const handleImport = async () => {
-    if (!file || !preview) return;
+    if (!file || !preview || !importData) return;
 
     setImporting(true);
     setError(null);
 
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      const importResult = await onConfirm(data);
+      const importResult = await onConfirm(importData);
       setResult(importResult);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to import keys');
@@ -72,6 +73,7 @@ export function FileImportDialog({
   const handleClose = () => {
     setFile(null);
     setPreview(null);
+    setImportData(null);
     setError(null);
     setResult(null);
     setParsing(false);

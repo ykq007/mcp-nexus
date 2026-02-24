@@ -1,44 +1,25 @@
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { cp, mkdir, rm } from 'node:fs/promises';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const src = path.resolve('packages/landing-page/dist');
+const destBridgeServer = path.resolve('packages/bridge-server/public');
+const destWorker = path.resolve('packages/worker/public');
 
-const rootDir = join(__dirname, '..');
-const landingPageDistDir = join(rootDir, 'packages/landing-page/dist');
-const bridgeServerPublicDir = join(rootDir, 'packages/bridge-server/public');
-const workerPublicDir = join(rootDir, 'packages/worker/public');
-
-function copyRecursive(src, dest) {
-  try {
-    mkdirSync(dest, { recursive: true });
-  } catch (err) {
-    // Directory might already exist
-  }
-
-  const entries = readdirSync(src, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const srcPath = join(src, entry.name);
-    const destPath = join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      copyRecursive(srcPath, destPath);
-    } else {
-      const content = readFileSync(srcPath);
-      writeFileSync(destPath, content);
-      console.log(`  Copied: ${entry.name}`);
-    }
-  }
+if (!existsSync(src)) {
+  throw new Error(`Expected landing page build output at: ${src}`);
 }
 
-console.log('Syncing landing page to public directories...\n');
+// bridge-server only serves the landing page from this directory; safe to fully replace.
+await rm(destBridgeServer, { recursive: true, force: true });
+await mkdir(destBridgeServer, { recursive: true });
+await cp(src, destBridgeServer, { recursive: true });
 
-console.log('→ Copying to bridge-server/public/');
-copyRecursive(landingPageDistDir, bridgeServerPublicDir);
+// Worker public directory also contains the Admin UI under /admin; only replace landing outputs.
+await rm(path.join(destWorker, 'index.html'), { force: true });
+await rm(path.join(destWorker, 'assets'), { recursive: true, force: true });
+await mkdir(destWorker, { recursive: true });
+await cp(src, destWorker, { recursive: true });
 
-console.log('\n→ Copying to worker/public/');
-copyRecursive(landingPageDistDir, workerPublicDir);
-
-console.log('\n✓ Landing page sync complete!');
+// eslint-disable-next-line no-console
+console.log(`Synced landing page assets to ${destBridgeServer} and ${destWorker}`);

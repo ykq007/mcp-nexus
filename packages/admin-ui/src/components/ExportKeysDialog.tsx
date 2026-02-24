@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AdminApi, KeyExportDto } from '../lib/adminApi';
+import { copyToClipboard } from '../lib/clipboard';
 import { Dialog } from '../ui/Dialog';
 import { useToast } from '../ui/toast';
 
@@ -27,6 +28,7 @@ export function ExportKeysDialog({
   const jsonText = useMemo(() => (data ? JSON.stringify(data, null, 2) : ''), [data]);
 
   const totalCount = (data?.tavily?.length || 0) + (data?.brave?.length || 0);
+  const decryptErrorCount = data?.decryptErrors?.length ?? 0;
 
   useEffect(() => {
     if (!open) return;
@@ -71,26 +73,27 @@ export function ExportKeysDialog({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.push({ title: t('export.success'), message: t('export.successMessage', { count: totalCount }), variant: 'success' });
+    toast.push({
+      title: t('export.success'),
+      message:
+        decryptErrorCount > 0
+          ? t('export.successMessagePartial', { count: totalCount, decryptErrorCount })
+          : t('export.successMessage', { count: totalCount }),
+      variant: decryptErrorCount > 0 ? 'warning' : 'success'
+    });
     handleClose();
   };
 
   const handleCopy = async () => {
-    if (!navigator.clipboard || !navigator.clipboard.writeText) {
-      toast.push({
-        title: t('export.clipboardFailed'),
-        message: t('export.clipboardNotSupported'),
-        variant: 'error',
-      });
-      return;
-    }
-
     try {
-      await navigator.clipboard.writeText(jsonText);
+      await copyToClipboard(jsonText);
       toast.push({
         title: t('export.clipboardSuccess'),
-        message: t('export.clipboardSuccessMessage', { count: totalCount }),
-        variant: 'success',
+        message:
+          decryptErrorCount > 0
+            ? t('export.clipboardSuccessMessagePartial', { count: totalCount, decryptErrorCount })
+            : t('export.clipboardSuccessMessage', { count: totalCount }),
+        variant: decryptErrorCount > 0 ? 'warning' : 'success'
       });
       handleClose();
     } catch (e: any) {
@@ -146,6 +149,14 @@ export function ExportKeysDialog({
         {!loading && data ? (
           <>
             <div className="help">{t('export.dialogSummary', { count: totalCount })}</div>
+            {decryptErrorCount > 0 ? (
+              <div className="stack">
+                <div className="badge mono" data-variant="warning">
+                  {t('export.decryptErrorsWarning', { count: decryptErrorCount })}
+                </div>
+                <div className="help">{t('export.decryptErrorsHelp')}</div>
+              </div>
+            ) : null}
 
             <div className="stack">
               <button className="btn" onClick={() => setShowJson((v) => !v)} style={{ alignSelf: 'flex-start' }}>
@@ -165,6 +176,23 @@ export function ExportKeysDialog({
                     rows={12}
                     style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
                   />
+                  {decryptErrorCount > 0 && data.decryptErrors ? (
+                    <div className="stack">
+                      <div className="label" style={{ color: 'var(--warning)' }}>
+                        {t('export.decryptErrorsTitle')}
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                        {data.decryptErrors.slice(0, 10).map((e, idx) => (
+                          <li key={`${e.provider}-${e.id}-${idx}`}>
+                            <span className="mono">{e.label}</span> ({e.provider}): {e.error}
+                          </li>
+                        ))}
+                        {data.decryptErrors.length > 10 ? (
+                          <li>{t('export.decryptErrorsMore', { count: data.decryptErrors.length - 10 })}</li>
+                        ) : null}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

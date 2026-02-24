@@ -17,6 +17,7 @@ export function ClipboardImportDialog({
   const { t: tc } = useTranslation('common');
   const [jsonText, setJsonText] = useState('');
   const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [importData, setImportData] = useState<KeyExportDto | null>(null);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<BatchImportResult | null>(null);
@@ -26,6 +27,7 @@ export function ClipboardImportDialog({
     const text = e.target.value;
     setJsonText(text);
     setPreview(null);
+    setImportData(null);
     setError(null);
     setResult(null);
 
@@ -44,6 +46,7 @@ export function ClipboardImportDialog({
 
       const previewData = validateImportData(data);
       setPreview(previewData);
+      setImportData(data as KeyExportDto);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to parse JSON');
     } finally {
@@ -61,6 +64,7 @@ export function ClipboardImportDialog({
       const text = await navigator.clipboard.readText();
       setJsonText(text);
       setPreview(null);
+      setImportData(null);
       setError(null);
       setResult(null);
       setParsing(true);
@@ -75,6 +79,7 @@ export function ClipboardImportDialog({
 
       const previewData = validateImportData(data);
       setPreview(previewData);
+      setImportData(data as KeyExportDto);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : t('import.clipboardReadFailed'));
     } finally {
@@ -83,14 +88,13 @@ export function ClipboardImportDialog({
   };
 
   const handleImport = async () => {
-    if (!jsonText || !preview) return;
+    if (!jsonText || !preview || !importData) return;
 
     setImporting(true);
     setError(null);
 
     try {
-      const data = JSON.parse(jsonText);
-      const importResult = await onConfirm(data);
+      const importResult = await onConfirm(importData);
       setResult(importResult);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to import keys');
@@ -102,6 +106,7 @@ export function ClipboardImportDialog({
   const handleClose = () => {
     setJsonText('');
     setPreview(null);
+    setImportData(null);
     setError(null);
     setResult(null);
     setParsing(false);

@@ -218,13 +218,19 @@
     "securityWarning": "导出的文件包含明文 API 密钥，请妥善保管。",
     "success": "密钥已导出",
     "successMessage": "已下载 {{count}} 个密钥",
+    "successMessagePartial": "已下载 {{count}} 个密钥。{{decryptErrorCount}} 个密钥无法解密，已跳过。",
     "failed": "导出失败",
     "toFile": "导出到文件",
     "toClipboard": "复制到剪贴板",
     "clipboardSuccess": "密钥已复制到剪贴板",
     "clipboardSuccessMessage": "已复制 {{count}} 个密钥到剪贴板",
+    "clipboardSuccessMessagePartial": "已复制 {{count}} 个密钥到剪贴板。{{decryptErrorCount}} 个密钥无法解密，已跳过。",
     "clipboardFailed": "复制到剪贴板失败",
     "clipboardPermissionDenied": "剪贴板权限被拒绝。请在浏览器设置中允许访问剪贴板。",
-    "clipboardNotSupported": "您的浏览器不支持剪贴板操作。请使用文件导出功能。"
+    "clipboardNotSupported": "您的浏览器不支持剪贴板操作。请使用文件导出功能。",
+    "decryptErrorsWarning": "{{count}} 个密钥无法解密，已从导出内容中排除。",
+    "decryptErrorsHelp": "通常表示服务器的 KEY_ENCRYPTION_SECRET 已发生变化。恢复原始 KEY_ENCRYPTION_SECRET 才能找回这些密钥。",
+    "decryptErrorsTitle": "解密错误",
+    "decryptErrorsMore": "...以及另外 {{count}} 个"
   }
 }

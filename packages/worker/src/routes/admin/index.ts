@@ -1004,52 +1004,84 @@ adminRouter.get('/keys/export', async (c) => {
       db.getBraveKeys()
     ]);
 
-    const tavily = await Promise.all(tavilyKeys.map(async (k) => {
-      const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
-      return {
-        id: k.id,
-        label: k.label,
-        apiKey,
-        maskedKey: k.keyMasked,
-        status: k.status,
-        cooldownUntil: toIsoOrNull(k.cooldownUntil),
-        lastUsedAt: toIsoOrNull(k.lastUsedAt),
-        failureScore: k.failureScore,
-        creditsRemaining: k.creditsRemaining,
-        creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
-        createdAt: k.createdAt,
-        updatedAt: k.updatedAt
-      };
-    }));
+    const decryptErrors: Array<{ provider: 'tavily' | 'brave'; id: string; label: string; error: string }> = [];
 
-    const brave = await Promise.all(braveKeys.map(async (k) => {
-      const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
-      return {
-        id: k.id,
-        label: k.label,
-        apiKey,
-        maskedKey: k.keyMasked,
-        status: k.status,
-        lastUsedAt: toIsoOrNull(k.lastUsedAt),
-        failureScore: k.failureScore,
-        createdAt: k.createdAt,
-        updatedAt: k.updatedAt
-      };
-    }));
+    // Decrypt per-key so a single bad row doesn't break the entire export.
+    // If decryption fails, the key is omitted (and recorded in decryptErrors).
+    const tavilySettled = await Promise.allSettled(
+      tavilyKeys.map(async (k) => {
+        const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+        return {
+          id: k.id,
+          label: k.label,
+          apiKey,
+          maskedKey: k.keyMasked,
+          status: k.status,
+          cooldownUntil: toIsoOrNull(k.cooldownUntil),
+          lastUsedAt: toIsoOrNull(k.lastUsedAt),
+          failureScore: k.failureScore,
+          creditsRemaining: k.creditsRemaining,
+          creditsCheckedAt: toIsoOrNull(k.creditsCheckedAt),
+          createdAt: k.createdAt,
+          updatedAt: k.updatedAt
+        };
+      })
+    );
+
+    const tavily = tavilySettled.flatMap((res, idx) => {
+      if (res.status === 'fulfilled') return [res.value];
+      decryptErrors.push({
+        provider: 'tavily',
+        id: tavilyKeys[idx]?.id ?? '',
+        label: tavilyKeys[idx]?.label ?? '',
+        error: res.reason instanceof Error ? res.reason.message : String(res.reason)
+      });
+      return [];
+    });
+
+    const braveSettled = await Promise.allSettled(
+      braveKeys.map(async (k) => {
+        const apiKey = await decrypt(new Uint8Array(k.keyEncrypted), c.env.KEY_ENCRYPTION_SECRET);
+        return {
+          id: k.id,
+          label: k.label,
+          apiKey,
+          maskedKey: k.keyMasked,
+          status: k.status,
+          lastUsedAt: toIsoOrNull(k.lastUsedAt),
+          failureScore: k.failureScore,
+          createdAt: k.createdAt,
+          updatedAt: k.updatedAt
+        };
+      })
+    );
+
+    const brave = braveSettled.flatMap((res, idx) => {
+      if (res.status === 'fulfilled') return [res.value];
+      decryptErrors.push({
+        provider: 'brave',
+        id: braveKeys[idx]?.id ?? '',
+        label: braveKeys[idx]?.label ?? '',
+        error: res.reason instanceof Error ? res.reason.message : String(res.reason)
+      });
+      return [];
+    });
 
     const exportData = {
       schemaVersion: 1,
       exportedAt: new Date().toISOString(),
       tavily,
-      brave
+      brave,
+      decryptErrors
     };
 
+    const outcome = decryptErrors.length > 0 ? 'partial' : 'success';
     await db.createAuditLog({
       eventType: 'keys.export',
-      outcome: 'success',
+      outcome,
       ip,
       userAgent,
-      detailsJson: JSON.stringify({ tavilyCount: tavily.length, braveCount: brave.length })
+      detailsJson: JSON.stringify({ tavilyCount: tavily.length, braveCount: brave.length, decryptErrorCount: decryptErrors.length })
     }).catch(() => {});
 
     return c.json(exportData, 200, {

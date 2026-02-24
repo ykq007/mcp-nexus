@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconCheck, IconCopy } from './icons';
 import { useToast } from './toast';
+import { copyToClipboard } from '../lib/clipboard';
 
 export function CopyButton({
   text,
@@ -41,7 +42,7 @@ export function CopyButton({
     e.stopPropagation();
     if (disabled) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await copyToClipboard(text);
       if (resetTimerRef.current) {
         clearTimeout(resetTimerRef.current);
       }

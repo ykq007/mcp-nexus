@@ -169,6 +169,12 @@ export type KeyExportDto = {
     createdAt: string;
     [key: string]: any;
   }>;
+  decryptErrors?: Array<{
+    provider: 'tavily' | 'brave';
+    id: string;
+    label: string;
+    error: string;
+  }>;
 };
 
 export type BatchImportResult = {
