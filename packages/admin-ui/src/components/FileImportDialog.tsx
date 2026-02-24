@@ -146,7 +146,8 @@ export function FileImportDialog({
                 {t('import.resultSummary', {
                   imported: result.summary.imported,
                   failed: result.summary.failed,
-                  renamed: result.summary.renamed
+                  renamed: result.summary.renamed,
+                  skipped: result.summary.skipped
                 })}
               </div>
 
@@ -159,6 +160,22 @@ export function FileImportDialog({
                         <span className="mono">{r.from}</span> → <span className="mono">{r.to}</span> ({r.provider})
                       </li>
                     ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.skipped.length > 0 && (
+                <div className="stack">
+                  <div className="label">{t('import.skippedKeys')}</div>
+                  <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                    {result.skipped.slice(0, 10).map((s, i) => (
+                      <li key={i}>
+                        <span className="mono">{s.label}</span> ({s.provider}): {s.reason}
+                      </li>
+                    ))}
+                    {result.skipped.length > 10 && (
+                      <li>{t('import.moreSkipped', { count: result.skipped.length - 10 })}</li>
+                    )}
                   </ul>
                 </div>
               )}

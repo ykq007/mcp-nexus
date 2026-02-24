@@ -174,14 +174,16 @@ export type KeyExportDto = {
 export type BatchImportResult = {
   ok: boolean;
   summary: {
-    tavily: { total: number; imported: number; failed: number; renamed: number };
-    brave: { total: number; imported: number; failed: number; renamed: number };
+    tavily: { total: number; imported: number; failed: number; renamed: number; skipped: number };
+    brave: { total: number; imported: number; failed: number; renamed: number; skipped: number };
     total: number;
     imported: number;
     failed: number;
     renamed: number;
+    skipped: number;
   };
   renamed: Array<{ provider: 'tavily' | 'brave'; from: string; to: string }>;
+  skipped: Array<{ provider: 'tavily' | 'brave'; label: string; reason: string }>;
   errors: Array<{ provider: 'tavily' | 'brave'; index: number; label: string; error: string }>;
 };
 
