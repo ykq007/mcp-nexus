@@ -9,8 +9,8 @@
       // Theme detection and initialization
       (function() {
         const stored = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = stored || (prefersDark ? 'dark' : 'light');
+        // Cyberpunk design direction is dark-first; allow explicit stored override.
+        const theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
         document.documentElement.dataset.theme = theme;
       })();
     </script>

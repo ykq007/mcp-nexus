@@ -15,8 +15,12 @@
   --space-12: 96px;
 
   /* Typography */
-  --font-sans: 'Fira Sans', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Fira Code', 'JetBrains Mono', 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --font-display: 'Orbitron', 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --font-sans: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --font-mono: 'Share Tech Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
 
   /* Font Size */
   --text-xs: 12px;
@@ -81,14 +85,56 @@
   --shadow-xl: 0 26px 68px rgba(6, 43, 27, 0.24);
 
   /* Border Radius */
-  --radius: 16px;
-  --radius-sm: 12px;
-  --radius-lg: 22px;
+  --radius: 4px;
+  --radius-sm: 2px;
+  --radius-lg: 6px;
 
   /* Transitions */
   --transition-fast: 120ms ease;
   --transition-base: 220ms ease;
   --transition-slow: 320ms ease;
+
+  /* Cyberpunk / Glitch extra tokens (non-breaking additions) */
+  --color-accent-secondary: #ff00ff;
+  --color-accent-tertiary: #00d4ff;
+
+  --box-shadow-neon: 0 0 5px rgba(0, 255, 136, 0.9), 0 0 10px rgba(0, 255, 136, 0.25);
+  --box-shadow-neon-sm: 0 0 3px rgba(0, 255, 136, 0.85), 0 0 6px rgba(0, 255, 136, 0.2);
+  --box-shadow-neon-lg: 0 0 10px rgba(0, 255, 136, 0.95), 0 0 20px rgba(0, 255, 136, 0.38),
+    0 0 40px rgba(0, 255, 136, 0.18);
+  --box-shadow-neon-secondary: 0 0 5px rgba(255, 0, 255, 0.9), 0 0 20px rgba(255, 0, 255, 0.38);
+  --box-shadow-neon-tertiary: 0 0 5px rgba(0, 212, 255, 0.9), 0 0 20px rgba(0, 212, 255, 0.38);
+
+  --clip-chamfer: polygon(
+    0 10px,
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
+  --clip-chamfer-sm: polygon(
+    0 8px,
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px)
+  );
+  --clip-chamfer-xs: polygon(
+    0 6px,
+    6px 0,
+    calc(100% - 6px) 0,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    0 calc(100% - 6px)
+  );
 
   /* ========================================
      Legacy Compatibility Aliases
@@ -118,33 +164,35 @@
 }
 
 html[data-theme='dark'] {
-  /* Semantic Colors (Dark Mode / OLED) */
-  --color-bg: #020807;
-  --color-surface-1: #07120e;
-  --color-surface-2: #0d1a15;
-  --color-surface-hover: rgba(74, 222, 128, 0.14);
+  /* Semantic Colors (Dark Mode / Cyberpunk) */
+  --color-bg: #0a0a0f; /* void */
+  --color-surface-1: #12121a; /* card */
+  --color-surface-2: #1c1c2e; /* muted/elevated */
+  --color-surface-hover: rgba(0, 255, 136, 0.08);
 
-  --color-text: #e7fff2;
-  --color-text-muted: #98c8b0;
-  --color-text-inverse: #04110b;
+  --color-text: #e0e0e0;
+  /* Slightly brighter than the spec’s #6b7280 to meet WCAG AA at 14px on #0a0a0f. */
+  --color-text-muted: #7b8394;
+  --color-text-inverse: #0a0a0f;
 
-  --color-border: rgba(110, 231, 183, 0.25);
-  --color-border-subtle: rgba(110, 231, 183, 0.14);
+  --color-border: #2a2a3a;
+  --color-border-subtle: rgba(42, 42, 58, 0.55);
 
-  --color-primary: #4ade80;
-  --color-primary-hover: #6ee7a4;
-  --color-primary-light: rgba(74, 222, 128, 0.2);
-  --color-primary-dark: #2fb565;
+  --color-primary: #00ff88;
+  --color-primary-hover: #36ff9f;
+  --color-primary-light: rgba(0, 255, 136, 0.18);
+  --color-primary-dark: #00cc6e;
 
-  --color-cta: #34d399;
-  --color-cta-hover: #4ade80;
+  /* CTA gradient companion (cyan) */
+  --color-cta: #00d4ff;
+  --color-cta-hover: #27ddff;
 
-  --color-success: #4ade80;
-  --color-success-light: rgba(74, 222, 128, 0.16);
+  --color-success: #00ff88;
+  --color-success-light: rgba(0, 255, 136, 0.18);
   --color-warning: #fbbf24;
   --color-warning-light: rgba(251, 191, 36, 0.2);
-  --color-danger: #f87171;
-  --color-danger-light: rgba(248, 113, 113, 0.18);
+  --color-danger: #ff3366;
+  --color-danger-light: rgba(255, 51, 102, 0.18);
 
   /* Legacy aliases */
   --bg: var(--color-bg);
@@ -156,7 +204,7 @@ html[data-theme='dark'] {
   --border-light: var(--color-border-subtle);
 
   /* Shadow adjustments for dark mode */
-  --shadow: 0 8px 26px rgba(0, 0, 0, 0.38);
-  --shadow-lg: 0 18px 52px rgba(0, 0, 0, 0.52);
-  --shadow-xl: 0 28px 74px rgba(0, 0, 0, 0.64);
+  --shadow: 0 0 0 1px rgba(0, 255, 136, 0.08), 0 10px 26px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 0 0 1px rgba(0, 212, 255, 0.1), 0 18px 52px rgba(0, 0, 0, 0.65);
+  --shadow-xl: 0 0 0 1px rgba(255, 0, 255, 0.12), 0 28px 74px rgba(0, 0, 0, 0.72);
 }

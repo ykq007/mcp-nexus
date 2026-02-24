@@ -9,13 +9,13 @@
       // Theme detection and initialization
       (function() {
         const stored = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = stored || (prefersDark ? 'dark' : 'light');
+        // Cyberpunk design direction is dark-first; allow explicit stored override.
+        const theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-CgnmBGGE.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-D4j73M-T.css">
+    <script type="module" crossorigin src="/assets/index-CmuZ-Y5I.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-hdKkaq1E.css">
   </head>
   <body>
     <div id="root"></div>
