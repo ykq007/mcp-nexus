@@ -56,8 +56,13 @@ function safeJson(text: string): any {
   try {
     return JSON.parse(text);
   } catch {
-    return { message: text };
+    return { message: truncateMessage(text) };
   }
+}
+
+function truncateMessage(message: string, maxLen = 500): string {
+  if (message.length <= maxLen) return message;
+  return `${message.slice(0, maxLen)}…`;
 }
 
 async function fetchTavilyCredits(apiKey: string): Promise<TavilyCreditsSnapshot> {
@@ -65,7 +70,7 @@ async function fetchTavilyCredits(apiKey: string): Promise<TavilyCreditsSnapshot
   const timeout = setTimeout(() => controller.abort(), 10_000);
 
   try {
-    const response = await fetch('https://api.tavily.com/credits', {
+    const response = await fetch('https://api.tavily.com/usage', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${apiKey}`
@@ -80,7 +85,10 @@ async function fetchTavilyCredits(apiKey: string): Promise<TavilyCreditsSnapshot
       if (response.status === 401 || response.status === 403) {
         throw new TavilyCreditsHttpError('Invalid API key', response.status);
       }
-      const message = typeof body?.message === 'string' ? body.message : response.statusText || 'Failed to fetch credits';
+      const message =
+        typeof body?.message === 'string'
+          ? truncateMessage(body.message)
+          : response.statusText || 'Failed to fetch credits';
       throw new TavilyCreditsHttpError(message, response.status);
     }
 
@@ -318,7 +326,7 @@ adminRouter.get('/keys/:id/reveal', async (c) => {
   try {
     const keyEncrypted = new Uint8Array(key.keyEncrypted);
     const apiKey = await decrypt(keyEncrypted, c.env.KEY_ENCRYPTION_SECRET);
-    return c.json({ apiKey });
+    return c.json({ apiKey }, 200, { 'Cache-Control': 'no-store' });
   } catch (error) {
     console.error(`Failed to decrypt Tavily key ${id}:`, error);
     return c.json({ error: 'Failed to decrypt key' }, 500);
@@ -625,7 +633,7 @@ adminRouter.get('/brave-keys/:id/reveal', async (c) => {
   try {
     const keyEncrypted = new Uint8Array(key.keyEncrypted);
     const apiKey = await decrypt(keyEncrypted, c.env.KEY_ENCRYPTION_SECRET);
-    return c.json({ apiKey });
+    return c.json({ apiKey }, 200, { 'Cache-Control': 'no-store' });
   } catch (error) {
     console.error(`Failed to decrypt Brave key ${id}:`, error);
     return c.json({ error: 'Failed to decrypt key' }, 500);
