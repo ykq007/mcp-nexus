@@ -465,6 +465,58 @@ export class D1Client {
     return result.results;
   }
 
+  async insertTavilyUsageLog(data: {
+    id: string;
+    timestamp: string;
+    toolName: string;
+    outcome: string;
+    latencyMs: number | null;
+    clientTokenId: string;
+    clientTokenPrefix: string | null;
+    upstreamKeyId: string | null;
+    queryHash: string | null;
+    queryPreview: string | null;
+    argsJson: string;
+    errorMessage: string | null;
+  }): Promise<void> {
+    await this.db.prepare(`
+      INSERT INTO TavilyToolUsage (id, timestamp, toolName, outcome, latencyMs,
+        clientTokenId, clientTokenPrefix, upstreamKeyId,
+        queryHash, queryPreview, argsJson, errorMessage)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.id, data.timestamp, data.toolName, data.outcome, data.latencyMs,
+      data.clientTokenId, data.clientTokenPrefix, data.upstreamKeyId,
+      data.queryHash, data.queryPreview, data.argsJson, data.errorMessage
+    ).run();
+  }
+
+  async insertBraveUsageLog(data: {
+    id: string;
+    timestamp: string;
+    toolName: string;
+    outcome: string;
+    latencyMs: number | null;
+    clientTokenId: string;
+    clientTokenPrefix: string | null;
+    upstreamKeyId: string | null;
+    queryHash: string | null;
+    queryPreview: string | null;
+    argsJson: string;
+    errorMessage: string | null;
+  }): Promise<void> {
+    await this.db.prepare(`
+      INSERT INTO BraveToolUsage (id, timestamp, toolName, outcome, latencyMs,
+        clientTokenId, clientTokenPrefix, upstreamKeyId,
+        queryHash, queryPreview, argsJson, errorMessage)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.id, data.timestamp, data.toolName, data.outcome, data.latencyMs,
+      data.clientTokenId, data.clientTokenPrefix, data.upstreamKeyId,
+      data.queryHash, data.queryPreview, data.argsJson, data.errorMessage
+    ).run();
+  }
+
   async getBraveUsageLogs(limit = 100, offset = 0): Promise<BraveToolUsage[]> {
     const result = await this.db.prepare(`
       SELECT id, timestamp, toolName, outcome, latencyMs,

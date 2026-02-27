@@ -1,6 +1,7 @@
 import type { WorkerContext } from '../context.js';
-import { D1Client } from '../db/d1.js';
+import { D1Client, generateId } from '../db/d1.js';
 import { selectTavilyKey, selectBraveKey, markTavilyKeyCooldown, markTavilyKeyInvalid, markBraveKeyInvalid } from '../services/keyPool.js';
+import { parseUsageLogMode, shouldLogUsage, buildQueryMetadata } from '../utils/usageLog.js';
 import { tavilySearch, tavilyExtract, tavilyCrawl, tavilyMap, tavilyResearch, TavilyError } from '../services/tavilyClient.js';
 import { braveWebSearch, braveLocalSearch, BraveError } from '../services/braveClient.js';
 import { parseSearchSourceMode } from './searchSource.js';
@@ -210,6 +211,10 @@ async function handleToolCall(
     }
   }
 
+  const startTime = Date.now();
+  const clientTokenId = c.get('clientTokenId') ?? 'unknown';
+  const clientTokenPrefix = c.get('clientTokenPrefix') ?? null;
+
   try {
     let result: McpToolResult;
 
@@ -226,6 +231,47 @@ async function handleToolCall(
       };
     }
 
+    // Log successful usage (fire-and-forget via waitUntil)
+    const latencyMs = Date.now() - startTime;
+    const isTavily = toolName.startsWith('tavily_');
+    const logMode = parseUsageLogMode(isTavily ? c.env.TAVILY_USAGE_LOG_MODE : c.env.BRAVE_USAGE_LOG_MODE);
+
+    if (shouldLogUsage(logMode)) {
+      const query = typeof toolArgs.query === 'string' ? toolArgs.query
+        : typeof toolArgs.input === 'string' ? toolArgs.input
+        : typeof toolArgs.url === 'string' ? toolArgs.url
+        : undefined;
+
+      const logPromise = (async () => {
+        try {
+          const db = new D1Client(c.env.DB);
+          const { queryHash, queryPreview } = await buildQueryMetadata(query, logMode);
+          const entry = {
+            id: generateId(),
+            timestamp: new Date().toISOString(),
+            toolName,
+            outcome: 'success',
+            latencyMs,
+            clientTokenId,
+            clientTokenPrefix,
+            upstreamKeyId: null as string | null,
+            queryHash: queryHash ?? null,
+            queryPreview: queryPreview ?? null,
+            argsJson: JSON.stringify(Object.keys(toolArgs)),
+            errorMessage: null as string | null,
+          };
+          if (isTavily) {
+            await db.insertTavilyUsageLog(entry);
+          } else {
+            await db.insertBraveUsageLog(entry);
+          }
+        } catch (e) {
+          console.error('Usage log write failed:', e);
+        }
+      })();
+      c.executionCtx.waitUntil(logPromise);
+    }
+
     return {
       jsonrpc: '2.0',
       id,
@@ -233,6 +279,48 @@ async function handleToolCall(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+
+    // Log error usage (fire-and-forget via waitUntil)
+    const latencyMs = Date.now() - startTime;
+    const isTavily = toolName.startsWith('tavily_');
+    const logMode = parseUsageLogMode(isTavily ? c.env.TAVILY_USAGE_LOG_MODE : c.env.BRAVE_USAGE_LOG_MODE);
+
+    if (shouldLogUsage(logMode)) {
+      const query = typeof toolArgs.query === 'string' ? toolArgs.query
+        : typeof toolArgs.input === 'string' ? toolArgs.input
+        : typeof toolArgs.url === 'string' ? toolArgs.url
+        : undefined;
+
+      const logPromise = (async () => {
+        try {
+          const db = new D1Client(c.env.DB);
+          const { queryHash, queryPreview } = await buildQueryMetadata(query, logMode);
+          const entry = {
+            id: generateId(),
+            timestamp: new Date().toISOString(),
+            toolName,
+            outcome: 'error',
+            latencyMs,
+            clientTokenId,
+            clientTokenPrefix,
+            upstreamKeyId: null as string | null,
+            queryHash: queryHash ?? null,
+            queryPreview: queryPreview ?? null,
+            argsJson: JSON.stringify(Object.keys(toolArgs)),
+            errorMessage: message,
+          };
+          if (isTavily) {
+            await db.insertTavilyUsageLog(entry);
+          } else {
+            await db.insertBraveUsageLog(entry);
+          }
+        } catch (e) {
+          console.error('Usage log write failed:', e);
+        }
+      })();
+      c.executionCtx.waitUntil(logPromise);
+    }
+
     return {
       jsonrpc: '2.0',
       id,
