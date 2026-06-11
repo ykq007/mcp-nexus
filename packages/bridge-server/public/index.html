@@ -3,19 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MCP Nexus - Unified search API bridge for Tavily and Brave with intelligent key rotation and monitoring" />
-    <title>MCP Nexus - Multi-Provider Search Bridge</title>
+    <meta name="description" content="mcp-nexus — unified MCP search gateway for Tavily and Brave with key-pool rotation, client auth, and usage observability" />
+    <meta name="color-scheme" content="dark" />
+    <title>mcp-nexus — multi-provider MCP search gateway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <!-- Phosphor Ops type system -->
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script>
-      // Theme detection and initialization
+      // Phosphor Ops is dark-first; allow explicit stored override.
       (function() {
         const stored = localStorage.getItem('theme');
-        // Cyberpunk design direction is dark-first; allow explicit stored override.
         const theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-CmuZ-Y5I.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-hdKkaq1E.css">
+    <script type="module" crossorigin src="/assets/index-D-44c4qr.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-L0rG2kC0.css">
   </head>
   <body>
     <div id="root"></div>

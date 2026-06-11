@@ -1,0 +1,30 @@
+{
+  "id": "rebuild-mcp-nexus",
+  "title": "从零重写 mcp-nexus（保留 CF Workers+D1，功能对等，impeccable 设计前端）",
+  "status": "in_progress",
+  "strategy": "full-collaborate",
+  "currentPhase": "4-implementation",
+  "nextAction": "前端全部完成（M3-M5）。决策点：是否投入后端干净重构（M0-M2，parity 低可见度），还是先提交前端",
+  "milestones": {
+    "M3": "done — Phosphor Ops design system applied to admin-ui (styles.css + fonts), verified live",
+    "M4": "done — 6 pages audited; fixed .iconBtn + status badge[data-variant] glow; brand→mcp-nexus; KPI mono slashed-zero. 60 tests pass, build green",
+    "M5": "done — landing page redesigned (Phosphor Ops), build green, layout bug fixed",
+    "M0_M2": "pending — backend clean-refactor (low-churn, parity)"
+  },
+  "gate": null,
+  "approvedDecisions": {
+    "backendDepth": "clean-refactor-behavior-equivalent",
+    "designDirection": "recommend-at-M3",
+    "packageLayout": "keep-existing"
+  },
+  "branch": "rebuild-mcp-nexus",
+  "scope": "rebuild-mcp-nexus",
+  "decisions": {
+    "stack": "keep-cloudflare-workers-d1-durable-objects-hono",
+    "featureScope": "parity",
+    "placement": "new-branch-in-place-rewrite",
+    "executionMode": "claude-led",
+    "frontendDesign": "impeccable / frontend-design skill"
+  },
+  "createdAt": "2026-06-11T07:53:37Z"
+}
