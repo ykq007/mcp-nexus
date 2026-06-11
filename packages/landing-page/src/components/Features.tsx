@@ -27,7 +27,6 @@ export function Features() {
     <section className="features" id="features" aria-labelledby="features-title">
       <div className="landing-shell features__container">
         <header className="features__header">
-          <p className="features__eyebrow">PLATFORM CAPABILITIES</p>
           <h2 className="features__title" id="features-title">
             Everything needed to operate a search bridge at scale
           </h2>

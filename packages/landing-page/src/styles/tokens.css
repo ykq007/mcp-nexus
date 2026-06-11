@@ -1,13 +1,14 @@
 /* ============================================================================
-   mcp-nexus landing — "Phosphor Ops" design tokens
-   Shared visual language with the Admin Console.
+   mcp-nexus landing — "Verdigris" design tokens
+   Shared visual language with the Admin Console: neutral surfaces, verdigris
+   teal brand, IBM Plex Sans/Mono. Light default + true dark parity.
    ========================================================================== */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --font-display: 'Clash Display', 'JetBrains Mono', ui-monospace, monospace;
-  --font-ui: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --space-1: 8px;
   --space-2: 16px;
@@ -20,47 +21,50 @@
   --space-12: 96px;
   --space-16: 128px;
 
-  --radius-sm: 4px;
-  --radius: 6px;
+  --radius-sm: 5px;
+  --radius: 7px;
   --radius-lg: 12px;
   --radius-pill: 999px;
 
-  --tracking-wide: 0.08em;
-  --tracking-wider: 0.18em;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.04em;
 
-  /* Phosphor Ops palette (OKLCH) */
-  --bg: oklch(0.155 0.012 245);
-  --bg-deep: oklch(0.125 0.012 248);
-  --surface-1: oklch(0.2 0.014 242);
-  --surface-2: oklch(0.245 0.016 242);
-  --surface-3: oklch(0.29 0.018 242);
+  /* ---- Verdigris palette · light (default) ---- */
+  --bg: oklch(0.984 0.003 225);
+  --bg-deep: oklch(0.962 0.004 225);
+  --surface-1: oklch(1 0 0);
+  --surface-2: oklch(0.968 0.004 225);
+  --surface-3: oklch(0.945 0.005 225);
 
-  --border: oklch(0.32 0.018 242);
-  --border-subtle: oklch(0.26 0.016 242);
-  --border-strong: oklch(0.42 0.02 242);
+  --border: oklch(0.905 0.005 230);
+  --border-subtle: oklch(0.935 0.004 230);
+  --border-strong: oklch(0.855 0.006 230);
 
-  --text-hi: oklch(0.97 0.01 230);
-  --text-mid: oklch(0.75 0.014 235);
-  --text-low: oklch(0.6 0.014 240);
-  --text-faint: oklch(0.48 0.012 242);
+  --text-hi: oklch(0.24 0.015 235);
+  --text-mid: oklch(0.46 0.014 235);
+  --text-low: oklch(0.565 0.012 235);
+  --text-faint: oklch(0.66 0.010 235);
 
-  --accent: oklch(0.86 0.2 132);
-  --accent-dim: oklch(0.72 0.16 134);
-  --accent-deep: oklch(0.5 0.13 136);
-  --accent-soft: oklch(0.86 0.2 132 / 0.14);
-  --accent-glow: oklch(0.86 0.2 132 / 0.35);
-  --on-accent: oklch(0.16 0.02 140);
+  --accent: oklch(0.56 0.12 192);
+  --accent-dim: oklch(0.50 0.12 192);
+  --accent-deep: oklch(0.64 0.07 200);
+  --accent-soft: oklch(0.56 0.12 192 / 0.10);
+  --accent-glow: oklch(0.56 0.12 192 / 0.22);
+  --on-accent: oklch(1 0 0);
+  --ring: oklch(0.56 0.13 192 / 0.45);
 
-  --cyan: oklch(0.78 0.13 200);
-  --amber: oklch(0.8 0.16 75);
-  --danger: oklch(0.66 0.2 25);
+  --signal: oklch(0.60 0.13 50);
+  --cyan: oklch(0.55 0.11 232);
+  --amber: oklch(0.70 0.13 75);
+  --danger: oklch(0.55 0.20 27);
 
-  --shadow: 0 18px 50px oklch(0 0 0 / 0.5), 0 0 0 1px var(--border-subtle);
-  --shadow-lg: 0 32px 80px oklch(0 0 0 / 0.6), 0 0 0 1px var(--border-subtle);
-  --glow-accent: 0 0 0 1px var(--accent-glow), 0 0 26px -4px var(--accent-glow);
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 240 / 0.06);
+  --shadow: 0 2px 10px oklch(0.2 0.02 240 / 0.08), 0 0 0 1px var(--border-subtle);
+  --shadow-lg: 0 18px 44px oklch(0.2 0.02 240 / 0.12), 0 0 0 1px var(--border-subtle);
+  --glow-accent: 0 0 0 1px var(--ring);
 
   --t-fast: 140ms cubic-bezier(0.4, 0, 0.2, 1);
-  --t-base: 260ms cubic-bezier(0.33, 1, 0.68, 1);
+  --t-base: 240ms cubic-bezier(0.33, 1, 0.68, 1);
 
   /* Legacy aliases kept for any stray references */
   --color-bg: var(--bg);
@@ -75,22 +79,42 @@
   --primary: var(--accent);
 }
 
+/* Full dark Verdigris ramp — first-class parity with light. */
 html[data-theme='dark'] {
   color-scheme: dark;
+  --bg: oklch(0.178 0.008 240);
+  --bg-deep: oklch(0.150 0.008 240);
+  --surface-1: oklch(0.215 0.009 240);
+  --surface-2: oklch(0.255 0.010 240);
+  --surface-3: oklch(0.295 0.011 240);
+
+  --border: oklch(0.300 0.010 240);
+  --border-subtle: oklch(0.258 0.009 240);
+  --border-strong: oklch(0.400 0.012 240);
+
+  --text-hi: oklch(0.950 0.006 230);
+  --text-mid: oklch(0.720 0.010 235);
+  --text-low: oklch(0.560 0.010 240);
+  --text-faint: oklch(0.460 0.010 240);
+
+  --accent: oklch(0.74 0.13 190);
+  --accent-dim: oklch(0.80 0.13 190);
+  --accent-deep: oklch(0.52 0.10 196);
+  --accent-soft: oklch(0.74 0.13 190 / 0.14);
+  --accent-glow: oklch(0.74 0.13 190 / 0.30);
+  --on-accent: oklch(0.17 0.03 195);
+  --ring: oklch(0.74 0.13 190 / 0.50);
+
+  --signal: oklch(0.74 0.13 55);
+  --cyan: oklch(0.72 0.12 232);
+  --amber: oklch(0.78 0.14 75);
+  --danger: oklch(0.66 0.19 27);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.40);
+  --shadow: 0 6px 20px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border-subtle);
+  --shadow-lg: 0 18px 44px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
 }
 
 html[data-theme='light'] {
   color-scheme: light;
-  --bg: oklch(0.97 0.008 230);
-  --bg-deep: oklch(0.94 0.01 230);
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(0.96 0.008 230);
-  --surface-3: oklch(0.92 0.012 230);
-  --border: oklch(0.86 0.012 240);
-  --border-subtle: oklch(0.9 0.01 240);
-  --text-hi: oklch(0.22 0.02 245);
-  --text-mid: oklch(0.42 0.018 245);
-  --text-low: oklch(0.55 0.016 245);
-  --accent: oklch(0.6 0.16 138);
-  --on-accent: oklch(0.99 0.01 140);
 }

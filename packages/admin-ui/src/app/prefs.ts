@@ -2,8 +2,8 @@ import { readJson, writeJson } from '../lib/storage';
 import { loadAdminToken, persistAdminToken } from './adminAuth';
 import type { SupportedLocale } from '../i18n';
 
-// Admin dashboard is dark-mode only.
-export type Theme = 'dark';
+// Admin console supports light + dark, both first-class. Default: light.
+export type Theme = 'light' | 'dark';
 
 export type AdminUiPrefs = {
   apiBaseUrl: string;
@@ -29,8 +29,12 @@ export function loadPrefs(defaults: Partial<AdminUiPrefs> = {}): AdminUiPrefs {
           ? defaults.apiBaseUrl
           : '';
 
-  // Ignore stored theme preferences (including legacy `theme: "light"`).
-  const theme: Theme = 'dark';
+  const theme: Theme =
+    savedV2?.theme === 'light' || savedV2?.theme === 'dark'
+      ? savedV2.theme
+      : defaults.theme === 'light' || defaults.theme === 'dark'
+        ? defaults.theme
+        : 'light';
 
   const rememberAdminToken =
     typeof savedV2?.rememberAdminToken === 'boolean'

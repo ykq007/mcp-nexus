@@ -1,0 +1,9 @@
+{
+  "files": [
+    "packages/admin-ui/index.html",
+    "packages/landing-page/index.html"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

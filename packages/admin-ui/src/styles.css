@@ -1,20 +1,21 @@
 /* ============================================================================
-   mcp-nexus // Admin Console — "Phosphor Ops" design system
-   Phosphor-terminal / observability aesthetic.
-   Display: Clash Display · UI/data: JetBrains Mono (mono-forward)
-   Palette: OKLCH near-black cool base + phosphor-lime accent.
+   mcp-nexus // Admin Console — "Verdigris" design system
+   A precision instrument at rest. Lab-grade control surface, cool teal
+   readout on clean neutral. Restrained, exact, engineered.
+   UI/body: IBM Plex Sans · data (keys/tokens/metrics): IBM Plex Mono
+   Palette: OKLCH neutral surfaces + verdigris-teal accent. Light + true dark.
    ========================================================================== */
 
 /* ----------------------------------------------------------------------------
    1. Design tokens
    -------------------------------------------------------------------------- */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Type families */
-  --font-display: 'Clash Display', 'JetBrains Mono', ui-monospace, monospace;
-  --font-ui: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Type families — one engineered sans for UI, mono only for real data */
+  --font-display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Type scale (data console reads slightly smaller, denser) */
   --text-2xs: 10.5px;
@@ -57,41 +58,48 @@
   --radius-lg: 10px;
   --radius-pill: 999px;
 
-  /* ---- Phosphor Ops palette (OKLCH) ---- */
-  --bg: oklch(0.165 0.012 240);
-  --bg-deep: oklch(0.135 0.012 245);
-  --surface-1: oklch(0.205 0.014 240);
-  --surface-2: oklch(0.245 0.016 240);
-  --surface-3: oklch(0.285 0.018 240);
-  --surface-hover: oklch(0.86 0.2 132 / 0.08);
+  /* ---- Verdigris palette · light (default) ---- */
+  --bg: oklch(0.984 0.003 225);          /* app canvas */
+  --bg-deep: oklch(0.962 0.004 225);     /* sunken wells, tab tracks */
+  --surface-1: oklch(1 0 0);             /* cards, panels (pure white) */
+  --surface-2: oklch(0.968 0.004 225);   /* inputs, raised */
+  --surface-3: oklch(0.945 0.005 225);   /* hover raised */
+  --surface-hover: oklch(0.56 0.12 192 / 0.07);  /* primary-tinted row hover */
 
-  --border: oklch(0.32 0.018 240);
-  --border-subtle: oklch(0.27 0.016 240);
-  --border-strong: oklch(0.42 0.02 240);
+  --border: oklch(0.905 0.005 230);
+  --border-subtle: oklch(0.935 0.004 230);
+  --border-strong: oklch(0.855 0.006 230);
 
-  --text-hi: oklch(0.96 0.01 230);
-  --text-mid: oklch(0.74 0.014 235);
-  --text-low: oklch(0.58 0.014 240);
-  --text-faint: oklch(0.46 0.012 240);
+  --text-hi: oklch(0.24 0.015 235);
+  --text-mid: oklch(0.46 0.014 235);
+  --text-low: oklch(0.565 0.012 235);
+  --text-faint: oklch(0.66 0.010 235);
 
-  /* Phosphor accent */
-  --accent: oklch(0.86 0.2 132);
-  --accent-dim: oklch(0.72 0.16 134);
-  --accent-deep: oklch(0.5 0.13 136);
-  --accent-soft: oklch(0.86 0.2 132 / 0.14);
-  --accent-glow: oklch(0.86 0.2 132 / 0.35);
-  --on-accent: oklch(0.18 0.02 140);
+  /* Verdigris teal — the brand / primary */
+  --accent: oklch(0.56 0.12 192);
+  --accent-dim: oklch(0.50 0.12 192);    /* hover/active */
+  --accent-deep: oklch(0.64 0.07 200);   /* low-chroma teal for soft borders */
+  --accent-soft: oklch(0.56 0.12 192 / 0.10);
+  --accent-glow: oklch(0.56 0.12 192 / 0.22);
+  --on-accent: oklch(1 0 0);
+  --ring: oklch(0.56 0.13 192 / 0.45);
 
-  /* Signal colors */
-  --amber: oklch(0.8 0.16 75);
-  --amber-soft: oklch(0.8 0.16 75 / 0.16);
-  --cyan: oklch(0.78 0.13 200);
-  --cyan-soft: oklch(0.78 0.13 200 / 0.16);
-  --danger: oklch(0.66 0.2 25);
-  --danger-soft: oklch(0.66 0.2 25 / 0.16);
-  --danger-glow: oklch(0.66 0.2 25 / 0.32);
-  --success: var(--accent);
+  /* Copper — reserved signal accent, used sparingly */
+  --signal: oklch(0.60 0.13 50);
+  --signal-soft: oklch(0.60 0.13 50 / 0.12);
+
+  /* Status — distinct hues; never color-alone */
+  --amber: oklch(0.70 0.13 75);          /* brave / cooldown */
+  --amber-soft: oklch(0.70 0.13 75 / 0.14);
+  --cyan: oklch(0.55 0.11 232);          /* tavily */
+  --cyan-soft: oklch(0.55 0.11 232 / 0.12);
+  --danger: oklch(0.55 0.20 27);
+  --danger-soft: oklch(0.55 0.20 27 / 0.12);
+  --danger-glow: oklch(0.55 0.20 27 / 0.22);
+  --success: oklch(0.52 0.13 155);
+  --success-soft: oklch(0.52 0.13 155 / 0.12);
   --warning: var(--amber);
+  --warning-soft: var(--amber-soft);
 
   /* Semantic aliases (component contract) */
   --color-bg: var(--bg);
@@ -113,13 +121,13 @@
   --panel: var(--surface-1);
   --panel-solid: var(--surface-1);
 
-  /* Elevation — depth + faint phosphor rim */
-  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
-  --shadow: 0 6px 22px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border-subtle);
-  --shadow-lg: 0 20px 50px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
-  --shadow-xl: 0 32px 70px oklch(0 0 0 / 0.6), 0 0 0 1px var(--border);
-  --glow-accent: 0 0 0 1px var(--accent-glow), 0 0 18px -2px var(--accent-glow);
-  --glow-danger: 0 0 0 1px var(--danger-glow), 0 0 16px -3px var(--danger-glow);
+  /* Elevation — soft depth + hairline, never glow */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 240 / 0.06);
+  --shadow: 0 2px 8px oklch(0.2 0.02 240 / 0.08), 0 0 0 1px var(--border-subtle);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.02 240 / 0.12), 0 0 0 1px var(--border-subtle);
+  --shadow-xl: 0 24px 56px oklch(0.2 0.02 240 / 0.16), 0 0 0 1px var(--border);
+  --glow-accent: 0 0 0 1px var(--ring);
+  --glow-danger: 0 0 0 1px var(--danger);
 
   /* Motion */
   --t-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -138,36 +146,60 @@
   --sidebar-w-collapsed: 72px;
 }
 
-/* Explicit dark theme hook — the console is dark-first, so this re-affirms the
-   canonical Phosphor Ops palette declared in :root (default). */
+/* Full dark Verdigris ramp — first-class parity with light. */
 html[data-theme='dark'] {
   color-scheme: dark;
-  --bg: oklch(0.165 0.012 240);
-  --surface-1: oklch(0.205 0.014 240);
-  --accent: oklch(0.86 0.2 132);
-  --on-accent: oklch(0.18 0.02 140);
+  --bg: oklch(0.178 0.008 240);
+  --bg-deep: oklch(0.150 0.008 240);
+  --surface-1: oklch(0.215 0.009 240);
+  --surface-2: oklch(0.255 0.010 240);
+  --surface-3: oklch(0.295 0.011 240);
+  --surface-hover: oklch(0.74 0.13 190 / 0.12);
+
+  --border: oklch(0.300 0.010 240);
+  --border-subtle: oklch(0.258 0.009 240);
+  --border-strong: oklch(0.400 0.012 240);
+
+  --text-hi: oklch(0.950 0.006 230);
+  --text-mid: oklch(0.720 0.010 235);
+  --text-low: oklch(0.560 0.010 240);
+  --text-faint: oklch(0.460 0.010 240);
+
+  --accent: oklch(0.74 0.13 190);
+  --accent-dim: oklch(0.80 0.13 190);    /* hover brightens in dark */
+  --accent-deep: oklch(0.52 0.10 196);
+  --accent-soft: oklch(0.74 0.13 190 / 0.14);
+  --accent-glow: oklch(0.74 0.13 190 / 0.30);
+  --on-accent: oklch(0.17 0.03 195);     /* near-black on bright teal */
+  --ring: oklch(0.74 0.13 190 / 0.50);
+
+  --signal: oklch(0.74 0.13 55);
+  --signal-soft: oklch(0.74 0.13 55 / 0.16);
+
+  --amber: oklch(0.78 0.14 75);
+  --amber-soft: oklch(0.78 0.14 75 / 0.16);
+  --cyan: oklch(0.72 0.12 232);
+  --cyan-soft: oklch(0.72 0.12 232 / 0.16);
+  --danger: oklch(0.66 0.19 27);
+  --danger-soft: oklch(0.66 0.19 27 / 0.18);
+  --danger-glow: oklch(0.66 0.19 27 / 0.30);
+  --success: oklch(0.72 0.14 155);
+  --success-soft: oklch(0.72 0.14 155 / 0.16);
+  --warning: var(--amber);
+  --warning-soft: var(--amber-soft);
+
+  /* Deeper base shadows for dark surfaces */
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.40);
+  --shadow: 0 6px 20px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border-subtle);
+  --shadow-lg: 0 18px 44px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
+  --shadow-xl: 0 28px 64px oklch(0 0 0 / 0.60), 0 0 0 1px var(--border);
+  --glow-accent: 0 0 0 1px var(--ring);
+  --glow-danger: 0 0 0 1px var(--danger);
 }
 
-/* Optional light theme hook (kept for [data-theme] contract; console is dark-first) */
+/* Light is the :root default; this hook re-affirms it for explicit toggles. */
 html[data-theme='light'] {
   color-scheme: light;
-  --bg: oklch(0.97 0.008 230);
-  --bg-deep: oklch(0.94 0.01 230);
-  --surface-1: oklch(1 0 0);
-  --surface-2: oklch(0.96 0.008 230);
-  --surface-3: oklch(0.93 0.01 230);
-  --border: oklch(0.86 0.012 240);
-  --border-subtle: oklch(0.9 0.01 240);
-  --border-strong: oklch(0.78 0.014 240);
-  --text-hi: oklch(0.22 0.02 245);
-  --text-mid: oklch(0.42 0.018 245);
-  --text-low: oklch(0.55 0.016 245);
-  --text-faint: oklch(0.66 0.014 245);
-  --accent: oklch(0.62 0.16 138);
-  --accent-dim: oklch(0.54 0.15 138);
-  --on-accent: oklch(0.99 0.01 140);
-  --surface-hover: oklch(0.62 0.16 138 / 0.1);
-  --shadow: 0 6px 22px oklch(0.2 0.02 245 / 0.12), 0 0 0 1px var(--border-subtle);
 }
 
 /* ----------------------------------------------------------------------------
@@ -197,13 +229,6 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* Signature: faint signal-grid backdrop */
-  background-image:
-    radial-gradient(oklch(0.86 0.2 132 / 0.04) 1px, transparent 1px),
-    radial-gradient(circle at 100% 0%, oklch(0.86 0.2 132 / 0.05), transparent 42%),
-    radial-gradient(circle at 0% 100%, oklch(0.78 0.13 200 / 0.04), transparent 40%);
-  background-size: 28px 28px, 100% 100%, 100% 100%;
-  background-attachment: fixed;
 }
 
 h1, h2, h3, h4, h5 {
@@ -332,14 +357,11 @@ code, kbd, pre, .mono {
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
-.navBrand::after { content: ' // ops'; color: var(--accent-dim); font-weight: var(--fw-normal); }
-.sidebar-collapsed .navBrand::after,
 .sidebar-collapsed .navTitleText .help { display: none; }
 .help {
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   color: var(--text-low);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
+  line-height: 1.5;
 }
 
 .nav {
@@ -384,7 +406,6 @@ code, kbd, pre, .mono {
   height: 18px;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .navFooter {
@@ -410,17 +431,30 @@ code, kbd, pre, .mono {
 .sidebarToggle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  gap: var(--space-1);
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-1);
   color: var(--text-mid);
-  transition: all var(--t-fast);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
 }
-.sidebarToggle:hover { color: var(--accent); border-color: var(--accent-deep); }
-.sidebarToggle svg { width: 16px; height: 16px; }
+.sidebarToggle:hover { color: var(--accent); border-color: var(--accent-deep); background: var(--surface-2); }
+.sidebarToggle svg { width: 16px; height: 16px; flex: none; }
+/* Collapse to an icon-only square when the sidebar is collapsed */
+.sidebar-collapsed .sidebarToggle { justify-content: center; padding: 0; width: 34px; }
+.sidebar-collapsed .sidebarToggle span { display: none; }
+/* Icon-only rail: hide text-heavy chrome when collapsed */
+.sidebar-collapsed .navTitleText,
+.sidebar-collapsed .navConnectionInfo { display: none; }
+.sidebar-collapsed .navTitle { justify-content: center; }
 
 /* ---- Main column ---- */
 .mainPanel {
@@ -439,24 +473,19 @@ code, kbd, pre, .mono {
   justify-content: space-between;
   gap: var(--space-2);
   padding: 0 var(--space-3);
-  background: oklch(0.165 0.012 240 / 0.78);
-  backdrop-filter: blur(14px) saturate(1.3);
+  background: var(--bg);
   border-bottom: 1px solid var(--border-subtle);
 }
-:root[data-theme='light'] .appHeader { background: oklch(1 0 0 / 0.8); }
 
-.appHeaderMeta { min-width: 0; }
+.appHeaderMeta { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
 .appHeader h1, .appHeader .h1 {
   font-size: var(--text-xl);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
   margin: 0;
   display: flex;
   align-items: baseline;
   gap: 10px;
-}
-.appHeader h1::before {
-  content: '▸';
-  color: var(--accent);
-  font-size: 0.8em;
 }
 .headerConnection {
   display: flex;
@@ -472,32 +501,15 @@ code, kbd, pre, .mono {
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
-  animation: pageRise var(--t-slow) both;
+  animation: pageFade var(--t-base) both;
 }
 
-@keyframes pageRise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-}
-
-/* Signature: one-shot scanline sweep on load */
-.mainBody::before {
-  content: '';
-  position: fixed;
-  inset: var(--nav-height) 0 auto 0;
-  height: 140px;
-  pointer-events: none;
-  background: linear-gradient(180deg, var(--accent-soft), transparent);
-  opacity: 0;
-  animation: scanSweep 1100ms ease-out 120ms 1;
-  z-index: 1;
-}
-@keyframes scanSweep {
-  0% { opacity: 0.5; transform: translateY(-160px); }
-  100% { opacity: 0; transform: translateY(60vh); }
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mainBody, .mainBody::before { animation: none; }
+  .mainBody { animation: none; }
 }
 
 /* ----------------------------------------------------------------------------
@@ -540,24 +552,18 @@ code, kbd, pre, .mono {
 }
 .kpiCard {
   position: relative;
-  background:
-    linear-gradient(180deg, var(--surface-1), var(--bg-deep)),
-    var(--surface-1);
+  background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
-  padding: var(--space-2) var(--space-2) var(--space-2);
+  padding: var(--space-2);
   overflow: hidden;
-  transition: border-color var(--t-base), transform var(--t-base);
+  transition: border-color var(--t-base), box-shadow var(--t-base), transform var(--t-base);
 }
-.kpiCard::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.35;
+.kpiCard:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
 }
-.kpiCard:hover { border-color: var(--border); transform: translateY(-2px); }
 .kpiCardHeader {
   display: flex;
   align-items: center;
@@ -655,19 +661,21 @@ code, kbd, pre, .mono {
   gap: var(--space-2);
 }
 
-/* Live dot — pulsing phosphor */
+/* Live dot — quiet pulse, no glow */
 .liveDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
-  animation: livePulse 1.8s ease-in-out infinite;
+  animation: livePulse 2s ease-in-out infinite;
   flex: none;
 }
 @keyframes livePulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent-glow); }
-  50% { opacity: 0.45; box-shadow: 0 0 2px var(--accent-glow); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liveDot { animation: none; }
 }
 
 /* ----------------------------------------------------------------------------
@@ -795,18 +803,16 @@ code, kbd, pre, .mono {
   background: currentColor;
 }
 
-/* Status states — glowing status field signature */
+/* Status states — quiet semantic fills, never glow */
 .pill.isActive, .badge.isActive, .pill.active, .status-active {
-  color: var(--accent);
-  border-color: var(--accent-deep);
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 1px var(--accent-soft), 0 0 12px -4px var(--accent-glow);
+  color: var(--success);
+  border-color: color-mix(in oklch, var(--success) 40%, transparent);
+  background: var(--success-soft);
 }
 .pill.cooldown, .badge.cooldown, .status-cooldown {
   color: var(--amber);
-  border-color: oklch(0.8 0.16 75 / 0.4);
+  border-color: color-mix(in oklch, var(--amber) 40%, transparent);
   background: var(--amber-soft);
-  box-shadow: 0 0 12px -4px oklch(0.8 0.16 75 / 0.4);
 }
 .pill.invalid, .badge.invalid, .status-invalid,
 .pill.error, .badge.error, .pill.disabled, .badge.disabled {
@@ -816,7 +822,7 @@ code, kbd, pre, .mono {
 }
 .pill.tavily, .badge.tavily {
   color: var(--cyan);
-  border-color: oklch(0.78 0.13 200 / 0.4);
+  border-color: color-mix(in oklch, var(--cyan) 40%, transparent);
   background: var(--cyan-soft);
 }
 .pill.brave, .badge.brave {
@@ -832,20 +838,18 @@ code, kbd, pre, .mono {
   border: 1px solid var(--border);
 }
 .badge[data-variant='success'] {
-  color: var(--accent);
-  border-color: var(--accent-deep);
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 1px var(--accent-soft), 0 0 12px -4px var(--accent-glow);
+  color: var(--success);
+  border-color: color-mix(in oklch, var(--success) 40%, transparent);
+  background: var(--success-soft);
 }
 .badge[data-variant='warning'] {
   color: var(--amber);
-  border-color: oklch(0.8 0.16 75 / 0.45);
+  border-color: color-mix(in oklch, var(--amber) 45%, transparent);
   background: var(--amber-soft);
-  box-shadow: 0 0 12px -4px oklch(0.8 0.16 75 / 0.4);
 }
 .badge[data-variant='danger'] {
   color: var(--danger);
-  border-color: oklch(0.66 0.2 25 / 0.45);
+  border-color: color-mix(in oklch, var(--danger) 45%, transparent);
   background: var(--danger-soft);
 }
 .badge[data-variant='neutral'] {
@@ -909,7 +913,7 @@ input[type='datetime-local'], select, textarea {
 textarea { height: auto; min-height: 96px; padding: 10px 12px; line-height: var(--lh-base); resize: vertical; }
 .input:focus, .select:focus, input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--accent-deep);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .input::placeholder, input::placeholder, textarea::placeholder { color: var(--text-faint); }
@@ -1122,10 +1126,9 @@ select {
   align-items: flex-start;
   gap: 10px;
   padding: 12px 14px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   color: var(--text-hi);
   font-size: var(--text-sm);
@@ -1135,11 +1138,9 @@ select {
 .toast--exiting { animation: toastIn var(--t-base) reverse both; }
 .toastIcon { display: inline-flex; flex: none; margin-top: 1px; }
 .toastIcon svg { width: 18px; height: 18px; }
-.toastIcon[data-variant='success'] { color: var(--accent); }
+.toastIcon[data-variant='success'] { color: var(--success); }
 .toastIcon[data-variant='error'] { color: var(--danger); }
 .toastIcon[data-variant='info'] { color: var(--cyan); }
-.toast:has(.toastIcon[data-variant='error']) { border-left-color: var(--danger); }
-.toast:has(.toastIcon[data-variant='info']) { border-left-color: var(--cyan); }
 .toastTitle { font-weight: var(--fw-semibold); color: var(--text-hi); }
 .toastMsg { font-size: var(--text-xs); color: var(--text-mid); margin-top: 2px; }
 .toastDismiss {
@@ -1164,7 +1165,6 @@ select {
 .toastProgressBar {
   height: 100%;
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
 }
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(16px); }
@@ -1206,7 +1206,7 @@ select {
   gap: 10px;
   padding: 12px 14px;
   background: var(--danger-soft);
-  border: 1px solid oklch(0.66 0.2 25 / 0.4);
+  border: 1px solid color-mix(in oklch, var(--danger) 40%, transparent);
   border-radius: var(--radius);
   color: var(--text-hi);
 }
@@ -1254,8 +1254,7 @@ select {
 .progressFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
-  box-shadow: 0 0 10px var(--accent-glow);
+  background: var(--accent);
   transition: width var(--t-slow);
 }
 
@@ -1403,7 +1402,7 @@ pre {
   position: sticky;
   bottom: 0;
   z-index: var(--z-sticky);
-  background: oklch(0.165 0.012 240 / 0.92);
+  background: color-mix(in oklch, var(--bg) 92%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-subtle);
   padding: 6px;

@@ -60,6 +60,10 @@ function AppInner() {
     setPrefs((prev) => ({ ...prev, sidebarCollapsed: !prev.sidebarCollapsed }));
   }, []);
 
+  const toggleTheme = useCallback(() => {
+    setPrefs((prev) => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }));
+  }, []);
+
   const signOut = useCallback(() => {
     setAdminToken('');
     clearAdminToken();
@@ -122,6 +126,8 @@ function AppInner() {
               onSignOut={signOutToLanding}
               sidebarCollapsed={prefs.sidebarCollapsed}
               onToggleSidebar={toggleSidebar}
+              theme={prefs.theme}
+              onToggleTheme={toggleTheme}
             />
           }
         >

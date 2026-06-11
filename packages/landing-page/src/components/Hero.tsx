@@ -15,13 +15,8 @@ export function Hero({ onOpenDashboard }: { onOpenDashboard: () => void }) {
     <section className="hero" aria-labelledby="landing-hero-title">
       <div className="landing-shell hero__container">
         <div className="hero__content">
-          <p className="hero__eyebrow">SEARCH INFRASTRUCTURE, REFINED</p>
-          <h1
-            className="hero__title cyber-glitch"
-            id="landing-hero-title"
-            data-text="Run Tavily + Brave through one resilient bridge."
-          >
-            Run Tavily + Brave through one resilient bridge.
+          <h1 className="hero__title" id="landing-hero-title">
+            Run Tavily + Brave through <span className="accent">one resilient bridge</span>.
           </h1>
           <p className="hero__subtitle">
             MCP Nexus centralizes multi-provider search orchestration with intelligent fallback,

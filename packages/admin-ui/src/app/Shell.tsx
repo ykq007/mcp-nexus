@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { BeakerIcon } from '@heroicons/react/24/outline';
-import { IconChevronLeft, IconChevronRight, IconKey, IconSearch, IconSettings, IconShield, IconToken } from '../ui/icons';
+import { IconChevronLeft, IconChevronRight, IconKey, IconMoon, IconSearch, IconSettings, IconShield, IconSun, IconToken } from '../ui/icons';
 import { ROUTE_PATHS } from './routePaths';
 import { buildLandingLoginUrl } from './loginUrl';
 
@@ -38,13 +38,17 @@ export function ShellLayout({
   signedIn,
   onSignOut,
   sidebarCollapsed,
-  onToggleSidebar
+  onToggleSidebar,
+  theme,
+  onToggleTheme
 }: {
   connectionSummary: string;
   signedIn: boolean;
   onSignOut: () => void;
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }) {
   const { t } = useTranslation('nav');
   const { t: tc } = useTranslation('common');
@@ -133,6 +137,15 @@ export function ShellLayout({
               </span>
             </div>
             <div className="appHeaderMeta">
+              <button
+                type="button"
+                className="iconBtn"
+                onClick={onToggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+                title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+              >
+                {theme === 'dark' ? <IconSun /> : <IconMoon />}
+              </button>
               {signedIn ? (
                 <button className="btn" data-variant="ghost" onClick={onSignOut}>
                   {tc('actions.signOut')}
