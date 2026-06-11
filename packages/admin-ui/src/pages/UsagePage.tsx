@@ -182,7 +182,7 @@ export function UsagePage({ api }: { api: AdminApi }) {
         <div className="cardHeader">
           <div className="row">
             <div>
-              <div className="h2">{t('title')}</div>
+              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
               <div className="help">{t('subtitle')}</div>
             </div>
             <button className="btn" onClick={load} disabled={loading}>

@@ -247,19 +247,11 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
 
   return (
     <div className="stack gap-6">
-      {/* Header */}
-      <div className="row">
-        <div>
-          <h1 className="h1">Playground</h1>
-          <p className="help">Test MCP tools in real-time</p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Request Panel */}
         <div className="card">
           <div className="cardHeader">
-            <div className="h2">Request</div>
+            <div className="h2" role="heading" aria-level={2}>Request</div>
           </div>
           <div className="cardBody">
             <form onSubmit={handleExecute} className="stack gap-4">
@@ -315,7 +307,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
         {/* Response Panel */}
         <div className="card flex flex-col min-h-[400px]">
           <div className="cardHeader row">
-            <div className="h2">Response</div>
+            <div className="h2" role="heading" aria-level={2}>Response</div>
             {selectedHistoryItem && (
                <span className={`badge`} data-variant={selectedHistoryItem.status === 'success' ? 'success' : 'danger'}>
                  {selectedHistoryItem.status.toUpperCase()}
@@ -342,7 +334,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
       {/* History Panel */}
       <div className="card">
         <div className="cardHeader row">
-          <div className="h2">Request History</div>
+          <div className="h2" role="heading" aria-level={2}>Request History</div>
           {history.length > 0 && (
             <button className="btn btn--sm" data-variant="ghost" onClick={handleClearHistory}>
               <IconTrash /> Clear

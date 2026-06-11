@@ -64,8 +64,11 @@ describe('PlaygroundPage', () => {
   it('renders initial state', () => {
     const html = renderToStaticMarkup(<PlaygroundPage />);
 
-    expect(html).toContain('Playground');
-    expect(html).toContain('Test MCP tools in real-time');
+    // The page title/subtitle are provided by the app Shell top bar, not the
+    // page body (kept consistent with the other routes). The page owns the
+    // Request/Response panels and the client-token field.
+    expect(html).toContain('Request');
+    expect(html).toContain('Response');
     expect(html).toContain('Client Token');
     expect(html).toContain('tool-selector-mock');
   });

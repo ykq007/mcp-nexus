@@ -203,7 +203,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
         <div className="cardHeader">
           <div className="row">
             <div>
-              <div className="h2">{t('title')}</div>
+              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
               <div className="help">
                 {t('stats.summary', { total: stats.total, active: stats.active })}
               </div>

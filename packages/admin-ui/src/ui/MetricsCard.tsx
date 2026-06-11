@@ -19,7 +19,7 @@ export function MetricsCard({ title, subtitle, liveLabel, metrics, loading }: Me
         <div className="cardHeader">
           <div className="row metricsCardHeader">
             <div className="metricsCardTitleStack">
-              <div className="h2">{title}</div>
+              <div className="h2" role="heading" aria-level={2}>{title}</div>
               {subtitle ? <div className="help">{subtitle}</div> : null}
             </div>
             {liveLabel ? (
@@ -47,7 +47,7 @@ export function MetricsCard({ title, subtitle, liveLabel, metrics, loading }: Me
       <div className="cardHeader">
         <div className="row metricsCardHeader">
           <div className="metricsCardTitleStack">
-            <div className="h2">{title}</div>
+            <div className="h2" role="heading" aria-level={2}>{title}</div>
             {subtitle ? <div className="help">{subtitle}</div> : null}
           </div>
           {liveLabel ? (
@@ -87,7 +87,7 @@ export function RecentErrorsCard({ errors, loading }: RecentErrorsCardProps) {
     return (
       <div className="card">
         <div className="cardHeader">
-          <div className="h3">Recent Errors</div>
+          <div className="h3" role="heading" aria-level={3}>Recent Errors</div>
         </div>
         <div className="cardBody">
           <div className="skeleton skeletonTableRow" />
@@ -101,7 +101,7 @@ export function RecentErrorsCard({ errors, loading }: RecentErrorsCardProps) {
     return (
       <div className="card">
         <div className="cardHeader">
-          <div className="h3">Recent Errors</div>
+          <div className="h3" role="heading" aria-level={3}>Recent Errors</div>
         </div>
         <div className="cardBody">
           <div className="help" style={{ textAlign: 'center', padding: '1rem' }}>
@@ -115,7 +115,7 @@ export function RecentErrorsCard({ errors, loading }: RecentErrorsCardProps) {
   return (
     <div className="card">
       <div className="cardHeader">
-        <div className="h3">Recent Errors</div>
+        <div className="h3" role="heading" aria-level={3}>Recent Errors</div>
       </div>
       <div className="cardBody p-0">
         <table className="table">
@@ -130,7 +130,7 @@ export function RecentErrorsCard({ errors, loading }: RecentErrorsCardProps) {
             {errors.map((error) => (
               <tr key={error.id}>
                 <td className="mono">{error.toolName}</td>
-                <td className="mono" style={{ color: 'var(--color-danger)' }}>
+                <td className="mono" style={{ color: 'var(--danger)' }}>
                   {error.errorMessage || 'Unknown error'}
                 </td>
                 <td className="mono">

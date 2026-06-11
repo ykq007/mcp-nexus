@@ -120,7 +120,7 @@ export function Dialog({
       <div className="dialog" ref={dialogRef}>
         <div className="dialogHeader">
           <div className="flex flex-col gap-1">
-            <div id={titleId} className="h2">
+            <div id={titleId} className="h2" role="heading" aria-level={2}>
               {title}
             </div>
             {description === '' ? null : <div className="help">{description ?? 'Press Esc to close'}</div>}

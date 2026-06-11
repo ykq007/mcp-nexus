@@ -1,24 +1,35 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <title>mcp-nexus // ops console</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>mcp-nexus · admin console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-    <!-- Phosphor Ops type system: Clash Display (display) + JetBrains Mono (UI/data) -->
+    <!-- Verdigris type system: IBM Plex Sans (UI/body) + IBM Plex Mono (data) -->
     <link
-      href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <script type="module" crossorigin src="/admin/assets/index-DCPKWJbQ.js"></script>
-    <link rel="stylesheet" crossorigin href="/admin/assets/index-D20SaImh.css">
+    <script>
+      // Apply the stored theme before paint to avoid a flash. Default: light.
+      (function () {
+        try {
+          var raw = localStorage.getItem('mcp-nexus.adminUiPrefs.v2');
+          var theme = 'light';
+          if (raw) {
+            var t = JSON.parse(raw).theme;
+            if (t === 'light' || t === 'dark') theme = t;
+          }
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/admin/assets/index-BCosqj0Y.js"></script>
+    <link rel="stylesheet" crossorigin href="/admin/assets/index-DYl5ToXF.css">
   </head>
   <body>
     <div id="root"></div>

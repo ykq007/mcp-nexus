@@ -110,13 +110,13 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
   if (!open) return null;
 
   return (
-    <>
-      <div
-        className="drawerOverlay"
-        data-open={open}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <div
+      className="drawerOverlay"
+      data-open={open}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         className="drawer"
         data-open={open}
@@ -127,13 +127,13 @@ export function Drawer({ open, onClose, title, children }: DrawerProps) {
         tabIndex={-1}
       >
         <div className="drawerHeader">
-          <div id={titleId} className="h2">{title}</div>
+          <div id={titleId} className="h2" role="heading" aria-level={2}>{title}</div>
           <IconButton ref={closeButtonRef} icon={<IconX />} onClick={onClose} aria-label="Close drawer" type="button" />
         </div>
         <div className="drawerBody">
           {children}
         </div>
       </div>
-    </>
+    </div>
   );
 }

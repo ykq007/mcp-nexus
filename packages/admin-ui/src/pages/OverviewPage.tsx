@@ -113,7 +113,7 @@ export function OverviewPage({
         <div className="cardHeader">
           <div className="row">
             <div>
-              <div className="h2">{t('title')}</div>
+              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
               <div className="help">{t('subtitle')}</div>
             </div>
             <button className="btn" onClick={load} disabled={loading}>
@@ -222,7 +222,7 @@ export function OverviewPage({
           <div className="cardHeader">
             <div className="row">
               <div>
-                <div className="h2">{t('recentUsage.title')}</div>
+                <div className="h2" role="heading" aria-level={2}>{t('recentUsage.title')}</div>
                 <div className="help">{t('recentUsage.subtitle')}</div>
               </div>
               <button className="btn" data-variant="ghost" onClick={onGoToUsage}>

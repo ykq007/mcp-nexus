@@ -187,7 +187,7 @@ export function ClipboardImportDialog({
         ) : (
           <>
             <div className="stack">
-              <div className="h3">{t('import.resultTitle')}</div>
+              <div className="h3" role="heading" aria-level={3}>{t('import.resultTitle')}</div>
               <div className="help">
                 {t('import.resultSummary', {
                   imported: result.summary.imported,

@@ -65,7 +65,7 @@ export function OnboardingGuide({
       <div className="cardHeader">
         <div className="row">
           <div>
-            <div className="h2">{t('onboarding.title', 'Getting Started')}</div>
+            <div className="h2" role="heading" aria-level={2}>{t('onboarding.title', 'Getting Started')}</div>
             <div className="help">{t('onboarding.subtitle', 'Complete these steps to start using MCP Nexus')}</div>
           </div>
           <button

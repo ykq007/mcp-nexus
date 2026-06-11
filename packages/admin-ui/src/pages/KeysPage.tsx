@@ -476,7 +476,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
         <div className="cardHeader">
           <div className="row">
             <div>
-              <div className="h2">{t('title')}</div>
+              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
               <div className="help">
                 {stats.total} total • {stats.active} active • {stats.cooldown} cooldown • {stats.invalid} invalid •{' '}
                 {stats.disabled} disabled
@@ -757,7 +757,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
             <div className="cardHeader">
               <div className="row">
                 <div>
-                  <div className="h2">{t('brave.title')}</div>
+                  <div className="h2" role="heading" aria-level={2}>{t('brave.title')}</div>
                   <div className="help">
                     {braveStats.total} total • {braveStats.active} active • {braveStats.invalid} invalid •{' '}
                     {braveStats.disabled} disabled
@@ -882,6 +882,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
               <input
                 id="key-label"
                 className="input"
+                aria-required
                 data-error={!!(formErrors.label && touched.label)}
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
@@ -908,6 +909,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
               <input
                 id="api-key"
                 className="input mono"
+                aria-required
                 data-error={!!(formErrors.apiKey && touched.apiKey)}
                 value={newApiKey}
                 onChange={(e) => setNewApiKey(e.target.value)}
@@ -978,6 +980,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
               <input
                 id="brave-key-label"
                 className="input"
+                aria-required
                 data-error={!!(braveFormErrors.label && braveTouched.label)}
                 value={newBraveLabel}
                 onChange={(e) => setNewBraveLabel(e.target.value)}
@@ -1004,6 +1007,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
               <input
                 id="brave-api-key"
                 className="input mono"
+                aria-required
                 data-error={!!(braveFormErrors.apiKey && braveTouched.apiKey)}
                 value={newBraveApiKey}
                 onChange={(e) => setNewBraveApiKey(e.target.value)}

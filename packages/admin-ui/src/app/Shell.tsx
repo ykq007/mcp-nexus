@@ -127,7 +127,7 @@ export function ShellLayout({
         <main className="mainPanel" id="mainContent" tabIndex={-1}>
           <header className="appHeader">
             <div className="topbarTitle">
-              <div className="h1">{title}</div>
+              <div className="h1" role="heading" aria-level={1}>{title}</div>
               <div className="help">{subtitle}</div>
             </div>
             <div className="appHeaderMeta">

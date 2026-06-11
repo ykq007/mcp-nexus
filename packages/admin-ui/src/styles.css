@@ -1245,6 +1245,18 @@ select {
 .spin svg { width: 16px; height: 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Honour reduced-motion for every decorative animation (the functional .spin
+   loader is kept as the sole progress cue). Entrance/shimmer motion is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .dialogOverlay, .drawerOverlay,
+  .dialog, .drawer,
+  .dialog.isExiting, .drawer.isExiting,
+  .toast, .toast--exiting,
+  .statusMenu, .actionMenu { animation: none; }
+  .skeleton::after, .skeletonKpi::after,
+  .skeletonMetricTile::after, .skeletonTableRow::after { animation: none; }
+}
+
 .progressBar {
   height: 6px;
   border-radius: var(--radius-pill);
@@ -1487,7 +1499,10 @@ pre {
    20. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
-  .appShell, .appFrame.sidebar-collapsed .appShell { grid-template-columns: 1fr; }
+  /* Stack the shell vertically so the sticky bottom nav doesn't sit beside the
+     content as a flex-row sibling (which squeezed the content into a column). */
+  .appFrame { flex-direction: column; }
+  .appShell, .appFrame.sidebar-collapsed .appShell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { display: none; }
   .mobileNav { display: flex; }
   .mainBody { padding: var(--space-2); }
