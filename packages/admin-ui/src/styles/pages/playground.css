@@ -36,6 +36,10 @@
   display: flex;
   flex-direction: column;
   min-height: 420px;
+  /* Let the 1fr grid track shrink below the response's min-content width
+     (a long single-line JSON string) instead of blowing the pane past the
+     viewport. Without this, overflow:auto on .json-viewer never engages. */
+  min-width: 0;
 }
 
 .page-playground .playground-panel-header {
@@ -64,6 +68,7 @@
   flex-direction: column;
   gap: var(--space-4);
   overflow: hidden;
+  min-width: 0;
 }
 
 /* ===========================================================================
@@ -154,7 +159,12 @@
   padding: var(--space-3);
   overflow: auto;
   flex: 1;
-  white-space: pre;
+  min-width: 0;
+  /* Wrap long lines (e.g. a tool result with one huge stringified JSON blob)
+     so the response reads top-to-bottom; preserve indentation. break long
+     unbreakable tokens so they never force horizontal overflow. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   tab-size: 2;
   margin: 0;
   font-variant-numeric: tabular-nums;
