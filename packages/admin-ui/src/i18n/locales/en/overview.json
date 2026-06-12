@@ -37,5 +37,25 @@
   },
   "empty": {
     "noUsage": "No usage yet."
+  },
+  "onboarding": {
+    "title": "Getting started",
+    "subtitle": "Complete these three steps to start serving MCP requests.",
+    "dismiss": "Dismiss",
+    "step1": {
+      "title": "Add an API key",
+      "description": "Add your Tavily or Brave API key. The gateway uses it for every upstream search call.",
+      "action": "Add key"
+    },
+    "step2": {
+      "title": "Mint a client token",
+      "description": "Create a scoped token for your MCP client. Set expiry, allowed tools, and rate limit.",
+      "action": "Mint token"
+    },
+    "step3": {
+      "title": "Test a tool",
+      "description": "Use the Playground to fire a live MCP request with your token and confirm results.",
+      "action": "Open Playground"
+    }
   }
 }

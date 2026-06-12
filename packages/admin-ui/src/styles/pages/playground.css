@@ -1,0 +1,262 @@
+/* ============================================================================
+   mcp-nexus Admin Console — Playground page
+   "Graphite & Cobalt" · P3
+   All rules scoped under .page-playground
+   ============================================================================ */
+
+/* ===========================================================================
+   Page frame
+   =========================================================================== */
+.page-playground {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  max-width: 1200px;
+}
+
+/* ===========================================================================
+   Two-pane layout
+   =========================================================================== */
+.page-playground .playground-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ===========================================================================
+   Panel card (request + response)
+   =========================================================================== */
+.page-playground .playground-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.page-playground .playground-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunken);
+  border-radius: var(--radius) var(--radius) 0 0;
+  flex-shrink: 0;
+}
+
+.page-playground .playground-panel-title {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  line-height: var(--lh-tight);
+}
+
+.page-playground .playground-panel-body {
+  flex: 1;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: hidden;
+}
+
+/* ===========================================================================
+   Request form fields
+   =========================================================================== */
+.page-playground .playground-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page-playground .playground-field-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-mid);
+  letter-spacing: 0.01em;
+}
+
+.page-playground .playground-field-hint {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  line-height: var(--lh-base);
+}
+
+.page-playground .playground-params-textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+
+.page-playground .playground-execute-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-1);
+}
+
+/* ===========================================================================
+   Response panel
+   =========================================================================== */
+.page-playground .playground-response-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page-playground .playground-response-duration {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-low);
+  font-variant-numeric: tabular-nums;
+}
+
+.page-playground .playground-response-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-playground .playground-empty-response {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: var(--text-low);
+  font-size: var(--text-sm);
+  min-height: 200px;
+}
+
+.page-playground .playground-empty-response svg {
+  width: 28px;
+  height: 28px;
+  color: var(--text-low);
+  opacity: 0.5;
+}
+
+/* ===========================================================================
+   JSON viewer (Playground-scoped; only used in this page)
+   =========================================================================== */
+.page-playground .json-viewer {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--lh-loose);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  overflow: auto;
+  flex: 1;
+  white-space: pre;
+  tab-size: 2;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Syntax colors — use design-system tokens */
+.page-playground .json-key {
+  color: var(--primary);
+  font-weight: var(--fw-medium);
+}
+
+.page-playground .json-string {
+  color: var(--success);
+}
+
+.page-playground .json-number {
+  color: var(--accent);
+}
+
+.page-playground .json-boolean {
+  color: var(--warning);
+}
+
+.page-playground .json-null {
+  color: var(--text-low);
+  font-style: italic;
+}
+
+/* ===========================================================================
+   History panel
+   =========================================================================== */
+.page-playground .playground-history-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.page-playground .playground-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.page-playground .playground-history-title {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+
+/* History table row interactions */
+.page-playground .playground-history-card .table tbody tr {
+  cursor: pointer;
+}
+
+.page-playground .playground-history-card .table tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+.page-playground .playground-history-card .table tbody tr[data-selected='true'] td {
+  background: var(--primary-soft);
+}
+
+/* ===========================================================================
+   Tool selector integration
+   =========================================================================== */
+.page-playground .playground-tool-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* ===========================================================================
+   Responsive — stack panes on narrow screens
+   =========================================================================== */
+@media (max-width: 900px) {
+  .page-playground .playground-panes {
+    grid-template-columns: 1fr;
+  }
+
+  .page-playground .playground-panel {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-playground {
+    padding: var(--space-4);
+  }
+}
+
+/* ===========================================================================
+   Reduced motion
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .page-playground .playground-panel,
+  .page-playground .playground-history-card {
+    transition: none;
+  }
+}

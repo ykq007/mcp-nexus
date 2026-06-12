@@ -37,5 +37,25 @@
   },
   "empty": {
     "noUsage": "暂无使用记录。"
+  },
+  "onboarding": {
+    "title": "快速开始",
+    "subtitle": "完成以下三个步骤，开始处理 MCP 请求。",
+    "dismiss": "关闭",
+    "step1": {
+      "title": "添加 API 密钥",
+      "description": "添加您的 Tavily 或 Brave API 密钥。网关将在每次上游搜索调用中使用它。",
+      "action": "添加密钥"
+    },
+    "step2": {
+      "title": "创建客户端令牌",
+      "description": "为您的 MCP 客户端创建一个有范围限制的令牌，设置过期时间、允许的工具和速率限制。",
+      "action": "创建令牌"
+    },
+    "step3": {
+      "title": "测试工具",
+      "description": "使用 Playground 发送一个实时 MCP 请求，并使用您的令牌确认结果。",
+      "action": "打开 Playground"
+    }
   }
 }

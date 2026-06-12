@@ -1,7 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const MCP_TOOLS = [
   'tavily_search',
+  'tavily_extract',
+  'tavily_crawl',
+  'tavily_map',
+  'tavily_research',
   'brave_web_search',
   'brave_local_search'
 ] as const;
@@ -25,14 +30,15 @@ type ToolSelectorProps = {
 };
 
 export function ToolSelector({ value, onChange, disabled }: ToolSelectorProps) {
+  const { t } = useTranslation('playground');
   return (
-    <div className="stack gap-1">
-      <label htmlFor="tool-selector" className="label">
-        Tool
+    <div className="playground-tool-select-wrap">
+      <label htmlFor="tool-selector" className="playground-field-label">
+        {t('tool')}
       </label>
       <select
         id="tool-selector"
-        className="select"
+        className="select mono"
         value={value}
         onChange={(e) => onChange(e.target.value as McpTool)}
         disabled={disabled}
@@ -43,7 +49,7 @@ export function ToolSelector({ value, onChange, disabled }: ToolSelectorProps) {
           </option>
         ))}
       </select>
-      <div className="help">Select the MCP tool to execute.</div>
+      <div className="playground-field-hint">{t('toolDescription')}</div>
     </div>
   );
 }

@@ -4,6 +4,9 @@
     "tavily": "Tavily",
     "brave": "Brave Search"
   },
+  "providerSwitch": {
+    "ariaLabel": "Select key provider"
+  },
   "tavily": {
     "title": "Tavily keys",
     "stats": {

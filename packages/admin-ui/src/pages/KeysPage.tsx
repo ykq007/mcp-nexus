@@ -6,26 +6,172 @@ import { formatDateTime } from '../lib/format';
 import { KeyRevealCell } from '../app/KeyRevealCell';
 import { KeyCreditsCell } from '../app/KeyCreditsCell';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { Dialog } from '../ui/Dialog';
+import { Drawer } from '../ui/Drawer';
 import { IconButton } from '../ui/IconButton';
 import { StatusMenu } from '../ui/StatusMenu';
+import { SegmentedControl } from '../ui/SegmentedControl';
 import { IconKey, IconPlus, IconRefresh, IconSearch, IconShield, IconToken, IconTrash } from '../ui/icons';
 import { Pagination } from '../ui/Pagination';
 import { useToast } from '../ui/toast';
 import { KpiCard } from '../ui/KpiCard';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { EmptyState } from '../ui/EmptyState';
-import { DataTable, type DataTableColumn } from '../ui/DataTable';
+import { DataTable, type DataTableColumn, type DataTableSortConfig } from '../ui/DataTable';
 import { ImportExportActions } from '../ui/ImportExportActions';
 import { FileImportDialog } from '../components/FileImportDialog';
 import { ClipboardImportDialog } from '../components/ClipboardImportDialog';
 import { ExportKeysDialog } from '../components/ExportKeysDialog';
+import '../styles/pages/keys.css';
 
 type SortField = 'label' | 'status' | 'lastUsedAt' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
-type KeyTab = 'tavily' | 'brave';
+type KeyProvider = 'tavily' | 'brave';
 
 const PAGE_SIZE = 10;
+
+// ─── Sub-component: Create Key Drawer ───────────────────────────────────────
+
+function KeysCreateDrawer({
+  open,
+  provider,
+  creating,
+  label,
+  apiKey,
+  touched,
+  formErrors,
+  isFormValid,
+  onClose,
+  onLabelChange,
+  onApiKeyChange,
+  onLabelBlur,
+  onApiKeyBlur,
+  onSubmit,
+}: {
+  open: boolean;
+  provider: KeyProvider;
+  creating: boolean;
+  label: string;
+  apiKey: string;
+  touched: { label?: boolean; apiKey?: boolean };
+  formErrors: { label?: string; apiKey?: string };
+  isFormValid: boolean;
+  onClose: () => void;
+  onLabelChange: (v: string) => void;
+  onApiKeyChange: (v: string) => void;
+  onLabelBlur: () => void;
+  onApiKeyBlur: () => void;
+  onSubmit: () => void;
+}) {
+  const { t } = useTranslation('keys');
+  const { t: tc } = useTranslation('common');
+
+  const isTavily = provider === 'tavily';
+  const titleKey = isTavily ? 'tavily.dialog.addTitle' : 'brave.dialog.addTitle';
+  const placeholderKey = isTavily ? 'form.apiKeyPlaceholder' : 'brave.form.apiKeyPlaceholder';
+  const helpKey = isTavily ? 'form.apiKeyHelp' : 'form.apiKeyHelp';
+  const formatHintKey = isTavily ? 'form.apiKeyFormat' : 'brave.form.apiKeyFormat';
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && isFormValid && !creating) {
+      onSubmit();
+    }
+  }
+
+  return (
+    <Drawer title={t(titleKey)} open={open} onClose={() => creating ? undefined : onClose()}>
+      <div className="stack" onKeyDown={handleKeyDown}>
+        {/* Label field */}
+        <div className="stack" style={{ gap: 'var(--space-1)' }}>
+          <label className="label" htmlFor="key-create-label">
+            {t('form.label')}
+            <span className="fieldRequired" aria-hidden="true"> {t('form.required')}</span>
+          </label>
+          <input
+            id="key-create-label"
+            className="input"
+            aria-required="true"
+            data-error={!!(formErrors.label && touched.label) || undefined}
+            value={label}
+            onChange={(e) => onLabelChange(e.target.value)}
+            onBlur={onLabelBlur}
+            placeholder={t('form.labelPlaceholder')}
+            autoComplete="off"
+            aria-invalid={!!(formErrors.label && touched.label)}
+            aria-describedby={
+              formErrors.label && touched.label ? 'key-create-label-error' : 'key-create-label-help'
+            }
+          />
+          {formErrors.label && touched.label ? (
+            <span id="key-create-label-error" className="fieldError" role="alert">
+              {formErrors.label}
+            </span>
+          ) : (
+            <span id="key-create-label-help" className="help">
+              {t('form.labelHelp')}
+            </span>
+          )}
+        </div>
+
+        {/* API Key field */}
+        <div className="stack" style={{ gap: 'var(--space-1)' }}>
+          <label className="label" htmlFor="key-create-apikey">
+            {t('form.apiKey')}
+            <span className="fieldRequired" aria-hidden="true"> {t('form.required')}</span>
+          </label>
+          <input
+            id="key-create-apikey"
+            className="input mono"
+            type="password"
+            aria-required="true"
+            data-error={!!(formErrors.apiKey && touched.apiKey) || undefined}
+            value={apiKey}
+            onChange={(e) => onApiKeyChange(e.target.value)}
+            onBlur={onApiKeyBlur}
+            placeholder={t(placeholderKey)}
+            autoComplete="new-password"
+            aria-invalid={!!(formErrors.apiKey && touched.apiKey)}
+            aria-describedby={
+              formErrors.apiKey && touched.apiKey ? 'key-create-apikey-error' : 'key-create-apikey-help'
+            }
+          />
+          {formErrors.apiKey && touched.apiKey ? (
+            <span id="key-create-apikey-error" className="fieldError" role="alert">
+              {formErrors.apiKey}
+            </span>
+          ) : (
+            <span id="key-create-apikey-help" className="help">
+              {isTavily ? t(helpKey) : t(formatHintKey)}
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+          <button
+            type="button"
+            className="btn"
+            onClick={onClose}
+            disabled={creating}
+          >
+            {tc('actions.cancel')}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            data-variant="primary"
+            onClick={onSubmit}
+            disabled={creating || !isFormValid}
+          >
+            <IconKey />
+            {creating ? t('button.adding') : t('actions.addKey')}
+          </button>
+        </div>
+      </div>
+    </Drawer>
+  );
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 
 export function KeysPage({ api }: { api: AdminApi }) {
   const { t } = useTranslation('keys');
@@ -33,38 +179,59 @@ export function KeysPage({ api }: { api: AdminApi }) {
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<KeyTab>('tavily');
+  // Provider segmented control
+  const [provider, setProvider] = useState<KeyProvider>('tavily');
 
-  // Tavily keys state
+  // ─── Tavily state ────────────────────────────────────────────────────────
   const [keys, setKeys] = useState<TavilyKeyDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingCredits, setSyncingCredits] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Brave keys state
+  // ─── Brave state ─────────────────────────────────────────────────────────
   const [braveKeys, setBraveKeys] = useState<BraveKeyDto[]>([]);
   const [braveLoading, setBraveLoading] = useState(true);
   const [braveError, setBraveError] = useState<string | null>(null);
 
-  // Search and filter state
+  // ─── Shared filter/sort state (reset on provider switch) ─────────────────
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | TavilyKeyStatus>('all');
-  const [sortBy, setSortBy] = useState<SortField>('createdAt');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-
-  // Pagination state
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortConfig, setSortConfig] = useState<DataTableSortConfig>({ columnId: 'createdAt', dir: 'desc' });
   const [page, setPage] = useState(1);
 
-  // Phase 3: Multi-select state
+  // Reset filters when switching provider
+  useEffect(() => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortConfig({ columnId: 'createdAt', dir: 'desc' });
+    setPage(1);
+  }, [provider]);
+
+  // ─── Multi-select (Tavily only) ───────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // ─── Create drawer state ──────────────────────────────────────────────────
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newLabel, setNewLabel] = useState('');
   const [newApiKey, setNewApiKey] = useState('');
   const [touched, setTouched] = useState<{ label?: boolean; apiKey?: boolean }>({});
 
+  // ─── Delete state ─────────────────────────────────────────────────────────
+  const [keyToDelete, setKeyToDelete] = useState<TavilyKeyDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [bulkDeleteIds, setBulkDeleteIds] = useState<string[] | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [braveKeyToDelete, setBraveKeyToDelete] = useState<BraveKeyDto | null>(null);
+  const [braveDeleting, setBraveDeleting] = useState(false);
+
+  // ─── Import/Export state ──────────────────────────────────────────────────
+  const [importOpen, setImportOpen] = useState(false);
+  const [clipboardImportOpen, setClipboardImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportInitialAction, setExportInitialAction] = useState<'file' | 'clipboard'>('file');
+
+  // ─── Deep-link ?create=1 ──────────────────────────────────────────────────
   const createFromUrl = searchParams.get('create');
   useEffect(() => {
     if (createFromUrl !== '1') return;
@@ -74,26 +241,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
     setSearchParams(next, { replace: true });
   }, [createFromUrl, searchParams, setSearchParams]);
 
-  const [keyToDelete, setKeyToDelete] = useState<TavilyKeyDto | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [bulkDeleteIds, setBulkDeleteIds] = useState<string[] | null>(null);
-  const [bulkDeleting, setBulkDeleting] = useState(false);
-
-  // Brave key dialog state
-  const [braveCreateOpen, setBraveCreateOpen] = useState(false);
-  const [braveCreating, setBraveCreating] = useState(false);
-  const [newBraveLabel, setNewBraveLabel] = useState('');
-  const [newBraveApiKey, setNewBraveApiKey] = useState('');
-  const [braveTouched, setBraveTouched] = useState<{ label?: boolean; apiKey?: boolean }>({});
-  const [braveKeyToDelete, setBraveKeyToDelete] = useState<BraveKeyDto | null>(null);
-  const [braveDeleting, setBraveDeleting] = useState(false);
-
-  // Import/Export state
-  const [importOpen, setImportOpen] = useState(false);
-  const [clipboardImportOpen, setClipboardImportOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [exportInitialAction, setExportInitialAction] = useState<'file' | 'clipboard'>('file');
-
+  // ─── Data loading ─────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -125,124 +273,130 @@ export function KeysPage({ api }: { api: AdminApi }) {
     void loadBraveKeys();
   }, [load, loadBraveKeys]);
 
-  // Filtered and sorted keys
+  // ─── Sort toggle ──────────────────────────────────────────────────────────
+  const handleSort = useCallback((columnId: string) => {
+    setSortConfig((prev) => ({
+      columnId,
+      dir: prev.columnId === columnId && prev.dir === 'asc' ? 'desc' : 'asc',
+    }));
+    setPage(1);
+  }, []);
+
+  // ─── Filtered + sorted Tavily keys ───────────────────────────────────────
   const filteredKeys = useMemo(() => {
     let result = keys;
-
-    // Filter by search query
     if (searchQuery.trim()) {
       result = result.filter((k) => k.label.toLowerCase().includes(searchQuery.toLowerCase()));
     }
-
-    // Filter by status
     if (statusFilter !== 'all') {
       result = result.filter((k) => k.status === statusFilter);
     }
-
-    // Sort
-    result = [...result].sort((a, b) => {
-      let comparison = 0;
-      switch (sortBy) {
-        case 'label':
-          comparison = a.label.localeCompare(b.label);
-          break;
-        case 'status':
-          comparison = a.status.localeCompare(b.status);
-          break;
-        case 'lastUsedAt':
-          comparison = (a.lastUsedAt || '').localeCompare(b.lastUsedAt || '');
-          break;
-        case 'createdAt':
-          comparison = a.createdAt.localeCompare(b.createdAt);
-          break;
-      }
-      return sortOrder === 'asc' ? comparison : -comparison;
+    return [...result].sort((a, b) => {
+      let cmp = 0;
+      const col = sortConfig.columnId as SortField;
+      if (col === 'label') cmp = a.label.localeCompare(b.label);
+      else if (col === 'status') cmp = a.status.localeCompare(b.status);
+      else if (col === 'lastUsedAt') cmp = (a.lastUsedAt || '').localeCompare(b.lastUsedAt || '');
+      else cmp = a.createdAt.localeCompare(b.createdAt); // createdAt default
+      return sortConfig.dir === 'asc' ? cmp : -cmp;
     });
+  }, [keys, searchQuery, statusFilter, sortConfig]);
 
-    return result;
-  }, [keys, searchQuery, statusFilter, sortBy, sortOrder]);
-
-  // Paginated keys
   const paginatedKeys = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return filteredKeys.slice(start, start + PAGE_SIZE);
   }, [filteredKeys, page]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, statusFilter, sortBy, sortOrder]);
+  // Reset page when filters change (but not on sort — sort keeps page)
+  useEffect(() => { setPage(1); }, [searchQuery, statusFilter]);
 
-  const stats = useMemo(() => {
+  // ─── Filtered + sorted Brave keys ─────────────────────────────────────────
+  const filteredBraveKeys = useMemo(() => {
+    let result = braveKeys;
+    if (searchQuery.trim()) {
+      result = result.filter((k) => k.label.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (statusFilter !== 'all') {
+      result = result.filter((k) => k.status === statusFilter);
+    }
+    return [...result].sort((a, b) => {
+      let cmp = 0;
+      const col = sortConfig.columnId as SortField;
+      if (col === 'label') cmp = a.label.localeCompare(b.label);
+      else if (col === 'status') cmp = a.status.localeCompare(b.status);
+      else if (col === 'lastUsedAt') cmp = (a.lastUsedAt || '').localeCompare(b.lastUsedAt || '');
+      else cmp = a.createdAt.localeCompare(b.createdAt);
+      return sortConfig.dir === 'asc' ? cmp : -cmp;
+    });
+  }, [braveKeys, searchQuery, statusFilter, sortConfig]);
+
+  const paginatedBraveKeys = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredBraveKeys.slice(start, start + PAGE_SIZE);
+  }, [filteredBraveKeys, page]);
+
+  // ─── Stats ────────────────────────────────────────────────────────────────
+  const tavilyStats = useMemo(() => {
     const active = keys.filter((k) => k.status === 'active').length;
-    const disabled = keys.filter((k) => k.status === 'disabled').length;
+    const totalCredits = keys.reduce((sum, k) => sum + (k.remainingCredits || 0), 0);
+    const activeRate = keys.length > 0 ? Math.round((active / keys.length) * 100) : 0;
     const cooldown = keys.filter((k) => k.status === 'cooldown').length;
     const invalid = keys.filter((k) => k.status === 'invalid').length;
-    const total = keys.length;
-
-    // 2026: Calculate KPI metrics
-    const totalCredits = keys.reduce((sum, k) => sum + (k.remainingCredits || 0), 0);
-    const activeRate = total > 0 ? Math.round((active / total) * 100) : 0;
-
-    return { active, disabled, cooldown, invalid, total, totalCredits, activeRate };
+    const disabled = keys.filter((k) => k.status === 'disabled').length;
+    return { active, disabled, cooldown, invalid, total: keys.length, totalCredits, activeRate };
   }, [keys]);
 
-  // Form validation
+  const braveStats = useMemo(() => {
+    const active = braveKeys.filter((k) => k.status === 'active').length;
+    const activeRate = braveKeys.length > 0 ? Math.round((active / braveKeys.length) * 100) : 0;
+    const invalid = braveKeys.filter((k) => k.status === 'invalid').length;
+    const disabled = braveKeys.filter((k) => k.status === 'disabled').length;
+    return { active, disabled, invalid, total: braveKeys.length, activeRate };
+  }, [braveKeys]);
+
+  // ─── Create form validation ───────────────────────────────────────────────
   const formErrors = useMemo(() => {
     const errors: { label?: string; apiKey?: string } = {};
-    if (touched.label && !newLabel.trim()) {
-      errors.label = t('form.labelRequired');
-    } else if (touched.label && newLabel.length < 2) {
-      errors.label = t('form.labelMinLength');
-    }
-    if (touched.apiKey && !newApiKey.trim()) {
-      errors.apiKey = t('form.apiKeyRequired');
-    } else if (touched.apiKey && !newApiKey.startsWith('tvly-')) {
+    if (touched.label && !newLabel.trim()) errors.label = t('form.labelRequired');
+    else if (touched.label && newLabel.length < 2) errors.label = t('form.labelMinLength');
+    if (touched.apiKey && !newApiKey.trim()) errors.apiKey = t('form.apiKeyRequired');
+    else if (touched.apiKey && provider === 'tavily' && !newApiKey.startsWith('tvly-'))
       errors.apiKey = t('form.apiKeyFormat');
-    }
     return errors;
-  }, [newLabel, newApiKey, touched, t]);
+  }, [newLabel, newApiKey, touched, provider, t]);
 
-  const isFormValid = !formErrors.label && !formErrors.apiKey && newLabel.trim() && newApiKey.trim();
+  const isFormValid =
+    !formErrors.label && !formErrors.apiKey && newLabel.trim().length >= 2 && newApiKey.trim().length > 0 &&
+    (provider !== 'tavily' || newApiKey.startsWith('tvly-'));
 
-  // Brave form validation
-  const braveFormErrors = useMemo(() => {
-    const errors: { label?: string; apiKey?: string } = {};
-    if (braveTouched.label && !newBraveLabel.trim()) {
-      errors.label = t('form.labelRequired');
-    } else if (braveTouched.label && newBraveLabel.length < 2) {
-      errors.label = t('form.labelMinLength');
-    }
-    if (braveTouched.apiKey && !newBraveApiKey.trim()) {
-      errors.apiKey = t('form.apiKeyRequired');
-    }
-    return errors;
-  }, [newBraveLabel, newBraveApiKey, braveTouched, t]);
-
-  const isBraveFormValid = !braveFormErrors.label && !braveFormErrors.apiKey && newBraveLabel.trim() && newBraveApiKey.trim();
-
-  function clearFilters() {
-    setSearchQuery('');
-    setStatusFilter('all');
+  function openCreate() {
+    setNewLabel('');
+    setNewApiKey('');
+    setTouched({});
+    setCreateOpen(true);
   }
 
-  function handleSortChange(value: string) {
-    const [field, order] = value.split('-') as [SortField, SortOrder];
-    setSortBy(field);
-    setSortOrder(order);
+  function closeCreate() {
+    if (creating) return;
+    setCreateOpen(false);
   }
 
+  // ─── Create actions ───────────────────────────────────────────────────────
   async function onCreate() {
-    if (!newLabel.trim() || !newApiKey.trim()) return;
+    if (!isFormValid) return;
     setCreating(true);
     try {
-      await api.createKey({ label: newLabel.trim(), apiKey: newApiKey.trim() });
+      if (provider === 'tavily') {
+        await api.createKey({ label: newLabel.trim(), apiKey: newApiKey.trim() });
+      } else {
+        await api.createBraveKey({ label: newLabel.trim(), apiKey: newApiKey.trim() });
+      }
       toast.push({ title: t('toast.added'), message: t('toast.addedMessage', { name: newLabel.trim() }), variant: 'success' });
       setCreateOpen(false);
       setNewLabel('');
       setNewApiKey('');
       setTouched({});
-      await load();
+      if (provider === 'tavily') { await load(); } else { await loadBraveKeys(); }
     } catch (e: any) {
       toast.push({ title: t('toast.createFailed'), message: typeof e?.message === 'string' ? e.message : tc('errors.unknownError'), variant: 'error' });
     } finally {
@@ -250,7 +404,8 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   }
 
-  async function onUpdateStatus(id: string, status: TavilyKeyStatus) {
+  // ─── Update status ────────────────────────────────────────────────────────
+  async function onUpdateTavilyStatus(id: string, status: TavilyKeyStatus) {
     try {
       await api.updateKeyStatus(id, status);
       toast.push({ title: t('toast.updated'), message: t('toast.updatedMessage', { status }), variant: 'success' });
@@ -270,6 +425,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   }
 
+  // ─── Delete (Tavily single) ───────────────────────────────────────────────
   async function onDeleteKey() {
     if (!keyToDelete) return;
     setDeleting(true);
@@ -285,24 +441,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   }
 
-  async function onCreateBraveKey() {
-    if (!newBraveLabel.trim() || !newBraveApiKey.trim()) return;
-    setBraveCreating(true);
-    try {
-      await api.createBraveKey({ label: newBraveLabel.trim(), apiKey: newBraveApiKey.trim() });
-      toast.push({ title: t('toast.added'), message: t('toast.addedMessage', { name: newBraveLabel.trim() }), variant: 'success' });
-      setBraveCreateOpen(false);
-      setNewBraveLabel('');
-      setNewBraveApiKey('');
-      setBraveTouched({});
-      await loadBraveKeys();
-    } catch (e: any) {
-      toast.push({ title: t('toast.createFailed'), message: typeof e?.message === 'string' ? e.message : tc('errors.unknownError'), variant: 'error' });
-    } finally {
-      setBraveCreating(false);
-    }
-  }
-
+  // ─── Delete (Brave single) ────────────────────────────────────────────────
   async function onDeleteBraveKey() {
     if (!braveKeyToDelete) return;
     setBraveDeleting(true);
@@ -318,6 +457,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   }
 
+  // ─── Sync-all credits (Tavily) ────────────────────────────────────────────
   async function onSyncAll() {
     if (syncingCredits) return;
     setSyncingCredits(true);
@@ -327,7 +467,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
       toast.push({
         title: t('toast.creditsUpdated'),
         message: t('toast.creditsUpdatedMessage', { total: result.total, success: result.success, failed: result.failed }),
-        variant: result.failed > 0 ? 'warning' : 'success'
+        variant: result.failed > 0 ? 'warning' : 'success',
       });
       await load();
     } catch (e: any) {
@@ -337,58 +477,53 @@ export function KeysPage({ api }: { api: AdminApi }) {
     }
   }
 
-  // Phase 3: Multi-select handlers
-  const toggleSelectAll = () => {
-    if (selectedIds.size === paginatedKeys.length) {
+  // ─── Multi-select (Tavily) ────────────────────────────────────────────────
+  function toggleSelectAll() {
+    if (selectedIds.size === paginatedKeys.length && paginatedKeys.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(paginatedKeys.map(k => k.id)));
+      setSelectedIds(new Set(paginatedKeys.map((k) => k.id)));
     }
-  };
+  }
 
-  const toggleSelect = (id: string) => {
-    const newSet = new Set(selectedIds);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setSelectedIds(newSet);
-  };
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
-  const clearSelection = () => {
+  function clearSelection() {
     setSelectedIds(new Set());
-  };
+  }
 
-  const bulkRefreshCredits = async () => {
+  async function bulkRefreshCredits() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
-
     toast.push({ title: t('toast.syncing'), message: t('toast.syncingMessage', { count: ids.length }), variant: 'info' });
-
     try {
-      await Promise.all(ids.map(id => api.refreshKeyCredits(id)));
+      await Promise.all(ids.map((id) => api.refreshKeyCredits(id)));
       toast.push({ title: t('toast.syncSuccess'), message: t('toast.syncSuccessMessage', { count: ids.length }), variant: 'success' });
       clearSelection();
       await load();
     } catch (e: any) {
       toast.push({ title: t('toast.bulkRefreshFailed'), message: e.message, variant: 'error' });
     }
-  };
+  }
 
-  const bulkDelete = async () => {
+  function bulkDelete() {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     setBulkDeleteIds(ids);
-  };
+  }
 
-  const onBulkDelete = async () => {
+  async function onBulkDelete() {
     if (!bulkDeleteIds || bulkDeleteIds.length === 0) return;
     setBulkDeleting(true);
     toast.push({ title: t('toast.bulkDeleting'), message: t('toast.bulkDeletingMessage', { count: bulkDeleteIds.length }), variant: 'info' });
-
     try {
-      await Promise.all(bulkDeleteIds.map(id => api.deleteKey(id)));
+      await Promise.all(bulkDeleteIds.map((id) => api.deleteKey(id)));
       toast.push({ title: t('toast.bulkDeleted'), message: t('toast.bulkDeletedMessage', { count: bulkDeleteIds.length }), variant: 'success' });
       clearSelection();
       setBulkDeleteIds(null);
@@ -398,8 +533,9 @@ export function KeysPage({ api }: { api: AdminApi }) {
     } finally {
       setBulkDeleting(false);
     }
-  };
+  }
 
+  // ─── Import/Export ────────────────────────────────────────────────────────
   const openExport = (mode: 'file' | 'clipboard') => {
     setExportInitialAction(mode);
     setExportOpen(true);
@@ -412,538 +548,477 @@ export function KeysPage({ api }: { api: AdminApi }) {
     return result;
   };
 
+  // ─── Derived flags ────────────────────────────────────────────────────────
   const hasFilters = searchQuery.trim() || statusFilter !== 'all';
+  const isTavily = provider === 'tavily';
+  const currentLoading = isTavily ? loading : braveLoading;
+  const currentError = isTavily ? error : braveError;
+  const currentRetry = isTavily ? load : loadBraveKeys;
 
-  // Brave stats
-  const braveStats = useMemo(() => {
-    const active = braveKeys.filter((k) => k.status === 'active').length;
-    const disabled = braveKeys.filter((k) => k.status === 'disabled').length;
-    const invalid = braveKeys.filter((k) => k.status === 'invalid').length;
-    const total = braveKeys.length;
-    const activeRate = total > 0 ? Math.round((active / total) * 100) : 0;
-    return { active, disabled, invalid, total, activeRate };
-  }, [braveKeys]);
+  function clearFilters() {
+    setSearchQuery('');
+    setStatusFilter('all');
+  }
 
+  // ─── Tavily DataTable columns ─────────────────────────────────────────────
+  const tavilyColumns = useMemo((): DataTableColumn<TavilyKeyDto>[] => [
+    {
+      id: 'select',
+      header: (
+        <input
+          type="checkbox"
+          checked={selectedIds.size === paginatedKeys.length && paginatedKeys.length > 0}
+          onChange={toggleSelectAll}
+          aria-label={t('table.selectAll')}
+          style={{ cursor: 'pointer' }}
+        />
+      ),
+      headerStyle: { width: 40 },
+      dataLabel: t('table.select'),
+      cell: (k: TavilyKeyDto) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(k.id)}
+          onChange={() => toggleSelect(k.id)}
+          aria-label={t('table.selectKey', { label: k.label })}
+          style={{ cursor: 'pointer' }}
+        />
+      ),
+    },
+    {
+      id: 'label',
+      header: t('table.label'),
+      headerStyle: { width: '15%' },
+      dataLabel: t('table.label'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: TavilyKeyDto) => k.label,
+    },
+    {
+      id: 'key',
+      header: t('table.apiKey'),
+      headerStyle: { width: '22%' },
+      dataLabel: t('table.apiKey'),
+      cell: (k: TavilyKeyDto) => (
+        <KeyRevealCell keyId={k.id} maskedKey={k.maskedKey || '••••••••••••'} api={api} provider="tavily" />
+      ),
+    },
+    {
+      id: 'credits',
+      header: t('table.credits'),
+      headerStyle: { width: '18%' },
+      dataLabel: t('table.credits'),
+      cell: (k: TavilyKeyDto) => (
+        <KeyCreditsCell
+          keyId={k.id}
+          remaining={k.remainingCredits}
+          total={k.totalCredits}
+          lastChecked={k.lastCheckedAt}
+          api={api}
+          onUpdate={load}
+        />
+      ),
+    },
+    {
+      id: 'status',
+      header: t('table.status'),
+      headerStyle: { width: '11%' },
+      dataLabel: t('table.status'),
+      sortable: true,
+      cell: (k: TavilyKeyDto) => (
+        <StatusMenu
+          status={k.status}
+          onChange={(s) => onUpdateTavilyStatus(k.id, s as TavilyKeyStatus)}
+        />
+      ),
+    },
+    {
+      id: 'lastUsedAt',
+      header: t('table.lastUsed'),
+      headerStyle: { width: '13%' },
+      dataLabel: t('table.lastUsed'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: TavilyKeyDto) => formatDateTime(k.lastUsedAt),
+    },
+    {
+      id: 'createdAt',
+      header: t('table.created'),
+      headerStyle: { width: '13%' },
+      dataLabel: t('table.created'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: TavilyKeyDto) => formatDateTime(k.createdAt),
+    },
+    {
+      id: 'actions',
+      header: '',
+      headerStyle: { width: '8%', textAlign: 'right' },
+      headerAlign: 'right',
+      dataLabel: t('table.actions'),
+      cellAlign: 'right',
+      cell: (k: TavilyKeyDto) => (
+        <IconButton
+          icon={<IconTrash />}
+          variant="ghost-danger"
+          onClick={() => setKeyToDelete(k)}
+          title={t('button.deleteKey')}
+          aria-label={t('button.deleteKey')}
+        />
+      ),
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [selectedIds, paginatedKeys, t, api, load]);
+
+  // ─── Brave DataTable columns ──────────────────────────────────────────────
+  const braveColumns = useMemo((): DataTableColumn<BraveKeyDto>[] => [
+    {
+      id: 'label',
+      header: t('table.label'),
+      headerStyle: { width: '20%' },
+      dataLabel: t('table.label'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: BraveKeyDto) => k.label,
+    },
+    {
+      id: 'key',
+      header: t('table.apiKey'),
+      headerStyle: { width: '30%' },
+      dataLabel: t('table.apiKey'),
+      cell: (k: BraveKeyDto) => (
+        <KeyRevealCell keyId={k.id} maskedKey={k.maskedKey || '••••••••••••'} api={api} provider="brave" />
+      ),
+    },
+    {
+      id: 'status',
+      header: t('table.status'),
+      headerStyle: { width: '14%' },
+      dataLabel: t('table.status'),
+      sortable: true,
+      cell: (k: BraveKeyDto) => (
+        <StatusMenu
+          status={k.status}
+          options={['active', 'disabled', 'invalid']}
+          onChange={(s) => onUpdateBraveStatus(k.id, s as BraveKeyStatus)}
+        />
+      ),
+    },
+    {
+      id: 'lastUsedAt',
+      header: t('table.lastUsed'),
+      headerStyle: { width: '16%' },
+      dataLabel: t('table.lastUsed'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: BraveKeyDto) => formatDateTime(k.lastUsedAt),
+    },
+    {
+      id: 'createdAt',
+      header: t('table.created'),
+      headerStyle: { width: '15%' },
+      dataLabel: t('table.created'),
+      cellClassName: 'mono',
+      sortable: true,
+      cell: (k: BraveKeyDto) => formatDateTime(k.createdAt),
+    },
+    {
+      id: 'actions',
+      header: '',
+      headerStyle: { width: '5%', textAlign: 'right' },
+      headerAlign: 'right',
+      dataLabel: t('table.actions'),
+      cellAlign: 'right',
+      cell: (k: BraveKeyDto) => (
+        <IconButton
+          icon={<IconTrash />}
+          variant="ghost-danger"
+          onClick={() => setBraveKeyToDelete(k)}
+          title={t('button.deleteKey')}
+          aria-label={t('button.deleteKey')}
+        />
+      ),
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, api]);
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="stack">
-      {/* Tab Navigation */}
-      <div className="tabs" role="tablist">
-        <button
-          role="tab"
-          aria-selected={activeTab === 'tavily'}
-          className={`tab${activeTab === 'tavily' ? ' tab--active' : ''}`}
-          onClick={() => setActiveTab('tavily')}
-        >
-          {t('tabs.tavily')}
-          <span className="tabBadge">{keys.length}</span>
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'brave'}
-          className={`tab${activeTab === 'brave' ? ' tab--active' : ''}`}
-          onClick={() => setActiveTab('brave')}
-        >
-          {t('tabs.brave')}
-          <span className="tabBadge">{braveKeys.length}</span>
-        </button>
-      </div>
-
-      {activeTab === 'tavily' ? (
-        <>
-          {/* 2026: KPI Dashboard */}
-          <div className="kpis">
-        <KpiCard
-          title={t('kpi.totalCapacity')}
-          value={stats.totalCredits.toLocaleString()}
-          icon={<IconToken />}
-          variant="tokens"
-        />
-        <KpiCard
-          title={t('kpi.activeKeys')}
-          value={`${stats.active}/${stats.total}`}
-          icon={<IconKey />}
-          variant="keys"
-        />
-        <KpiCard
-          title={t('kpi.systemHealth')}
-          value={`${stats.activeRate}%`}
-          icon={<IconShield />}
-          variant="usage"
+    <div className="page-keys stack">
+      {/* ── Provider segmented control ── */}
+      <div className="keys-providerRow">
+        <SegmentedControl
+          aria-label={t('providerSwitch.ariaLabel')}
+          value={provider}
+          onChange={(v) => { setProvider(v as KeyProvider); clearSelection(); }}
+          options={[
+            {
+              value: 'tavily' as KeyProvider,
+              label: (
+                <span className="keys-providerLabel">
+                  {t('tabs.tavily')}
+                  <span className="keys-providerCount">{keys.length}</span>
+                </span>
+              ),
+              ariaLabel: `${t('tabs.tavily')} (${keys.length})`,
+            },
+            {
+              value: 'brave' as KeyProvider,
+              label: (
+                <span className="keys-providerLabel">
+                  {t('tabs.brave')}
+                  <span className="keys-providerCount">{braveKeys.length}</span>
+                </span>
+              ),
+              ariaLabel: `${t('tabs.brave')} (${braveKeys.length})`,
+            },
+          ]}
         />
       </div>
 
-      <div className="card">
-        <div className="cardHeader">
-          <div className="row">
-            <div>
-              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
-              <div className="help">
-                {stats.total} total • {stats.active} active • {stats.cooldown} cooldown • {stats.invalid} invalid •{' '}
-                {stats.disabled} disabled
-              </div>
-            </div>
-            <div className="flex gap-3 items-center">
-              <ImportExportActions
-                onExportToFile={() => openExport('file')}
-                onExportToClipboard={() => openExport('clipboard')}
-                onImportFromFile={() => setImportOpen(true)}
-                onImportFromClipboard={() => setClipboardImportOpen(true)}
-                loading={exportOpen}
-              />
-              <button className="btn" onClick={load} disabled={loading}>
-                <IconRefresh className={loading ? 'spin' : ''} />
-                {t('actions.refresh')}
-              </button>
-              <button
-                className="btn"
-                onClick={onSyncAll}
-                title={t('actions.checkCredits')}
-                disabled={syncingCredits}
-                style={{ minWidth: 140 }}
-              >
-                <IconRefresh className={syncingCredits ? 'spin' : ''} />
-                {syncingCredits ? t('actions.checkingCredits') : t('actions.checkCredits')}
-              </button>
-              <button className="btn" data-variant="primary" onClick={() => setCreateOpen(true)}>
-                <IconPlus />
-                {t('actions.addKey')}
-              </button>
-            </div>
-          </div>
+      {/* ── KPI row ── */}
+      {isTavily ? (
+        <div className="kpis">
+          <KpiCard
+            title={t('tavily.kpi.totalCapacity')}
+            value={tavilyStats.totalCredits.toLocaleString()}
+            icon={<IconToken />}
+            variant="tokens"
+          />
+          <KpiCard
+            title={t('tavily.kpi.activeKeys')}
+            value={`${tavilyStats.active}/${tavilyStats.total}`}
+            icon={<IconKey />}
+            variant="keys"
+          />
+          <KpiCard
+            title={t('tavily.kpi.systemHealth')}
+            value={`${tavilyStats.activeRate}%`}
+            icon={<IconShield />}
+            variant="usage"
+          />
         </div>
+      ) : (
+        <div className="kpis">
+          <KpiCard
+            title={t('brave.kpi.activeKeys')}
+            value={`${braveStats.active}/${braveStats.total}`}
+            icon={<IconKey />}
+            variant="keys"
+          />
+          <KpiCard
+            title={t('brave.kpi.systemHealth')}
+            value={`${braveStats.activeRate}%`}
+            icon={<IconShield />}
+            variant="usage"
+          />
+        </div>
+      )}
 
-        {/* Search and Filter Bar */}
-        <div className="filterBar">
-          <div className="filterBarGrid">
-            {/* Search input */}
-            <div className="searchInput">
-              <div className="searchInputIcon">
-                <IconSearch />
-              </div>
-              <input
-                type="search"
-                className="input"
-                placeholder={t('search.placeholder')}
-                aria-label={t('search.placeholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: 40 }}
-              />
+      {/* ── Table card ── */}
+      <div className="card">
+        {/* Table toolbar */}
+        <div className="tableToolbar">
+          {/* Search */}
+          <div className="tableToolbarSearch searchInput">
+            <div className="searchInputIcon" aria-hidden="true">
+              <IconSearch />
             </div>
+            <input
+              type="search"
+              className="input"
+              placeholder={t('search.placeholder')}
+              aria-label={t('search.placeholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-            {/* Status filter */}
+          {/* Status filter */}
+          <div className="tableToolbarFilters">
             <select
               className="select"
               aria-label={t('table.status')}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | TavilyKeyStatus)}
-              style={{ minWidth: 150 }}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ minWidth: 140 }}
             >
               <option value="all">{t('filter.allStatuses')}</option>
               <option value="active">{t('filter.active')}</option>
               <option value="disabled">{t('filter.disabled')}</option>
-              <option value="cooldown">{t('filter.cooldown')}</option>
+              {isTavily && <option value="cooldown">{t('filter.cooldown')}</option>}
               <option value="invalid">{t('filter.invalid')}</option>
             </select>
 
-            {/* Sort selector */}
-            <select
-              className="select"
-              aria-label={t('sort.label')}
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => handleSortChange(e.target.value)}
-              style={{ minWidth: 160 }}
-            >
-              <option value="createdAt-desc">{t('sort.newestFirst')}</option>
-              <option value="createdAt-asc">{t('sort.oldestFirst')}</option>
-              <option value="label-asc">{t('sort.labelAZ')}</option>
-              <option value="label-desc">{t('sort.labelZA')}</option>
-              <option value="lastUsedAt-desc">{t('sort.recentlyUsed')}</option>
-              <option value="status-asc">{t('sort.statusAZ')}</option>
-            </select>
-          </div>
-
-          {/* Results count */}
-          <div className="filterResults">
-            <span>
-              {t('search.showing', { filtered: filteredKeys.length, total: keys.length })}
+            {/* Results count + clear */}
+            <span className="keys-filterCount">
+              {t('search.showing', {
+                filtered: isTavily ? filteredKeys.length : filteredBraveKeys.length,
+                total: isTavily ? keys.length : braveKeys.length,
+              })}
             </span>
             {hasFilters && (
-              <button className="btn btn--xs" data-variant="ghost" onClick={clearFilters}>
+              <button className="btn" data-variant="ghost" onClick={clearFilters} style={{ height: 28, fontSize: 'var(--text-xs)' }}>
                 {t('search.clearFilters')}
               </button>
             )}
           </div>
+
+          {/* Right-side actions */}
+          <div className="tableToolbarActions">
+            {/* Tavily-only: import/export + sync-all */}
+            {isTavily && (
+              <>
+                <ImportExportActions
+                  onExportToFile={() => openExport('file')}
+                  onExportToClipboard={() => openExport('clipboard')}
+                  onImportFromFile={() => setImportOpen(true)}
+                  onImportFromClipboard={() => setClipboardImportOpen(true)}
+                  loading={exportOpen}
+                />
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={onSyncAll}
+                  title={t('tavily.actions.checkCredits')}
+                  disabled={syncingCredits}
+                  aria-label={syncingCredits ? t('tavily.actions.checkingCredits') : t('tavily.actions.checkCredits')}
+                >
+                  <IconRefresh className={syncingCredits ? 'spin' : ''} aria-hidden="true" />
+                  {syncingCredits ? t('tavily.actions.checkingCredits') : t('tavily.actions.checkCredits')}
+                </button>
+              </>
+            )}
+
+            {/* Refresh list */}
+            <button
+              type="button"
+              className="btn"
+              onClick={currentRetry}
+              disabled={currentLoading}
+              aria-label={t('actions.refresh')}
+            >
+              <IconRefresh className={currentLoading ? 'spin' : ''} aria-hidden="true" />
+              {t('actions.refresh')}
+            </button>
+
+            {/* Add key primary action */}
+            <button
+              type="button"
+              className="btn"
+              data-variant="primary"
+              onClick={openCreate}
+            >
+              <IconPlus aria-hidden="true" />
+              {isTavily ? t('tavily.actions.addKey') : t('brave.actions.addKey')}
+            </button>
+          </div>
         </div>
 
-        {/* Phase 3: Bulk Actions Bar */}
-        {selectedIds.size > 0 && (
+        {/* Bulk-action bar (Tavily only, slides in on selection) */}
+        {isTavily && selectedIds.size > 0 && (
           <div className="bulkActionsBar">
             <div className="bulkActionsInfo">
-              <strong>{selectedIds.size}</strong> {selectedIds.size === 1 ? 'key' : 'keys'} selected
+              <strong>{selectedIds.size}</strong>{' '}
+              {selectedIds.size === 1 ? t('bulk.selectedCount_one', { count: 1 }) : t('bulk.selectedCount_other', { count: selectedIds.size })}
             </div>
             <div className="bulkActionsButtons">
-              <button className="btn" onClick={bulkRefreshCredits} title={t('bulk.refreshCredits')}>
-                <IconRefresh />
+              <button type="button" className="btn btn--sm" onClick={bulkRefreshCredits}>
+                <IconRefresh aria-hidden="true" />
                 {t('bulk.refreshCredits')}
               </button>
-              <button className="btn" data-variant="danger" onClick={bulkDelete} title={t('bulk.deleteSelected')}>
-                <IconTrash />
+              <button type="button" className="btn btn--sm" data-variant="danger" onClick={bulkDelete}>
+                <IconTrash aria-hidden="true" />
                 {t('bulk.deleteSelected')}
               </button>
-              <button className="btn" data-variant="ghost" onClick={clearSelection}>
+              <button type="button" className="btn btn--sm" data-variant="ghost" onClick={clearSelection}>
                 {t('bulk.clearSelection')}
               </button>
             </div>
           </div>
         )}
 
-        <div className="cardBody p-0">
-          {error ? (
-            <div className="p-4">
-              <ErrorBanner message={error} onRetry={load} retrying={loading} />
-            </div>
-          ) : null}
+        {/* Error banner */}
+        {currentError && (
+          <div className="keys-errorWrap">
+            <ErrorBanner message={currentError} onRetry={currentRetry} retrying={currentLoading} />
+          </div>
+        )}
 
-          <DataTable
-            ariaLabel={t('title')}
-            columns={(
-              [
-                {
-                  id: 'select',
-                  header: (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.size === paginatedKeys.length && paginatedKeys.length > 0}
-                      onChange={toggleSelectAll}
-                      aria-label={t('table.selectAll')}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  ),
-                  headerStyle: { width: 40 },
-                  dataLabel: t('table.select'),
-                  cell: (k: TavilyKeyDto) => (
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(k.id)}
-                      onChange={() => toggleSelect(k.id)}
-                      aria-label={t('table.selectKey', { label: k.label })}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  )
-                },
-                {
-                  id: 'label',
-                  header: t('table.label'),
-                  headerStyle: { width: '15%' },
-                  dataLabel: t('table.label'),
-                  cellClassName: 'mono',
-                  cell: (k: TavilyKeyDto) => k.label
-                },
-                {
-                  id: 'key',
-                  header: t('table.apiKey'),
-                  headerStyle: { width: '25%' },
-                  dataLabel: t('table.apiKey'),
-                  cell: (k: TavilyKeyDto) => (
-                    <KeyRevealCell
-                      keyId={k.id}
-                      maskedKey={k.maskedKey || '••••••••••••'}
-                      api={api}
-                    />
-                  )
-                },
-                {
-                  id: 'credits',
-                  header: t('table.credits'),
-                  headerStyle: { width: '20%' },
-                  dataLabel: t('table.credits'),
-                  cell: (k: TavilyKeyDto) => (
-                    <KeyCreditsCell
-                      keyId={k.id}
-                      remaining={k.remainingCredits}
-                      total={k.totalCredits}
-                      lastChecked={k.lastCheckedAt}
-                      api={api}
-                      onUpdate={load}
-                    />
-                  )
-                },
-                {
-                  id: 'status',
-                  header: t('table.status'),
-                  headerStyle: { width: '12%' },
-                  dataLabel: t('table.status'),
-                  cell: (k: TavilyKeyDto) => (
-                    <StatusMenu
-                      status={k.status}
-                      onChange={(s) => onUpdateStatus(k.id, s as TavilyKeyStatus)}
-                    />
-                  )
-                },
-                {
-                  id: 'lastUsed',
-                  header: t('table.lastUsed'),
-                  headerStyle: { width: '14%' },
-                  dataLabel: t('table.lastUsed'),
-                  cellClassName: 'mono',
-                  cell: (k: TavilyKeyDto) => formatDateTime(k.lastUsedAt)
-                },
-                {
-                  id: 'created',
-                  header: t('table.created'),
-                  headerStyle: { width: '14%' },
-                  dataLabel: t('table.created'),
-                  cellClassName: 'mono',
-                  cell: (k: TavilyKeyDto) => formatDateTime(k.createdAt)
-                },
-                {
-                  id: 'actions',
-                  header: '',
-                  headerStyle: { width: '10%', textAlign: 'right' },
-                  headerAlign: 'right',
-                  dataLabel: t('table.actions'),
-                  cellAlign: 'right',
-                  cell: (k: TavilyKeyDto) => (
-                    <IconButton
-                      icon={<IconTrash />}
-                      variant="ghost-danger"
-                      onClick={() => setKeyToDelete(k)}
-                      title={t('button.deleteKey')}
-                      aria-label={t('button.deleteKey')}
-                    />
-                  )
-                }
-              ] satisfies DataTableColumn<TavilyKeyDto>[]
-            )}
-            rows={paginatedKeys}
-            rowKey={(k) => k.id}
-            loading={loading && keys.length === 0}
-            empty={
-              <EmptyState
-                icon={<IconKey />}
-                message={hasFilters ? t('empty.noMatch') : t('empty.noKeys')}
-                action={
-                  hasFilters
-                    ? { label: t('search.clearFilters'), onClick: clearFilters, variant: 'ghost' }
-                    : { label: t('actions.addKey'), onClick: () => setCreateOpen(true) }
-                }
-              />
-            }
+        {/* DataTable */}
+        <div className="cardBody p-0">
+          {isTavily ? (
+            <DataTable<TavilyKeyDto>
+              ariaLabel={t('tavily.title')}
+              columns={tavilyColumns}
+              rows={paginatedKeys}
+              rowKey={(k) => k.id}
+              loading={loading && keys.length === 0}
+              sortConfig={sortConfig}
+              onSort={handleSort}
+              empty={
+                <EmptyState
+                  icon={<IconKey />}
+                  message={hasFilters ? t('empty.noMatch') : t('tavily.empty.noKeys')}
+                  action={
+                    hasFilters
+                      ? { label: t('search.clearFilters'), onClick: clearFilters, variant: 'ghost' }
+                      : { label: t('tavily.actions.addKey'), onClick: openCreate }
+                  }
+                />
+              }
+            />
+          ) : (
+            <DataTable<BraveKeyDto>
+              ariaLabel={t('brave.title')}
+              columns={braveColumns}
+              rows={paginatedBraveKeys}
+              rowKey={(k) => k.id}
+              loading={braveLoading && braveKeys.length === 0}
+              sortConfig={sortConfig}
+              onSort={handleSort}
+              empty={
+                <EmptyState
+                  icon={<IconKey />}
+                  message={hasFilters ? t('empty.noMatch') : t('brave.empty.noKeys')}
+                  action={
+                    hasFilters
+                      ? { label: t('search.clearFilters'), onClick: clearFilters, variant: 'ghost' }
+                      : { label: t('brave.actions.addKey'), onClick: openCreate }
+                  }
+                />
+              }
+            />
+          )}
+
+          <Pagination
+            total={isTavily ? filteredKeys.length : filteredBraveKeys.length}
+            page={page}
+            pageSize={PAGE_SIZE}
+            onChange={setPage}
           />
-          <Pagination total={filteredKeys.length} page={page} pageSize={PAGE_SIZE} onChange={setPage} />
         </div>
       </div>
-        </>
-      ) : (
-        <>
-          {/* Brave KPI Dashboard */}
-          <div className="kpis">
-            <KpiCard
-              title={t('brave.kpi.activeKeys')}
-              value={`${braveStats.active}/${braveStats.total}`}
-              icon={<IconKey />}
-              variant="keys"
-            />
-            <KpiCard
-              title={t('brave.kpi.systemHealth')}
-              value={`${braveStats.activeRate}%`}
-              icon={<IconShield />}
-              variant="usage"
-            />
-          </div>
 
-          <div className="card">
-            <div className="cardHeader">
-              <div className="row">
-                <div>
-                  <div className="h2" role="heading" aria-level={2}>{t('brave.title')}</div>
-                  <div className="help">
-                    {braveStats.total} total • {braveStats.active} active • {braveStats.invalid} invalid •{' '}
-                    {braveStats.disabled} disabled
-                  </div>
-                </div>
-                <div className="flex gap-3 items-center">
-                  <button className="btn" onClick={loadBraveKeys} disabled={braveLoading}>
-                    <IconRefresh className={braveLoading ? 'spin' : ''} />
-                    {t('brave.actions.refresh')}
-                  </button>
-                  <button className="btn" data-variant="primary" onClick={() => setBraveCreateOpen(true)}>
-                    <IconPlus />
-                    {t('brave.actions.addKey')}
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* ── Create key drawer ── */}
+      <KeysCreateDrawer
+        open={createOpen}
+        provider={provider}
+        creating={creating}
+        label={newLabel}
+        apiKey={newApiKey}
+        touched={touched}
+        formErrors={formErrors}
+        isFormValid={isFormValid}
+        onClose={closeCreate}
+        onLabelChange={setNewLabel}
+        onApiKeyChange={setNewApiKey}
+        onLabelBlur={() => setTouched((p) => ({ ...p, label: true }))}
+        onApiKeyBlur={() => setTouched((p) => ({ ...p, apiKey: true }))}
+        onSubmit={onCreate}
+      />
 
-            <div className="cardBody p-0">
-              {braveError ? (
-                <div className="p-4">
-                  <ErrorBanner message={braveError} onRetry={loadBraveKeys} retrying={braveLoading} />
-                </div>
-              ) : null}
-
-              <DataTable
-                ariaLabel={t('brave.title')}
-                columns={(
-                  [
-                    {
-                      id: 'label',
-                      header: t('table.label'),
-                      headerStyle: { width: '20%' },
-                      dataLabel: t('table.label'),
-                      cellClassName: 'mono',
-                      cell: (k: BraveKeyDto) => k.label
-                    },
-                    {
-                      id: 'key',
-                      header: t('table.apiKey'),
-                      headerStyle: { width: '30%' },
-                      dataLabel: t('table.apiKey'),
-                      cell: (k: BraveKeyDto) => (
-                        <KeyRevealCell
-                          keyId={k.id}
-                          maskedKey={k.maskedKey || '••••••••••••'}
-                          api={api}
-                          provider="brave"
-                        />
-                      )
-                    },
-                    {
-                      id: 'status',
-                      header: t('table.status'),
-                      headerStyle: { width: '15%' },
-                      dataLabel: t('table.status'),
-                      cell: (k: BraveKeyDto) => (
-                        <StatusMenu
-                          status={k.status}
-                          options={['active', 'disabled', 'invalid']}
-                          onChange={(s) => onUpdateBraveStatus(k.id, s as BraveKeyStatus)}
-                        />
-                      )
-                    },
-                    {
-                      id: 'lastUsed',
-                      header: t('table.lastUsed'),
-                      headerStyle: { width: '15%' },
-                      dataLabel: t('table.lastUsed'),
-                      cellClassName: 'mono',
-                      cell: (k: BraveKeyDto) => formatDateTime(k.lastUsedAt)
-                    },
-                    {
-                      id: 'created',
-                      header: t('table.created'),
-                      headerStyle: { width: '15%' },
-                      dataLabel: t('table.created'),
-                      cellClassName: 'mono',
-                      cell: (k: BraveKeyDto) => formatDateTime(k.createdAt)
-                    },
-                    {
-                      id: 'actions',
-                      header: '',
-                      headerStyle: { width: '5%', textAlign: 'right' },
-                      headerAlign: 'right',
-                      dataLabel: t('table.actions'),
-                      cellAlign: 'right',
-                      cell: (k: BraveKeyDto) => (
-                        <IconButton
-                          icon={<IconTrash />}
-                          variant="ghost-danger"
-                          onClick={() => setBraveKeyToDelete(k)}
-                          title={t('button.deleteKey')}
-                          aria-label={t('button.deleteKey')}
-                        />
-                      )
-                    }
-                  ] satisfies DataTableColumn<BraveKeyDto>[]
-                )}
-                rows={braveKeys}
-                rowKey={(k) => k.id}
-                loading={braveLoading && braveKeys.length === 0}
-                empty={
-                  <EmptyState
-                    icon={<IconKey />}
-                    message={t('brave.empty.noKeys')}
-                    action={{ label: t('brave.actions.addKey'), onClick: () => setBraveCreateOpen(true) }}
-                  />
-                }
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      <Dialog title={t('dialog.addTitle')} open={createOpen} onClose={() => (creating ? null : setCreateOpen(false))}>
-        <div className="stack">
-          <div className="grid2">
-            <div className="stack">
-              <label className="label" htmlFor="key-label">
-                {t('form.label')} <span style={{ color: 'var(--danger)' }}>{t('form.required')}</span>
-              </label>
-              <input
-                id="key-label"
-                className="input"
-                aria-required
-                data-error={!!(formErrors.label && touched.label)}
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                onBlur={() => setTouched((prev) => ({ ...prev, label: true }))}
-                placeholder={t('form.labelPlaceholder')}
-                autoComplete="off"
-                aria-invalid={!!(formErrors.label && touched.label)}
-                aria-describedby={formErrors.label && touched.label ? 'label-error' : 'label-help'}
-              />
-              {formErrors.label && touched.label ? (
-                <div id="label-error" className="fieldError">
-                  {formErrors.label}
-                </div>
-              ) : (
-                <div id="label-help" className="help">
-                  {t('form.labelHelp')}
-                </div>
-              )}
-            </div>
-            <div className="stack">
-              <label className="label" htmlFor="api-key">
-                {t('form.apiKey')} <span style={{ color: 'var(--danger)' }}>{t('form.required')}</span>
-              </label>
-              <input
-                id="api-key"
-                className="input mono"
-                aria-required
-                data-error={!!(formErrors.apiKey && touched.apiKey)}
-                value={newApiKey}
-                onChange={(e) => setNewApiKey(e.target.value)}
-                onBlur={() => setTouched((prev) => ({ ...prev, apiKey: true }))}
-                placeholder={t('form.apiKeyPlaceholder')}
-                autoComplete="off"
-                aria-invalid={!!(formErrors.apiKey && touched.apiKey)}
-                aria-describedby={formErrors.apiKey && touched.apiKey ? 'apikey-error' : 'apikey-help'}
-              />
-              {formErrors.apiKey && touched.apiKey ? (
-                <div id="apikey-error" className="fieldError">
-                  {formErrors.apiKey}
-                </div>
-              ) : (
-                <div id="apikey-help" className="help">
-                  {t('form.apiKeyHelp')}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button className="btn" onClick={() => setCreateOpen(false)} disabled={creating}>
-              {tc('actions.cancel')}
-            </button>
-            <button className="btn" data-variant="primary" onClick={onCreate} disabled={creating || !isFormValid}>
-              <IconKey />
-              {creating ? t('button.adding') : t('actions.addKey')}
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
+      {/* ── Tavily single-delete confirm ── */}
       <ConfirmDialog
         open={!!keyToDelete}
         title={t('dialog.deleteTitle')}
@@ -957,6 +1032,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
         onConfirm={onDeleteKey}
       />
 
+      {/* ── Tavily bulk-delete confirm ── */}
       <ConfirmDialog
         open={bulkDeleteIds !== null}
         title={t('dialog.deleteSelectedTitle')}
@@ -970,79 +1046,7 @@ export function KeysPage({ api }: { api: AdminApi }) {
         onConfirm={onBulkDelete}
       />
 
-      {/* Brave Create Dialog */}
-      <Dialog title={t('brave.dialog.addTitle')} open={braveCreateOpen} onClose={() => (braveCreating ? null : setBraveCreateOpen(false))}>
-        <div className="stack">
-          <div className="grid2">
-            <div className="stack">
-              <label className="label" htmlFor="brave-key-label">
-                {t('form.label')} <span style={{ color: 'var(--danger)' }}>{t('form.required')}</span>
-              </label>
-              <input
-                id="brave-key-label"
-                className="input"
-                aria-required
-                data-error={!!(braveFormErrors.label && braveTouched.label)}
-                value={newBraveLabel}
-                onChange={(e) => setNewBraveLabel(e.target.value)}
-                onBlur={() => setBraveTouched((prev) => ({ ...prev, label: true }))}
-                placeholder={t('form.labelPlaceholder')}
-                autoComplete="off"
-                aria-invalid={!!(braveFormErrors.label && braveTouched.label)}
-                aria-describedby={braveFormErrors.label && braveTouched.label ? 'brave-label-error' : 'brave-label-help'}
-              />
-              {braveFormErrors.label && braveTouched.label ? (
-                <div id="brave-label-error" className="fieldError">
-                  {braveFormErrors.label}
-                </div>
-              ) : (
-                <div id="brave-label-help" className="help">
-                  {t('form.labelHelp')}
-                </div>
-              )}
-            </div>
-            <div className="stack">
-              <label className="label" htmlFor="brave-api-key">
-                {t('form.apiKey')} <span style={{ color: 'var(--danger)' }}>{t('form.required')}</span>
-              </label>
-              <input
-                id="brave-api-key"
-                className="input mono"
-                aria-required
-                data-error={!!(braveFormErrors.apiKey && braveTouched.apiKey)}
-                value={newBraveApiKey}
-                onChange={(e) => setNewBraveApiKey(e.target.value)}
-                onBlur={() => setBraveTouched((prev) => ({ ...prev, apiKey: true }))}
-                placeholder={t('brave.form.apiKeyPlaceholder')}
-                autoComplete="off"
-                aria-invalid={!!(braveFormErrors.apiKey && braveTouched.apiKey)}
-                aria-describedby={braveFormErrors.apiKey && braveTouched.apiKey ? 'brave-apikey-error' : 'brave-apikey-help'}
-              />
-              {braveFormErrors.apiKey && braveTouched.apiKey ? (
-                <div id="brave-apikey-error" className="fieldError">
-                  {braveFormErrors.apiKey}
-                </div>
-              ) : (
-                <div id="brave-apikey-help" className="help">
-                  {t('form.apiKeyHelp')}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-            <button className="btn" onClick={() => setBraveCreateOpen(false)} disabled={braveCreating}>
-              {tc('actions.cancel')}
-            </button>
-            <button className="btn" data-variant="primary" onClick={onCreateBraveKey} disabled={braveCreating || !isBraveFormValid}>
-              <IconKey />
-              {braveCreating ? t('button.adding') : t('brave.actions.addKey')}
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      {/* Brave Delete Dialog */}
+      {/* ── Brave single-delete confirm ── */}
       <ConfirmDialog
         open={!!braveKeyToDelete}
         title={t('dialog.deleteTitle')}
@@ -1056,14 +1060,13 @@ export function KeysPage({ api }: { api: AdminApi }) {
         onConfirm={onDeleteBraveKey}
       />
 
-      {/* Import Dialog */}
+      {/* ── Import/Export dialogs (Tavily) ── */}
       <FileImportDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onConfirm={handleImport}
       />
 
-      {/* Clipboard Import Dialog */}
       <ClipboardImportDialog
         open={clipboardImportOpen}
         onClose={() => setClipboardImportOpen(false)}

@@ -14,15 +14,14 @@ import { useDebounce } from '../lib/useDebounce';
 import { MCP_SETUP_TARGETS, resolveMcpUrl } from '../app/mcpSetupTemplates';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { CopyButton } from '../ui/CopyButton';
-import { Dialog } from '../ui/Dialog';
 import { Drawer } from '../ui/Drawer';
 import { ActionMenu } from '../ui/ActionMenu';
 import { SegmentedControl } from '../ui/SegmentedControl';
+import { TokenReveal } from '../ui/Reveal';
 import {
   IconAlertCircle,
   IconCheck,
   IconClock,
-  IconEye,
   IconPlus,
   IconRefresh,
   IconToken,
@@ -35,6 +34,8 @@ import { useToast } from '../ui/toast';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { EmptyState } from '../ui/EmptyState';
 import { DataTable, type DataTableColumn } from '../ui/DataTable';
+
+import '../styles/pages/tokens.css';
 
 const PAGE_SIZE = 10;
 
@@ -67,8 +68,6 @@ const EXPIRY_PRESETS: ExpiryPreset[] = [
   'custom'
 ];
 
-const REVEAL_DURATION = 30; // seconds
-
 const STATUS_ICONS: Record<TokenStatus, React.ComponentType<{ className?: string }>> = {
   active: IconCheck,
   expiring: IconAlertCircle,
@@ -77,6 +76,436 @@ const STATUS_ICONS: Record<TokenStatus, React.ComponentType<{ className?: string
 };
 
 type StatusFilter = 'all' | TokenStatus;
+
+// ---- Create Drawer — Step 1: Configuration ----
+
+interface CreateStep1Props {
+  t: (k: string, opts?: Record<string, unknown>) => string;
+  tc: (k: string, opts?: Record<string, unknown>) => string;
+  description: string;
+  setDescription: (v: string) => void;
+  expiryPreset: ExpiryPreset;
+  setExpiryPreset: (v: ExpiryPreset) => void;
+  customDuration: number;
+  setCustomDuration: (v: number) => void;
+  customUnit: 'hours' | 'days';
+  setCustomUnit: (v: 'hours' | 'days') => void;
+  restrictTools: boolean;
+  setRestrictTools: (v: boolean) => void;
+  selectedTools: string[];
+  setSelectedTools: React.Dispatch<React.SetStateAction<string[]>>;
+  restrictRate: boolean;
+  setRestrictRate: (v: boolean) => void;
+  rateLimitRpm: number | '';
+  setRateLimitRpm: (v: number | '') => void;
+  creating: boolean;
+  canCreate: boolean;
+  onCancel: () => void;
+  onCreate: () => void;
+  expiryPreviewText: string;
+  expiryPresetOptions: { value: ExpiryPreset; label: string }[];
+  rateValid: boolean;
+  restrictToolsValid: boolean;
+}
+
+function TokenCreateStep1({
+  t,
+  tc,
+  description,
+  setDescription,
+  expiryPreset,
+  setExpiryPreset,
+  customDuration,
+  setCustomDuration,
+  customUnit,
+  setCustomUnit,
+  restrictTools,
+  setRestrictTools,
+  selectedTools,
+  setSelectedTools,
+  restrictRate,
+  setRestrictRate,
+  rateLimitRpm,
+  setRateLimitRpm,
+  creating,
+  canCreate,
+  onCancel,
+  onCreate,
+  expiryPreviewText,
+  expiryPresetOptions,
+  rateValid,
+  restrictToolsValid
+}: CreateStep1Props) {
+  function toggleGroupAll(groupTools: string[], selectAll: boolean) {
+    if (selectAll) {
+      setSelectedTools((prev) => {
+        const set = new Set(prev);
+        groupTools.forEach((tool) => set.add(tool));
+        return [...set];
+      });
+    } else {
+      setSelectedTools((prev) => prev.filter((tool) => !groupTools.includes(tool)));
+    }
+  }
+
+  // Live summary data
+  const scopeSummary = restrictTools
+    ? selectedTools.length === 0
+      ? t('liveSummary.noTools')
+      : t('liveSummary.restrictedTools', { count: selectedTools.length })
+    : t('liveSummary.allTools');
+
+  const rateSummary = restrictRate && typeof rateLimitRpm === 'number' && rateLimitRpm >= 1
+    ? t('liveSummary.rateEnabled', { rpm: rateLimitRpm })
+    : t('liveSummary.rateUnlimited');
+
+  return (
+    <div className="page-tokens__createStepContent">
+      {/* Step indicator */}
+      <div className="page-tokens__stepIndicator" aria-label={t('createDrawer.stepIndicator', { current: 1, total: 2 })}>
+        <span className="page-tokens__stepDot page-tokens__stepDot--active" />
+        <span className="page-tokens__stepDot" />
+      </div>
+
+      <div className="stack">
+        {/* Description */}
+        <div className="stack">
+          <label htmlFor="token-description-input" className="label">
+            {t('form.description')}
+          </label>
+          <input
+            id="token-description-input"
+            className="input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t('form.descriptionPlaceholder')}
+            disabled={creating}
+          />
+          <div className="help">{t('form.descriptionHelp')}</div>
+        </div>
+
+        {/* Expiry presets */}
+        <div className="stack">
+          <div className="label">{t('form.expiresIn')}</div>
+          <SegmentedControl
+            options={expiryPresetOptions}
+            value={expiryPreset}
+            onChange={setExpiryPreset}
+            aria-label={t('form.expiresIn')}
+            size="sm"
+          />
+          {expiryPreset === 'custom' ? (
+            <div className="flex gap-2 items-center mt-2">
+              <input
+                type="number"
+                className="input mono"
+                min={1}
+                value={customDuration}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  setCustomDuration(Number.isFinite(n) && n > 0 ? n : 1);
+                }}
+                style={{ width: 100 }}
+                disabled={creating}
+                aria-label={t('form.expiryCustomValue')}
+              />
+              <select
+                className="input"
+                style={{ width: 100 }}
+                value={customUnit}
+                onChange={(e) => setCustomUnit(e.target.value as 'hours' | 'days')}
+                disabled={creating}
+              >
+                <option value="hours">{t('form.expiryCustomUnit_hours')}</option>
+                <option value="days">{t('form.expiryCustomUnit_days')}</option>
+              </select>
+            </div>
+          ) : null}
+          <div className="expiryPreview">{expiryPreviewText}</div>
+        </div>
+
+        {/* Tool access */}
+        <div className="stack gap-3">
+          <div className="row">
+            <div className="label" style={{ marginBottom: 0 }}>
+              {t('form.allowedTools')}
+            </div>
+          </div>
+          <SegmentedControl
+            options={[
+              { value: 'all', label: t('form.allTools') },
+              { value: 'restrict', label: t('form.restrictTools') }
+            ]}
+            value={restrictTools ? 'restrict' : 'all'}
+            onChange={(v) => {
+              const restrict = v === 'restrict';
+              setRestrictTools(restrict);
+              if (restrict && selectedTools.length === 0) {
+                setSelectedTools([...ALL_TOOLS]);
+              }
+            }}
+            aria-label={t('form.allowedTools')}
+            size="sm"
+          />
+
+          {restrictTools ? (
+            <div className="stack gap-3">
+              {TOOL_GROUPS.map((group) => {
+                const groupSelected = group.tools.filter((tool) =>
+                  selectedTools.includes(tool)
+                );
+                const allGroupSelected = groupSelected.length === group.tools.length;
+                return (
+                  <div key={group.id} className="toolGroup">
+                    <div className="toolGroupHeader">
+                      <span className="toolGroupLabel">{t(`form.groups.${group.id}`)}</span>
+                      <button
+                        type="button"
+                        className="btn btn--xs"
+                        data-variant="ghost"
+                        onClick={() => toggleGroupAll(group.tools, !allGroupSelected)}
+                        disabled={creating}
+                      >
+                        {allGroupSelected ? t('form.deselectAll') : t('form.selectAll')}
+                      </button>
+                    </div>
+                    <div className="toolCheckList">
+                      {group.tools.map((tool) => (
+                        <label key={tool} className="toolCheckItem">
+                          <input
+                            type="checkbox"
+                            checked={selectedTools.includes(tool)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedTools((prev) => [...prev, tool]);
+                              } else {
+                                setSelectedTools((prev) =>
+                                  prev.filter((t) => t !== tool)
+                                );
+                              }
+                            }}
+                            disabled={creating}
+                          />
+                          <span className="toolCheckItemLabel">{tool}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="help">
+                {t('form.selected', {
+                  selected: selectedTools.length,
+                  total: ALL_TOOLS.length
+                })}
+              </div>
+              {!restrictToolsValid ? (
+                <div className="fieldError">{t('form.restrictToolsHint')}</div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Rate limit */}
+        <div className="stack gap-3">
+          <div className="row">
+            <div className="label" style={{ marginBottom: 0 }}>
+              {t('form.rateLimit')}
+            </div>
+            <div className="flex gap-2 items-center">
+              <input
+                type="checkbox"
+                id="restrict-rate-check"
+                checked={restrictRate}
+                onChange={(e) => setRestrictRate(e.target.checked)}
+                disabled={creating}
+              />
+              <label
+                htmlFor="restrict-rate-check"
+                style={{ fontSize: 'var(--text-sm)', cursor: 'pointer' }}
+              >
+                {t('form.enableRateLimit')}
+              </label>
+            </div>
+          </div>
+          {restrictRate ? (
+            <>
+              <div className="flex items-center gap-2">
+                <input
+                  className="input mono"
+                  type="number"
+                  min="1"
+                  placeholder="60"
+                  value={rateLimitRpm}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setRateLimitRpm(isNaN(val) ? '' : Math.max(1, val));
+                  }}
+                  style={{ width: 100 }}
+                  disabled={creating}
+                />
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-mid)' }}>
+                  {t('form.requestsPerMinute')}
+                </span>
+              </div>
+              {!rateValid ? (
+                <div className="fieldError">{t('form.rateLimitHint')}</div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+
+        {/* Live summary */}
+        <div className="page-tokens__liveSummary" aria-label={t('liveSummary.label')}>
+          <div className="page-tokens__liveSummaryTitle">{t('liveSummary.label')}</div>
+          <div className="page-tokens__liveSummaryRow">
+            <span className="page-tokens__liveSummaryKey">{t('liveSummary.keyScope')}</span>
+            <span className="page-tokens__liveSummaryVal">{scopeSummary}</span>
+          </div>
+          <div className="page-tokens__liveSummaryRow">
+            <span className="page-tokens__liveSummaryKey">{t('liveSummary.keyExpiry')}</span>
+            <span className="page-tokens__liveSummaryVal">{expiryPreviewText}</span>
+          </div>
+          <div className="page-tokens__liveSummaryRow">
+            <span className="page-tokens__liveSummaryKey">{t('liveSummary.keyRate')}</span>
+            <span className="page-tokens__liveSummaryVal">{rateSummary}</span>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex justify-end gap-3">
+          <button className="btn" onClick={onCancel} disabled={creating}>
+            {tc('actions.cancel')}
+          </button>
+          <button
+            className="btn"
+            data-variant="primary"
+            onClick={onCreate}
+            disabled={!canCreate}
+          >
+            {creating ? (
+              <span className="spin">
+                <IconToken />
+              </span>
+            ) : (
+              <IconToken />
+            )}
+            {t('createDrawer.createAndReveal')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Create Drawer — Step 2: Reveal + Wire-up ----
+
+interface CreateStep2Props {
+  t: (k: string, opts?: Record<string, unknown>) => string;
+  tc: (k: string, opts?: Record<string, unknown>) => string;
+  createdToken: string;
+  apiBaseUrl: string;
+  origin: string;
+  onDone: () => void;
+}
+
+function TokenCreateStep2({ t, tc: _tc, createdToken, apiBaseUrl, origin, onDone }: CreateStep2Props) {
+  const [activeTargetId, setActiveTargetId] = useState(() => MCP_SETUP_TARGETS[0]?.id ?? 'http-curl');
+  const mcpUrl = useMemo(() => resolveMcpUrl({ apiBaseUrl, origin }), [apiBaseUrl, origin]);
+
+  const activeTarget = useMemo(
+    () => MCP_SETUP_TARGETS.find((t) => t.id === activeTargetId) ?? MCP_SETUP_TARGETS[0]!,
+    [activeTargetId]
+  );
+  const activeSnippet = useMemo(
+    () => activeTarget.render({ apiBaseUrl, origin, clientToken: createdToken }),
+    [activeTarget, apiBaseUrl, origin, createdToken]
+  );
+
+  return (
+    <div className="page-tokens__createStepContent">
+      {/* Step indicator */}
+      <div className="page-tokens__stepIndicator" aria-label={t('createDrawer.stepIndicator', { current: 2, total: 2 })}>
+        <span className="page-tokens__stepDot page-tokens__stepDot--done" />
+        <span className="page-tokens__stepDot page-tokens__stepDot--active" />
+      </div>
+
+      <div className="stack">
+        {/* Security notice */}
+        <div className="page-tokens__securityNotice">
+          <IconAlertCircle aria-hidden="true" />
+          <span>{t('copyDialog.warning')}</span>
+        </div>
+
+        {/* Token well — cleartext, copy */}
+        <div className="stack">
+          <div className="label">{t('copyDialog.copyToken')}</div>
+          <div className="tokenWell" aria-label={t('copyDialog.copyToken')}>
+            {createdToken}
+          </div>
+          <CopyButton
+            text={createdToken}
+            variant="primary"
+            label={t('copyDialog.copyToken')}
+            buttonText={t('copyDialog.copyToken')}
+          />
+        </div>
+
+        {/* MCP endpoint (read-only context) */}
+        <div className="stack">
+          <label className="label" htmlFor="create-step2-mcp-endpoint">
+            {t('setup.mcpEndpoint')}
+          </label>
+          <input
+            id="create-step2-mcp-endpoint"
+            className="input mono"
+            value={mcpUrl}
+            readOnly
+            tabIndex={-1}
+          />
+        </div>
+
+        {/* Inline setup snippet */}
+        <div className="stack gap-3">
+          <div className="label">{t('setup.configSnippets')}</div>
+          <SegmentedControl
+            options={MCP_SETUP_TARGETS.map((target) => ({
+              value: target.id,
+              label: target.title
+            }))}
+            value={activeTargetId}
+            onChange={setActiveTargetId}
+            aria-label={t('setup.configSnippets')}
+            size="sm"
+          />
+          <div className="help">{activeTarget.description}</div>
+          <CopyButton
+            text={activeSnippet}
+            variant="primary"
+            label={t('setup.copySnippet')}
+            buttonText={t('setup.copySnippet')}
+            disabled={!activeSnippet.trim()}
+          />
+          <textarea
+            className="textarea mono text-xs"
+            value={activeSnippet}
+            readOnly
+            rows={Math.min(14, Math.max(6, activeSnippet.split('\n').length + 1))}
+            aria-label={t('setup.configSnippets')}
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <button className="btn" data-variant="primary" onClick={onDone}>
+            {t('copyDialog.done')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Main page ----
 
 export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: string }) {
   const { t } = useTranslation('tokens');
@@ -95,7 +524,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const debouncedSearch = useDebounce(searchQuery, 250);
 
-  // Create dialog state
+  // Create drawer state
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState<'form' | 'issued'>('form');
   const [creating, setCreating] = useState(false);
@@ -117,18 +546,10 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   // Post-create
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
-  // Setup drawer state
+  // Setup drawer state (separate from create)
+  const [setupOpen, setSetupOpen] = useState(false);
   const [setupClientToken, setSetupClientToken] = useState('');
-  const [activeTargetId, setActiveTargetId] = useState(() => MCP_SETUP_TARGETS[0]?.id ?? 'http-curl');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // Reveal state
-  const [revealTokenRow, setRevealTokenRow] = useState<ClientTokenDto | null>(null);
-  const [revealedToken, setRevealedToken] = useState<string | null>(null);
-  const [revealing, setRevealing] = useState(false);
-  const [revealSecondsLeft, setRevealSecondsLeft] = useState(REVEAL_DURATION);
-  // Ref tracks the id of the token being revealed so we can detect stale resolves
-  const revealRequestIdRef = useRef<string | null>(null);
+  const [setupTargetId, setSetupTargetId] = useState(() => MCP_SETUP_TARGETS[0]?.id ?? 'http-curl');
 
   // Revoke state
   const [tokenToRevoke, setTokenToRevoke] = useState<ClientTokenDto | null>(null);
@@ -141,6 +562,10 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   // URL param driven open
   const createFromUrl = searchParams.get('create');
   const setupFromUrl = searchParams.get('setup');
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const mcpUrl = useMemo(() => resolveMcpUrl({ apiBaseUrl, origin }), [apiBaseUrl, origin]);
+
   useEffect(() => {
     if (createFromUrl === '1') {
       resetCreateForm();
@@ -150,15 +575,12 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       setSearchParams(next, { replace: true });
     }
     if (setupFromUrl === '1') {
-      setDrawerOpen(true);
+      setSetupOpen(true);
       const next = new URLSearchParams(searchParams.toString());
       next.delete('setup');
       setSearchParams(next, { replace: true });
     }
   }, [createFromUrl, searchParams, setSearchParams, setupFromUrl]);
-
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const mcpUrl = useMemo(() => resolveMcpUrl({ apiBaseUrl, origin }), [apiBaseUrl, origin]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,7 +602,6 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
   // Derived stats
   const stats = useMemo(() => {
     const now = new Date();
-    // "Expires soon" tokens are still usable, so they count as active.
     const active = tokens.filter((tok) => {
       const st = deriveTokenStatus(tok, now);
       return st === 'active' || st === 'expiring';
@@ -193,13 +614,11 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     const now = new Date();
     const q = debouncedSearch.trim().toLowerCase();
     return tokens.filter((tok) => {
-      // Text filter
       if (q) {
         const prefix = tok.tokenPrefix.toLowerCase();
         const desc = (tok.description ?? '').toLowerCase();
         if (!prefix.includes(q) && !desc.includes(q)) return false;
       }
-      // Status filter
       if (statusFilter !== 'all') {
         const st = deriveTokenStatus(tok, now);
         if (st !== statusFilter) return false;
@@ -213,7 +632,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     setPage(1);
   }, [debouncedSearch, statusFilter]);
 
-  // Clamp page when result set shrinks (e.g. after delete/revoke)
+  // Clamp page when result set shrinks
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(filteredTokens.length / PAGE_SIZE));
     if (page > totalPages) setPage(totalPages);
@@ -235,13 +654,16 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     setRestrictRate(false);
     setRateLimitRpm('');
     setCreateStep('form');
+    setCreatedToken(null);
   }
 
   function closeCreate() {
     if (creating) return;
-    setCreateOpen(false);
-    resetCreateForm();
+    // Clear the created token from state/DOM on close — secret hygiene
     setCreatedToken(null);
+    setCreateOpen(false);
+    // Defer form reset until the drawer has animated out
+    setTimeout(resetCreateForm, 250);
   }
 
   async function onCreate() {
@@ -258,7 +680,6 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
             : undefined
       });
       setCreatedToken(res.token);
-      setSetupClientToken(res.token);
       setCreateStep('issued');
       await load();
     } catch (e: any) {
@@ -271,83 +692,30 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     }
   }
 
-  function onSetupClient() {
-    closeCreate();
-    setDrawerOpen(true);
+  // ---- Setup drawer ----
+  const setupTarget = useMemo(
+    () => MCP_SETUP_TARGETS.find((t) => t.id === setupTargetId) ?? MCP_SETUP_TARGETS[0]!,
+    [setupTargetId]
+  );
+  const setupSnippet = useMemo(
+    () => setupTarget.render({ apiBaseUrl, origin, clientToken: setupClientToken }),
+    [setupTarget, apiBaseUrl, origin, setupClientToken]
+  );
+
+  function closeSetup() {
+    setSetupOpen(false);
+    // Clear any revealed token from the setup drawer on close — secret hygiene
+    setTimeout(() => setSetupClientToken(''), 250);
   }
 
-  // Closing the drawer drops the cleartext token from state so re-opening
-  // via "Setup Info" never resurfaces a previously revealed token.
-  function closeDrawer() {
-    setDrawerOpen(false);
-    setSetupClientToken('');
-  }
-
-  // ---- Reveal flow ----
-  const clearRevealedToken = useCallback(() => {
-    revealRequestIdRef.current = null;
-    setRevealTokenRow(null);
-    setRevealedToken(null);
-    setRevealing(false);
-    setRevealSecondsLeft(REVEAL_DURATION);
-  }, []);
-
-  // Countdown interval
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => {
-    if (!revealedToken || !revealTokenRow) return;
-
-    setRevealSecondsLeft(REVEAL_DURATION);
-
-    const timeout = window.setTimeout(() => {
-      clearRevealedToken();
-    }, REVEAL_DURATION * 1000);
-
-    countdownRef.current = setInterval(() => {
-      setRevealSecondsLeft((prev) => Math.max(0, prev - 1));
-    }, 1000);
-
-    const onVisibilityChange = () => {
-      if (document.hidden) clearRevealedToken();
-    };
-
-    window.addEventListener('blur', clearRevealedToken);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      window.clearTimeout(timeout);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-      window.removeEventListener('blur', clearRevealedToken);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-    };
-  }, [clearRevealedToken, revealedToken, revealTokenRow]);
-
-  async function onRevealToken(tok: ClientTokenDto) {
-    revealRequestIdRef.current = tok.id;
-    setRevealTokenRow(tok);
-    setRevealedToken(null);
-    setRevealing(true);
-    try {
+  // ---- Reveal via TokenReveal ----
+  // onRevealToken is passed into TokenReveal as an async factory.
+  // TokenReveal manages countdown, auto-clear on blur/hidden/timeout.
+  function makeRevealCallback(tok: ClientTokenDto) {
+    return async () => {
       const res = await api.revealToken(tok.id);
-      // Guard: if the dialog was closed (clearRevealedToken called) while the
-      // request was in-flight, revealRequestIdRef is set to null — discard.
-      if (revealRequestIdRef.current !== tok.id) return;
-      setRevealedToken(res.token);
-    } catch (e: any) {
-      clearRevealedToken();
-      toast.push({
-        title: t('toast.revealFailed'),
-        message: typeof e?.message === 'string' ? e.message : tc('errors.unknownError')
-      });
-    } finally {
-      setRevealing(false);
-    }
-  }
-
-  function onUseInSetup() {
-    if (revealedToken) setSetupClientToken(revealedToken);
-    clearRevealedToken();
-    setDrawerOpen(true);
+      return res.token;
+    };
   }
 
   // ---- Configure client from overflow menu ----
@@ -355,7 +723,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     try {
       const res = await api.revealToken(tok.id);
       setSetupClientToken(res.token);
-      setDrawerOpen(true);
+      setSetupOpen(true);
     } catch (e: any) {
       toast.push({
         title: t('toast.revealFailed'),
@@ -408,16 +776,6 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     }
   }
 
-  // ---- Setup drawer ----
-  const activeTarget = useMemo(
-    () => MCP_SETUP_TARGETS.find((target) => target.id === activeTargetId) ?? MCP_SETUP_TARGETS[0]!,
-    [activeTargetId]
-  );
-  const activeSnippet = useMemo(
-    () => activeTarget.render({ apiBaseUrl, origin, clientToken: setupClientToken }),
-    [activeTarget, apiBaseUrl, origin, setupClientToken]
-  );
-
   // ---- Expiry preview ----
   const expiryPreviewText = useMemo(() => {
     if (expiryPreset === 'never') return t('form.expiryAbsolute_never');
@@ -427,18 +785,15 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     return t('form.expiryAbsolute_at', { at: formatDateTime(expiry.toISOString()) });
   }, [expiryPreset, customDuration, customUnit, t]);
 
-  // ---- Tool selection helpers ----
-  function toggleGroupAll(groupTools: string[], selectAll: boolean) {
-    if (selectAll) {
-      setSelectedTools((prev) => {
-        const set = new Set(prev);
-        groupTools.forEach((tool) => set.add(tool));
-        return [...set];
-      });
-    } else {
-      setSelectedTools((prev) => prev.filter((t) => !groupTools.includes(t)));
-    }
-  }
+  // ---- Expiry presets ----
+  const expiryPresetOptions = useMemo(
+    () =>
+      EXPIRY_PRESETS.map((preset) => ({
+        value: preset,
+        label: t(`form.expiry${preset.charAt(0).toUpperCase() + preset.slice(1)}` as any)
+      })),
+    [t]
+  );
 
   const restrictToolsValid = !restrictTools || selectedTools.length > 0;
   const rateValid = !restrictRate || (typeof rateLimitRpm === 'number' && rateLimitRpm >= 1);
@@ -456,23 +811,17 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
     [t]
   );
 
-  // ---- Expiry presets ----
-  const expiryPresetOptions = useMemo(
-    () =>
-      EXPIRY_PRESETS.map((preset) => ({
-        value: preset,
-        label: t(`form.expiry${preset.charAt(0).toUpperCase() + preset.slice(1)}` as any)
-      })),
-    [t]
-  );
-
-  // Bound time translator for formatRelativeDate — ensures zh-CN parity
+  // Bound time translator for formatRelativeDate
   const timeT = useCallback(
-    (key: string, opts?: Record<string, unknown>) => tc(`time.${key}`, opts as any),
+    (key: string, opts?: Record<string, unknown>): string => tc(`time.${key}`, opts as any) as string,
     [tc]
   );
 
   // ---- Table columns ----
+  // We use a ref for revealCallbacks to avoid column re-creation on every render,
+  // since makeRevealCallback is stable per token id at render time.
+  const revealCallbacksRef = useRef<Map<string, () => Promise<string>>>(new Map());
+
   const columns = useMemo<DataTableColumn<ClientTokenDto>[]>(() => {
     const now = new Date();
     return [
@@ -481,14 +830,10 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
         header: t('table.prefix'),
         dataLabel: t('table.prefix'),
         cell: (tok) => (
-          <div>
-            <div className="mono" style={{ color: 'var(--text-hi)' }}>
-              {tok.tokenPrefix}
-            </div>
+          <div className="page-tokens__tokenCell">
+            <span className="mono page-tokens__tokenPrefix">{tok.tokenPrefix}</span>
             {tok.description ? (
-              <div className="help" style={{ fontSize: 'var(--text-xs)', marginTop: 2 }}>
-                {tok.description}
-              </div>
+              <span className="page-tokens__tokenDescription">{tok.description}</span>
             ) : null}
           </div>
         )
@@ -496,14 +841,14 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       {
         id: 'status',
         header: t('table.status'),
-        headerStyle: { width: 120 },
+        headerStyle: { width: 130 },
         dataLabel: t('table.status'),
         cell: (tok) => {
           const st = deriveTokenStatus(tok, now);
           const StatusIcon = STATUS_ICONS[st];
           return (
             <span className="badge" data-variant={tokenStatusVariant(st)}>
-              <StatusIcon />
+              <StatusIcon aria-hidden="true" />
               {t(`status.${st}`)}
             </span>
           );
@@ -512,7 +857,7 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       {
         id: 'scope',
         header: t('table.scope'),
-        headerStyle: { width: 140 },
+        headerStyle: { width: 150 },
         dataLabel: t('table.scope'),
         cell: (tok) => {
           const toolLabel =
@@ -525,21 +870,12 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
               ? t('scope.rpm', { count: tok.rateLimit.requestsPerMinute })
               : null;
           return (
-            <div>
-              <div
-                className="mono"
-                style={{ fontSize: 'var(--text-xs)', color: 'var(--text-hi)' }}
-                title={toolTitle}
-              >
+            <div className="page-tokens__scopeCell">
+              <span className="mono page-tokens__scopeTools" title={toolTitle}>
                 {toolLabel}
-              </div>
+              </span>
               {rpmLabel ? (
-                <div
-                  className="mono help"
-                  style={{ fontSize: 'var(--text-2xs)', marginTop: 2 }}
-                >
-                  {rpmLabel}
-                </div>
+                <span className="mono page-tokens__scopeRate">{rpmLabel}</span>
               ) : null}
             </div>
           );
@@ -552,9 +888,14 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
         dataLabel: t('table.expires'),
         cellClassName: 'mono',
         cell: (tok) => {
-          if (!tok.expiresAt) return <span style={{ color: 'var(--text-faint)' }}>—</span>;
+          if (!tok.expiresAt)
+            return <span className="page-tokens__muted">—</span>;
           return (
-            <span title={formatDateTime(tok.expiresAt)} style={{ color: 'var(--text-mid)' }}>
+            <span
+              className="mono"
+              title={formatDateTime(tok.expiresAt)}
+              style={{ color: 'var(--text-mid)' }}
+            >
               {formatRelativeDate(tok.expiresAt, timeT)}
             </span>
           );
@@ -567,7 +908,11 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
         dataLabel: t('table.created'),
         cellClassName: 'mono',
         cell: (tok) => (
-          <span title={formatDateTime(tok.createdAt)} style={{ color: 'var(--text-mid)' }}>
+          <span
+            className="mono"
+            title={formatDateTime(tok.createdAt)}
+            style={{ color: 'var(--text-mid)' }}
+          >
             {formatRelativeDate(tok.createdAt, timeT)}
           </span>
         )
@@ -575,24 +920,27 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       {
         id: 'actions',
         header: t('table.actions'),
-        headerStyle: { width: 140, textAlign: 'right' },
+        headerStyle: { width: 160, textAlign: 'right' },
         headerAlign: 'right',
         dataLabel: t('table.actions'),
         cellAlign: 'right',
         cell: (tok) => {
           const st = deriveTokenStatus(tok, now);
           const isRevoked = st === 'revoked';
+
+          // Stable reveal callback per token id
+          if (!revealCallbacksRef.current.has(tok.id)) {
+            revealCallbacksRef.current.set(tok.id, makeRevealCallback(tok));
+          }
+          const revealCb = revealCallbacksRef.current.get(tok.id)!;
+
           return (
-            <div className="flex gap-2 justify-end">
-              <button
-                className="btn btn--sm"
-                data-variant="ghost"
-                onClick={() => void onRevealToken(tok)}
-                disabled={revealing && revealTokenRow?.id === tok.id}
-              >
-                <IconEye />
-                {t('actions.reveal')}
-              </button>
+            <div className="page-tokens__actionsCell">
+              <TokenReveal
+                onReveal={revealCb}
+                triggerLabel={t('actions.reveal')}
+                copyLabel={t('revealDialog.copyToken')}
+              />
               <ActionMenu
                 aria-label={t('actions.rowMenuLabel', { prefix: tok.tokenPrefix })}
                 options={[
@@ -621,61 +969,48 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
         }
       }
     ];
-  }, [t, tc, timeT, revealing, revealTokenRow]);
+  }, [t, tc, timeT]);
 
   const isFiltered = debouncedSearch.trim() !== '' || statusFilter !== 'all';
 
   return (
-    <div className="stack">
+    <div className="stack page-tokens">
       {/* ---- Header card ---- */}
       <div className="card">
         <div className="cardHeader">
-          <div className="row">
-            <div>
-              <div className="h2" role="heading" aria-level={2}>
-                {t('title')}
-              </div>
-              <div className="help">
-                {t('stats.summary', { total: stats.total, active: stats.active })}
-              </div>
-            </div>
-            <div className="flex gap-3 items-center">
-              <button className="btn" data-variant="ghost" onClick={() => setDrawerOpen(true)}>
-                {t('actions.setupInfo')}
-              </button>
-              <button className="btn" onClick={load} disabled={loading}>
-                <IconRefresh />
-                {t('actions.refresh')}
-              </button>
-              <button
-                className="btn"
-                data-variant="primary"
-                onClick={() => {
-                  resetCreateForm();
-                  setCreateOpen(true);
-                }}
-              >
-                <IconPlus />
-                {t('actions.createToken')}
-              </button>
-            </div>
+          <div>
+            <h1 className="page-tokens__pageTitle">{t('title')}</h1>
+            <p className="page-tokens__pageSubtitle">
+              {t('stats.summary', { total: stats.total, active: stats.active })}
+            </p>
+          </div>
+          <div className="page-tokens__headerActions">
+            <button className="btn" data-variant="ghost" onClick={() => setSetupOpen(true)}>
+              {t('actions.setupInfo')}
+            </button>
+            <button className="btn" onClick={load} disabled={loading}>
+              <IconRefresh aria-hidden="true" />
+              {t('actions.refresh')}
+            </button>
+            <button
+              className="btn"
+              data-variant="primary"
+              onClick={() => {
+                resetCreateForm();
+                setCreateOpen(true);
+              }}
+            >
+              <IconPlus aria-hidden="true" />
+              {t('actions.createToken')}
+            </button>
           </div>
         </div>
 
-        {/* Filter row */}
-        <div
-          style={{
-            padding: '10px var(--space-3)',
-            borderBottom: '1px solid var(--border-subtle)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-            flexWrap: 'wrap'
-          }}
-        >
-          <div className="searchInput" style={{ flex: '1 1 200px', minWidth: 160 }}>
+        {/* Toolbar: search + status filter */}
+        <div className="page-tokens__toolbar">
+          <div className="searchInput page-tokens__searchWrap">
             <span className="searchInputIcon">
-              <IconSearch />
+              <IconSearch aria-hidden="true" />
             </span>
             <input
               type="search"
@@ -714,14 +1049,8 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
             }}
             empty={
               isFiltered ? (
-                <div
-                  style={{
-                    padding: 'var(--space-4)',
-                    textAlign: 'center',
-                    color: 'var(--text-low)'
-                  }}
-                >
-                  <p style={{ marginBottom: 8 }}>{t('filter.noResults')}</p>
+                <div className="page-tokens__filteredEmpty">
+                  <p>{t('filter.noResults')}</p>
                   <button
                     className="btn btn--sm"
                     data-variant="ghost"
@@ -736,8 +1065,15 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
               ) : (
                 <EmptyState
                   icon={<IconToken />}
+                  title={t('empty.noTokensTitle')}
                   message={t('empty.noTokens')}
-                  action={{ label: t('actions.createToken'), onClick: () => setCreateOpen(true) }}
+                  action={{
+                    label: t('actions.createToken'),
+                    onClick: () => {
+                      resetCreateForm();
+                      setCreateOpen(true);
+                    }
+                  }}
                   compact
                 />
               )
@@ -753,16 +1089,70 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
       </div>
 
       {/* ================================================================
-          Setup Drawer
+          Create Drawer — guided two-step flow
+          Step 1: Configure (form + live summary)
+          Step 2: Reveal token + inline setup snippet
           ================================================================ */}
-      <Drawer open={drawerOpen} onClose={closeDrawer} title={t('setup.title')}>
+      <Drawer
+        open={createOpen}
+        onClose={closeCreate}
+        title={
+          createStep === 'form'
+            ? t('createDrawer.stepTitle1')
+            : t('createDrawer.stepTitle2')
+        }
+      >
+        {createStep === 'form' ? (
+          <TokenCreateStep1
+            t={t}
+            tc={tc}
+            description={description}
+            setDescription={setDescription}
+            expiryPreset={expiryPreset}
+            setExpiryPreset={setExpiryPreset}
+            customDuration={customDuration}
+            setCustomDuration={setCustomDuration}
+            customUnit={customUnit}
+            setCustomUnit={setCustomUnit}
+            restrictTools={restrictTools}
+            setRestrictTools={setRestrictTools}
+            selectedTools={selectedTools}
+            setSelectedTools={setSelectedTools}
+            restrictRate={restrictRate}
+            setRestrictRate={setRestrictRate}
+            rateLimitRpm={rateLimitRpm}
+            setRateLimitRpm={setRateLimitRpm}
+            creating={creating}
+            canCreate={canCreate}
+            onCancel={closeCreate}
+            onCreate={onCreate}
+            expiryPreviewText={expiryPreviewText}
+            expiryPresetOptions={expiryPresetOptions}
+            rateValid={rateValid}
+            restrictToolsValid={restrictToolsValid}
+          />
+        ) : createdToken ? (
+          <TokenCreateStep2
+            t={t}
+            tc={tc}
+            createdToken={createdToken}
+            apiBaseUrl={apiBaseUrl}
+            origin={origin}
+            onDone={closeCreate}
+          />
+        ) : null}
+      </Drawer>
+
+      {/* ================================================================
+          Setup Drawer — reachable from "Setup Info" + "Configure client"
+          ================================================================ */}
+      <Drawer open={setupOpen} onClose={closeSetup} title={t('setup.title')}>
         <div className="stack gap-6">
           <div className="stack">
             <label className="label" htmlFor="mcp-endpoint-input">
               {t('setup.mcpEndpoint')}
             </label>
             <input id="mcp-endpoint-input" className="input mono" value={mcpUrl} readOnly />
-            {/* Safe JSX replacement for dangerouslySetInnerHTML */}
             <div className="help">
               {t('setup.mcpEndpointHelp_line1')}
               <code className="mono">{t('setup.mcpEndpointHelp_endpoint')}</code>
@@ -801,349 +1191,31 @@ export function TokensPage({ api, apiBaseUrl }: { api: AdminApi; apiBaseUrl: str
                 value: target.id,
                 label: target.title
               }))}
-              value={activeTargetId}
-              onChange={setActiveTargetId}
+              value={setupTargetId}
+              onChange={setSetupTargetId}
               aria-label={t('setup.configSnippets')}
               size="sm"
             />
-            <div className="help">{activeTarget.description}</div>
-
+            <div className="help">{setupTarget.description}</div>
             <div className="flex gap-3 items-center mt-2">
               <CopyButton
-                text={activeSnippet}
+                text={setupSnippet}
                 variant="primary"
                 label={t('setup.copySnippet')}
                 buttonText={t('setup.copySnippet')}
-                disabled={!activeSnippet.trim()}
+                disabled={!setupSnippet.trim()}
               />
             </div>
             <textarea
               id="mcp-config-snippet"
               className="textarea mono text-xs"
-              value={activeSnippet}
+              value={setupSnippet}
               readOnly
-              rows={Math.min(14, Math.max(6, activeSnippet.split('\n').length + 1))}
+              rows={Math.min(14, Math.max(6, setupSnippet.split('\n').length + 1))}
             />
           </div>
         </div>
       </Drawer>
-
-      {/* ================================================================
-          Create Dialog — Step 1: Form
-          ================================================================ */}
-      <Dialog
-        title={t('dialog.createTitle')}
-        open={createOpen && createStep === 'form'}
-        onClose={closeCreate}
-      >
-        <div className="stack">
-          {/* Description */}
-          <div className="stack">
-            <label htmlFor="token-description-input" className="label">
-              {t('form.description')}
-            </label>
-            <input
-              id="token-description-input"
-              className="input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('form.descriptionPlaceholder')}
-              disabled={creating}
-            />
-            <div className="help">{t('form.descriptionHelp')}</div>
-          </div>
-
-          {/* Expiry presets */}
-          <div className="stack">
-            <div className="label">{t('form.expiresIn')}</div>
-            <SegmentedControl
-              options={expiryPresetOptions}
-              value={expiryPreset}
-              onChange={setExpiryPreset}
-              aria-label={t('form.expiresIn')}
-              size="sm"
-            />
-            {expiryPreset === 'custom' ? (
-              <div className="flex gap-2 items-center mt-2">
-                <input
-                  type="number"
-                  className="input mono"
-                  min={1}
-                  value={customDuration}
-                  onChange={(e) => {
-                    const n = parseInt(e.target.value, 10);
-                    setCustomDuration(Number.isFinite(n) && n > 0 ? n : 1);
-                  }}
-                  style={{ width: 100 }}
-                  disabled={creating}
-                  aria-label={t('form.expiryCustomValue')}
-                />
-                <select
-                  className="input"
-                  style={{ width: 100 }}
-                  value={customUnit}
-                  onChange={(e) => setCustomUnit(e.target.value as 'hours' | 'days')}
-                  disabled={creating}
-                >
-                  <option value="hours">{t('form.expiryCustomUnit_hours')}</option>
-                  <option value="days">{t('form.expiryCustomUnit_days')}</option>
-                </select>
-              </div>
-            ) : null}
-            <div className="expiryPreview">{expiryPreviewText}</div>
-          </div>
-
-          {/* Tool access */}
-          <div className="stack gap-3">
-            <div className="row">
-              <div className="label" style={{ marginBottom: 0 }}>
-                {t('form.allowedTools')}
-              </div>
-            </div>
-            <SegmentedControl
-              options={[
-                { value: 'all', label: t('form.allTools') },
-                { value: 'restrict', label: t('form.restrictTools') }
-              ]}
-              value={restrictTools ? 'restrict' : 'all'}
-              onChange={(v) => {
-                const restrict = v === 'restrict';
-                setRestrictTools(restrict);
-                if (restrict && selectedTools.length === 0) {
-                  setSelectedTools([...ALL_TOOLS]);
-                }
-              }}
-              aria-label={t('form.allowedTools')}
-              size="sm"
-            />
-
-            {restrictTools ? (
-              <div className="stack gap-3">
-                {TOOL_GROUPS.map((group) => {
-                  const groupSelected = group.tools.filter((tool) =>
-                    selectedTools.includes(tool)
-                  );
-                  const allGroupSelected = groupSelected.length === group.tools.length;
-                  return (
-                    <div key={group.id} className="toolGroup">
-                      <div className="toolGroupHeader">
-                        <span className="toolGroupLabel">{t(`form.groups.${group.id}`)}</span>
-                        <button
-                          type="button"
-                          className="btn btn--xs"
-                          data-variant="ghost"
-                          onClick={() => toggleGroupAll(group.tools, !allGroupSelected)}
-                          disabled={creating}
-                        >
-                          {allGroupSelected ? t('form.deselectAll') : t('form.selectAll')}
-                        </button>
-                      </div>
-                      <div className="toolCheckList">
-                        {group.tools.map((tool) => (
-                          <label key={tool} className="toolCheckItem">
-                            <input
-                              type="checkbox"
-                              checked={selectedTools.includes(tool)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedTools((prev) => [...prev, tool]);
-                                } else {
-                                  setSelectedTools((prev) =>
-                                    prev.filter((t) => t !== tool)
-                                  );
-                                }
-                              }}
-                              disabled={creating}
-                            />
-                            <span className="toolCheckItemLabel">{tool}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="help">
-                  {t('form.selected', {
-                    selected: selectedTools.length,
-                    total: ALL_TOOLS.length
-                  })}
-                </div>
-                {selectedTools.length === 0 ? (
-                  <div className="fieldError">{t('form.restrictToolsHint')}</div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-
-          {/* Rate limit */}
-          <div className="stack gap-3">
-            <div className="row">
-              <div className="label" style={{ marginBottom: 0 }}>
-                {t('form.rateLimit')}
-              </div>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="checkbox"
-                  id="restrict-rate-check"
-                  checked={restrictRate}
-                  onChange={(e) => setRestrictRate(e.target.checked)}
-                  disabled={creating}
-                />
-                <label
-                  htmlFor="restrict-rate-check"
-                  className="text-sm cursor-pointer"
-                  style={{ fontSize: 'var(--text-sm)' }}
-                >
-                  {t('form.enableRateLimit')}
-                </label>
-              </div>
-            </div>
-            {restrictRate ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <input
-                    className="input mono"
-                    type="number"
-                    min="1"
-                    placeholder="60"
-                    value={rateLimitRpm}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      setRateLimitRpm(isNaN(val) ? '' : Math.max(1, val));
-                    }}
-                    style={{ width: 100 }}
-                    disabled={creating}
-                  />
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-mid)' }}>
-                    {t('form.requestsPerMinute')}
-                  </span>
-                </div>
-                {!rateValid ? (
-                  <div className="fieldError">{t('form.rateLimitHint')}</div>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-end gap-3">
-            <button className="btn" onClick={closeCreate} disabled={creating}>
-              {tc('actions.cancel')}
-            </button>
-            <button
-              className="btn"
-              data-variant="primary"
-              onClick={onCreate}
-              disabled={!canCreate}
-            >
-              {creating ? (
-                <span className="spin">
-                  <IconToken />
-                </span>
-              ) : (
-                <IconToken />
-              )}
-              {t('actions.createToken')}
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      {/* ================================================================
-          Create Dialog — Step 2: Token Issued
-          ================================================================ */}
-      <Dialog
-        title={t('dialog.copyTitle')}
-        open={createOpen && createStep === 'issued'}
-        onClose={closeCreate}
-      >
-        <div className="stack">
-          <div className="help">{t('copyDialog.warning')}</div>
-          <div className="tokenWell" aria-label={t('copyDialog.copyToken')}>
-            {createdToken ?? ''}
-          </div>
-          <CopyButton
-            text={createdToken ?? ''}
-            variant="primary"
-            label={t('copyDialog.copyToken')}
-            buttonText={t('copyDialog.copyToken')}
-            disabled={!createdToken}
-          />
-          <div className="flex justify-end gap-3 mt-2">
-            <button className="btn" data-variant="ghost" onClick={closeCreate}>
-              {t('copyDialog.done')}
-            </button>
-            <button className="btn" data-variant="primary" onClick={onSetupClient}>
-              {t('copyDialog.setupClient')}
-            </button>
-          </div>
-        </div>
-      </Dialog>
-
-      {/* ================================================================
-          Reveal Dialog
-          ================================================================ */}
-      <Dialog
-        title={t('dialog.revealTitle')}
-        open={Boolean(revealTokenRow)}
-        onClose={clearRevealedToken}
-      >
-        <div className="stack">
-          <div className="help">{t('revealDialog.warning')}</div>
-
-          {revealing ? (
-            <div className="tokenWell" style={{ color: 'var(--text-faint)' }}>
-              ···
-            </div>
-          ) : (
-            <div className="tokenWell">{revealedToken ?? ''}</div>
-          )}
-
-          {/* Countdown */}
-          {revealedToken ? (
-            <div className="revealCountdown">
-              <div className="revealCountdownBar">
-                <div
-                  className="revealCountdownFill"
-                  style={{ width: `${(revealSecondsLeft / REVEAL_DURATION) * 100}%` }}
-                />
-              </div>
-              {/* Visual label updates every second; aria-hidden to avoid per-second AT spam */}
-              <span className="revealCountdownLabel" aria-hidden="true">
-                {t('revealDialog.hidesIn', { seconds: revealSecondsLeft })}
-              </span>
-              {/* Accessible live region updates only on 5-second boundaries */}
-              <span
-                className="sr-only"
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                {revealSecondsLeft % 5 === 0
-                  ? t('revealDialog.hidesIn', { seconds: revealSecondsLeft })
-                  : ''}
-              </span>
-            </div>
-          ) : null}
-
-          <div className="flex gap-3">
-            <CopyButton
-              text={revealedToken ?? ''}
-              variant="primary"
-              label={t('revealDialog.copyToken')}
-              buttonText={t('revealDialog.copyToken')}
-              disabled={!revealedToken || revealing}
-            />
-            <button
-              className="btn"
-              data-variant="ghost"
-              onClick={onUseInSetup}
-              disabled={!revealedToken || revealing}
-            >
-              {t('actions.useInSetup')}
-            </button>
-          </div>
-        </div>
-      </Dialog>
 
       {/* ================================================================
           Revoke Confirm Dialog

@@ -1,6 +1,6 @@
 {
   "title": "Usage",
-  "subtitle": "What Tavily is used for (queries are redacted based on server log mode)",
+  "subtitle": "Audit log of all tool calls (queries are redacted based on server log mode)",
   "actions": {
     "refresh": "Refresh"
   },
@@ -17,7 +17,8 @@
     "to": "To"
   },
   "summary": {
-    "totalEvents": "Total events:"
+    "totalEvents": "Total events:",
+    "noEvents": "No events match the current filters."
   },
   "table": {
     "time": "Time",
@@ -28,17 +29,20 @@
     "latency": "Latency"
   },
   "empty": {
-    "noEvents": "No usage events yet."
+    "noEvents": "No usage events yet.",
+    "noEventsFiltered": "No events match the current filters."
   },
-  "dialog": {
-    "title": "Usage event",
+  "drawer": {
+    "title": "Event detail",
     "time": "Time",
-    "client": "Client",
-    "upstreamKey": "Upstream key",
+    "tool": "Tool",
+    "outcome": "Outcome",
+    "client": "Client token",
+    "upstreamKey": "Upstream key ID",
     "latency": "Latency",
-    "query": "Query (redacted)",
-    "queryHash": "hash: {{hash}}",
-    "error": "Error",
-    "args": "Args (redacted)"
+    "query": "Query",
+    "queryHash": "Hash: {{hash}}",
+    "error": "Error message",
+    "args": "Arguments (redacted)"
   }
 }

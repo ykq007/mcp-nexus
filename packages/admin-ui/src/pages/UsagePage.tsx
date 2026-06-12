@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AdminApi, TavilyToolUsageDto, PaginationDto, TavilyToolUsageFilters, TavilyToolUsageSummaryDto } from '../lib/adminApi';
 import { formatDateTime } from '../lib/format';
-import { Dialog } from '../ui/Dialog';
-import { IconRefresh, IconSearch } from '../ui/icons';
+import { Drawer } from '../ui/Drawer';
+import { IconRefresh, IconSearch, IconCheck, IconAlertCircle } from '../ui/icons';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { Pagination } from '../ui/Pagination';
 import { useDebounce } from '../lib/useDebounce';
 import { EmptyState } from '../ui/EmptyState';
 import { DataTable, type DataTableColumn } from '../ui/DataTable';
+import { CopyButton } from '../ui/CopyButton';
+import '../styles/pages/usage.css';
 
 const PAGE_SIZE = 20;
 
@@ -45,6 +47,111 @@ function toLocalEndOfDayIso(dateInput: string): string | null {
   const date = new Date(parts.year, parts.month - 1, parts.day, 23, 59, 59, 999);
   if (Number.isNaN(date.getTime())) return null;
   return date.toISOString();
+}
+
+function OutcomePill({ outcome }: { outcome: string }) {
+  if (outcome === 'success') {
+    return (
+      <span className="badge statusPill--success usage-outcome-pill">
+        <IconCheck aria-hidden="true" />
+        {outcome}
+      </span>
+    );
+  }
+  return (
+    <span className="badge statusPill--danger usage-outcome-pill">
+      <IconAlertCircle aria-hidden="true" />
+      {outcome}
+    </span>
+  );
+}
+
+function UsageDetailDrawer({
+  event,
+  onClose
+}: {
+  event: TavilyToolUsageDto | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation('usage');
+
+  if (!event) return null;
+
+  const argsText = JSON.stringify(event.argsJson ?? {}, null, 2);
+
+  return (
+    <Drawer open={Boolean(event)} onClose={onClose} title={t('drawer.title')}>
+      <div className="stack gap-4">
+        {/* 2-col grid for compact fields */}
+        <div className="usage-detail-grid">
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.time')}</div>
+            <div className="usage-detail-value">{formatDateTime(event.timestamp)}</div>
+          </div>
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.tool')}</div>
+            <div className="usage-detail-value">{event.toolName}</div>
+          </div>
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.client')}</div>
+            <div className={`usage-detail-value${!event.clientTokenPrefix ? ' is-empty' : ''}`}>
+              {event.clientTokenPrefix ?? '—'}
+            </div>
+          </div>
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.upstreamKey')}</div>
+            <div className={`usage-detail-value${!event.upstreamKeyId ? ' is-empty' : ''}`}>
+              {event.upstreamKeyId ?? '—'}
+            </div>
+          </div>
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.latency')}</div>
+            <div className={`usage-detail-value${typeof event.latencyMs !== 'number' ? ' is-empty' : ''}`}>
+              {typeof event.latencyMs === 'number' ? `${event.latencyMs}ms` : '—'}
+            </div>
+          </div>
+          <div className="usage-detail-field">
+            <div className="usage-detail-label">{t('drawer.outcome')}</div>
+            <div className="usage-detail-value">
+              <OutcomePill outcome={event.outcome} />
+            </div>
+          </div>
+        </div>
+
+        {/* Query — full width */}
+        <div className="usage-detail-full">
+          <div className="usage-detail-label">{t('drawer.query')}</div>
+          {event.queryPreview ? (
+            <div className="usage-detail-code" style={{ maxHeight: 80 }}>{event.queryPreview}</div>
+          ) : (
+            <div className="usage-detail-value is-empty">—</div>
+          )}
+          {event.queryHash ? (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-low)', fontFamily: 'var(--font-mono)' }}>
+              {t('drawer.queryHash', { hash: event.queryHash })}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Error — full width, only if present */}
+        {event.errorMessage ? (
+          <div className="usage-detail-full">
+            <div className="usage-detail-label">{t('drawer.error')}</div>
+            <div className="usage-detail-error">{event.errorMessage}</div>
+          </div>
+        ) : null}
+
+        {/* Args JSON — full width */}
+        <div className="usage-detail-full">
+          <div className="usage-detail-args-label">
+            <div className="usage-detail-label">{t('drawer.args')}</div>
+            <CopyButton text={argsText} />
+          </div>
+          <pre className="usage-detail-code">{argsText}</pre>
+        </div>
+      </div>
+    </Drawer>
+  );
 }
 
 export function UsagePage({ api }: { api: AdminApi }) {
@@ -113,6 +220,7 @@ export function UsagePage({ api }: { api: AdminApi }) {
     void load();
   }, [load]);
 
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [toolName, outcome, debouncedTokenPrefix, dateFrom, dateTo]);
@@ -122,6 +230,8 @@ export function UsagePage({ api }: { api: AdminApi }) {
     const unique = Array.from(new Set(fromSummary));
     return unique.length ? unique : ['tavily_search', 'tavily_extract', 'tavily_crawl', 'tavily_map', 'tavily_research'];
   }, [summary]);
+
+  const hasActiveFilters = Boolean(toolName || outcome || clientTokenPrefix || dateFrom || dateTo);
 
   const columns = useMemo(() => {
     return [
@@ -136,7 +246,7 @@ export function UsagePage({ api }: { api: AdminApi }) {
       {
         id: 'tool',
         header: t('table.tool'),
-        headerStyle: { width: 140 },
+        headerStyle: { width: 160 },
         dataLabel: t('table.tool'),
         cellClassName: 'mono',
         cell: (row: TavilyToolUsageDto) => row.toolName
@@ -146,7 +256,7 @@ export function UsagePage({ api }: { api: AdminApi }) {
         header: t('table.outcome'),
         headerStyle: { width: 120 },
         dataLabel: t('table.outcome'),
-        cell: (row: TavilyToolUsageDto) => <OutcomeBadge outcome={row.outcome} />
+        cell: (row: TavilyToolUsageDto) => <OutcomePill outcome={row.outcome} />
       },
       {
         id: 'token',
@@ -160,112 +270,131 @@ export function UsagePage({ api }: { api: AdminApi }) {
         id: 'query',
         header: t('table.query'),
         dataLabel: t('table.query'),
-        cellClassName: 'mono',
-        cell: (row: TavilyToolUsageDto) => row.queryPreview ?? (row.queryHash ? `${row.queryHash.slice(0, 10)}…` : '—')
+        cell: (row: TavilyToolUsageDto) => (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--text-mid)' }}>
+            {row.queryPreview ?? (row.queryHash ? `${row.queryHash.slice(0, 10)}…` : '—')}
+          </span>
+        )
       },
       {
         id: 'latency',
         header: t('table.latency'),
-        headerStyle: { width: 120, textAlign: 'right' },
-        headerAlign: 'right',
+        headerStyle: { width: 100, textAlign: 'right' as const },
+        headerAlign: 'right' as const,
         dataLabel: t('table.latency'),
-        cellAlign: 'right',
+        cellAlign: 'right' as const,
         cellClassName: 'mono',
-        cell: (row: TavilyToolUsageDto) => (typeof row.latencyMs === 'number' ? `${row.latencyMs}ms` : '—')
+        cell: (row: TavilyToolUsageDto) =>
+          typeof row.latencyMs === 'number' ? `${row.latencyMs}ms` : '—'
       }
     ] satisfies DataTableColumn<TavilyToolUsageDto>[];
   }, [t]);
 
   return (
-    <div className="usagePage">
-      <div className="card usagePageCard">
-        <div className="cardHeader">
-          <div className="row">
-            <div>
-              <div className="h2" role="heading" aria-level={2}>{t('title')}</div>
-              <div className="help">{t('subtitle')}</div>
-            </div>
-            <button className="btn" onClick={load} disabled={loading}>
-              <IconRefresh className={loading ? 'spin' : ''} />
-              {t('actions.refresh')}
-            </button>
+    <div className="page-usage">
+      {/* Page header */}
+      <div className="pageHeader">
+        <div>
+          <h1 className="pageTitle">{t('title')}</h1>
+          <p className="pageSubtitle">{t('subtitle')}</p>
+        </div>
+        <button className="btn" onClick={load} disabled={loading} type="button">
+          <IconRefresh className={loading ? 'spin' : ''} aria-hidden="true" />
+          {t('actions.refresh')}
+        </button>
+      </div>
+
+      {/* Error */}
+      {error ? <ErrorBanner message={error} onRetry={load} retrying={loading} /> : null}
+
+      {/* Filter bar */}
+      <div className="usage-filter-bar" role="search" aria-label="Filter usage events">
+        {/* Tool */}
+        <div className="usage-filter-field">
+          <label htmlFor="usage-tool">{t('filters.tool')}</label>
+          <select
+            id="usage-tool"
+            className="select"
+            value={toolName}
+            onChange={(e) => setToolName(e.target.value)}
+          >
+            <option value="">{t('filters.allTools')}</option>
+            {toolOptions.map((tool) => (
+              <option key={tool} value={tool}>
+                {tool}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Outcome */}
+        <div className="usage-filter-field">
+          <label htmlFor="usage-outcome">{t('filters.outcome')}</label>
+          <select
+            id="usage-outcome"
+            className="select"
+            value={outcome}
+            onChange={(e) => setOutcome(e.target.value)}
+          >
+            <option value="">{t('filters.allOutcomes')}</option>
+            <option value="success">{t('filters.success')}</option>
+            <option value="error">{t('filters.error')}</option>
+          </select>
+        </div>
+
+        {/* Client token prefix — debounced 400ms */}
+        <div className="usage-filter-field">
+          <label htmlFor="usage-client">{t('filters.clientTokenPrefix')}</label>
+          <div className="usage-search-wrap">
+            <IconSearch aria-hidden="true" />
+            <input
+              id="usage-client"
+              type="search"
+              className="input mono"
+              placeholder={t('filters.clientPlaceholder')}
+              value={clientTokenPrefix}
+              onChange={(e) => setClientTokenPrefix(e.target.value)}
+            />
           </div>
         </div>
 
-        <div className="cardBody">
-          {error ? <ErrorBanner message={error} onRetry={load} retrying={loading} /> : null}
-
-          <div className="grid2 gap-3">
-            <div className="stack">
-              <label htmlFor="usage-tool" className="label">
-                {t('filters.tool')}
-              </label>
-              <select id="usage-tool" className="select" value={toolName} onChange={(e) => setToolName(e.target.value)}>
-                <option value="">{t('filters.allTools')}</option>
-                {toolOptions.map((tool) => (
-                  <option key={tool} value={tool}>
-                    {tool}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="stack">
-              <label htmlFor="usage-outcome" className="label">
-                {t('filters.outcome')}
-              </label>
-              <select id="usage-outcome" className="select" value={outcome} onChange={(e) => setOutcome(e.target.value)}>
-                <option value="">{t('filters.allOutcomes')}</option>
-                <option value="success">{t('filters.success')}</option>
-                <option value="error">{t('filters.error')}</option>
-              </select>
-            </div>
-
-            <div className="stack">
-              <label htmlFor="usage-client" className="label">
-                {t('filters.clientTokenPrefix')}
-              </label>
-              <div className="searchInput">
-                <div className="searchInputIcon">
-                  <IconSearch />
-                </div>
-                <input
-                  id="usage-client"
-                  type="search"
-                  className="input mono"
-                  placeholder={t('filters.clientPlaceholder')}
-                  value={clientTokenPrefix}
-                  onChange={(e) => setClientTokenPrefix(e.target.value)}
-                  style={{ paddingLeft: 40 }}
-                />
-              </div>
-            </div>
-
-            <div className="stack">
-              <label htmlFor="usage-date-from" className="label">
-                {t('filters.from')}
-              </label>
-              <input id="usage-date-from" type="date" className="input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-
-            <div className="stack">
-              <label htmlFor="usage-date-to" className="label">
-                {t('filters.to')}
-              </label>
-              <input id="usage-date-to" type="date" className="input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
-          </div>
-
-          {summary ? (
-            <div className="mt-4">
-              <div className="help">
-                {t('summary.totalEvents')} <span className="mono">{summary.total}</span>
-              </div>
-            </div>
-          ) : null}
+        {/* Date from */}
+        <div className="usage-filter-field">
+          <label htmlFor="usage-date-from">{t('filters.from')}</label>
+          <input
+            id="usage-date-from"
+            type="date"
+            className="input"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
         </div>
 
-        <div className="cardBody p-0 usageTableScroller">
+        {/* Date to */}
+        <div className="usage-filter-field">
+          <label htmlFor="usage-date-to">{t('filters.to')}</label>
+          <input
+            id="usage-date-to"
+            type="date"
+            className="input"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Summary strip */}
+      {summary ? (
+        <div className="usage-summary" aria-live="polite" aria-atomic="true">
+          <span>{t('summary.totalEvents')}</span>
+          <span className="usage-summary-count">{summary.total}</span>
+          {hasActiveFilters ? <span style={{ color: 'var(--text-low)', fontSize: 'var(--text-xs)' }}>(filtered)</span> : null}
+        </div>
+      ) : null}
+
+      {/* Table card */}
+      <div className="usage-table-card usageTableScroller">
+        <div className="usage-table-scroll">
           <DataTable
             ariaLabel={t('title')}
             columns={columns}
@@ -274,77 +403,39 @@ export function UsagePage({ api }: { api: AdminApi }) {
             loading={loading && logs.length === 0}
             getRowProps={(row) => ({
               onClick: () => setSelected(row),
-              style: { cursor: 'pointer' }
+              role: 'button',
+              tabIndex: 0,
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelected(row);
+                }
+              },
+              'aria-label': `View detail for ${row.toolName} event at ${formatDateTime(row.timestamp)}`
             })}
-            empty={<EmptyState message={t('empty.noEvents')} compact />}
+            empty={
+              <EmptyState
+                message={hasActiveFilters ? t('empty.noEventsFiltered') : t('empty.noEvents')}
+                compact
+              />
+            }
           />
         </div>
 
         {pagination.totalPages > 1 ? (
-          <div className="cardBody">
-            <Pagination total={pagination.totalItems} page={pagination.currentPage} pageSize={PAGE_SIZE} onChange={setCurrentPage} />
+          <div className="usage-pagination">
+            <Pagination
+              total={pagination.totalItems}
+              page={pagination.currentPage}
+              pageSize={PAGE_SIZE}
+              onChange={setCurrentPage}
+            />
           </div>
         ) : null}
       </div>
 
-      <Dialog
-        title={t('dialog.title')}
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        description={selected ? `${selected.toolName} • ${selected.outcome}` : undefined}
-      >
-        <div className="stack">
-          <div className="grid2">
-            <div className="stack">
-              <div className="label">{t('dialog.time')}</div>
-              <div className="mono">{selected ? formatDateTime(selected.timestamp) : ''}</div>
-            </div>
-            <div className="stack">
-              <div className="label">{t('dialog.client')}</div>
-              <div className="mono">{selected?.clientTokenPrefix ?? '—'}</div>
-            </div>
-            <div className="stack">
-              <div className="label">{t('dialog.upstreamKey')}</div>
-              <div className="mono">{selected?.upstreamKeyId ?? '—'}</div>
-            </div>
-            <div className="stack">
-              <div className="label">{t('dialog.latency')}</div>
-              <div className="mono">{typeof selected?.latencyMs === 'number' ? `${selected.latencyMs}ms` : '—'}</div>
-            </div>
-          </div>
-
-          <div className="stack">
-            <div className="label">{t('dialog.query')}</div>
-            <div className="mono" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {selected?.queryPreview ?? '—'}
-            </div>
-            {selected?.queryHash ? <div className="help mono">{t('dialog.queryHash', { hash: selected.queryHash })}</div> : null}
-          </div>
-
-          {selected?.errorMessage ? (
-            <div className="stack">
-              <div className="label">{t('dialog.error')}</div>
-              <div className="mono" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                {selected.errorMessage}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="stack">
-            <div className="label">{t('dialog.args')}</div>
-            <textarea className="textarea mono text-xs" readOnly value={JSON.stringify(selected?.argsJson ?? {}, null, 2)} rows={10} />
-          </div>
-        </div>
-      </Dialog>
+      {/* Detail drawer — replaces modal; list stays visible while inspecting */}
+      <UsageDetailDrawer event={selected} onClose={() => setSelected(null)} />
     </div>
-  );
-}
-
-function OutcomeBadge({ outcome }: { outcome: string }) {
-  const variant = outcome === 'success' ? 'success' : outcome === 'error' ? 'danger' : 'neutral';
-  return (
-    <span className="badge mono" data-variant={variant}>
-      {outcome}
-    </span>
   );
 }

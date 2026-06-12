@@ -64,12 +64,31 @@ describe('PlaygroundPage', () => {
   it('renders initial state', () => {
     const html = renderToStaticMarkup(<PlaygroundPage />);
 
-    // The page title/subtitle are provided by the app Shell top bar, not the
-    // page body (kept consistent with the other routes). The page owns the
-    // Request/Response panels and the client-token field.
-    expect(html).toContain('Request');
-    expect(html).toContain('Response');
-    expect(html).toContain('Client Token');
+    // The page renders two panels (request + response) and the history section.
+    // When i18n is mocked to return the key, the rendered text is the key name.
+    // We check for stable structural elements.
+    expect(html).toContain('playground-panes');
+    expect(html).toContain('playground-panel');
+    // The request panel title uses t('request')
+    expect(html).toContain('playground-panel-title');
+    // The client token input is always present
+    expect(html).toContain('playground-client-token');
+    // ToolSelector mock is rendered
     expect(html).toContain('tool-selector-mock');
+    // The history card is always rendered
+    expect(html).toContain('playground-history-card');
+  });
+
+  it('renders client token input', () => {
+    const html = renderToStaticMarkup(<PlaygroundPage />);
+    expect(html).toContain('type="password"');
+    expect(html).toContain('id="playground-client-token"');
+  });
+
+  it('renders two panels', () => {
+    const html = renderToStaticMarkup(<PlaygroundPage />);
+    // Count the panel elements — there should be 2 (request + response)
+    const panelCount = (html.match(/playground-panel-body/g) ?? []).length;
+    expect(panelCount).toBe(2);
   });
 });

@@ -1,0 +1,258 @@
+/* ============================================================================
+   mcp-nexus Admin Console — Usage page
+   "Graphite & Cobalt" · P3
+   All rules scoped under .page-usage
+   ============================================================================ */
+
+/* ===========================================================================
+   Page frame
+   =========================================================================== */
+.page-usage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  max-width: 1200px;
+}
+
+/* ===========================================================================
+   Page header row
+   =========================================================================== */
+.page-usage .pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-usage .pageTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  line-height: var(--lh-tight);
+}
+
+.page-usage .pageSubtitle {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-mid);
+  line-height: var(--lh-base);
+}
+
+/* ===========================================================================
+   Filter bar
+   =========================================================================== */
+.page-usage .usage-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-usage .usage-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page-usage .usage-filter-field label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-mid);
+  letter-spacing: 0.01em;
+}
+
+/* Search input wrapper */
+.page-usage .usage-search-wrap {
+  position: relative;
+}
+
+.page-usage .usage-search-wrap svg {
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-low);
+  pointer-events: none;
+}
+
+.page-usage .usage-search-wrap input {
+  padding-left: 30px;
+}
+
+/* Summary strip */
+.page-usage .usage-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-mid);
+  padding: 0 var(--space-1);
+}
+
+.page-usage .usage-summary-count {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===========================================================================
+   Table card
+   =========================================================================== */
+.page-usage .usage-table-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Scroll container — visible horizontal scroll on narrow viewports */
+.page-usage .usage-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Dense row height override for usage table */
+.page-usage .usage-table-card .table tbody tr {
+  cursor: pointer;
+}
+
+.page-usage .usage-table-card .table tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+/* ===========================================================================
+   Pagination footer
+   =========================================================================== */
+.page-usage .usage-pagination {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+/* ===========================================================================
+   Detail drawer body
+   =========================================================================== */
+.page-usage .usage-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.page-usage .usage-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page-usage .usage-detail-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-mid);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.page-usage .usage-detail-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.page-usage .usage-detail-value.is-empty {
+  color: var(--text-low);
+  font-family: var(--font-sans);
+}
+
+.page-usage .usage-detail-full {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.page-usage .usage-detail-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 200px;
+  line-height: var(--lh-loose);
+}
+
+.page-usage .usage-detail-error {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--danger-ink);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in oklch, var(--danger) 30%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.page-usage .usage-detail-args-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ===========================================================================
+   Outcome pill in table — overrides on top of badge
+   =========================================================================== */
+.page-usage .usage-outcome-pill {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.04em;
+}
+
+/* ===========================================================================
+   Responsive
+   =========================================================================== */
+@media (max-width: 720px) {
+  .page-usage {
+    padding: var(--space-4);
+  }
+
+  .page-usage .usage-filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .page-usage .usage-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-usage .usage-filter-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===========================================================================
+   Reduced motion
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .page-usage .usage-table-card .table tbody tr {
+    transition: none;
+  }
+}

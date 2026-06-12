@@ -1,6 +1,11 @@
 {
   "title": "设置",
   "subtitle": "管理员请求的发送位置和认证方式",
+  "section": {
+    "connection": "连接",
+    "serverStrategy": "服务器策略",
+    "appearance": "外观与语言"
+  },
   "actions": {
     "testConnection": "测试连接"
   },

@@ -1,6 +1,11 @@
 {
   "title": "Settings",
   "subtitle": "Where to send admin requests and how to authenticate",
+  "section": {
+    "connection": "Connection",
+    "serverStrategy": "Server strategy",
+    "appearance": "Appearance & language"
+  },
   "actions": {
     "testConnection": "Test connection"
   },

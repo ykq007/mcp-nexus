@@ -1,0 +1,238 @@
+/* ============================================================================
+   mcp-nexus Admin Console — Overview page
+   "Graphite & Cobalt" · P3a
+   All rules scoped to .page-overview to avoid cross-page collisions.
+   ============================================================================ */
+
+/* ===========================================================================
+   1. Page frame
+   =========================================================================== */
+
+.page-overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Page action row (refresh button + subtitle) */
+.page-overview .overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* ===========================================================================
+   2. KPI row — flat, mono numbers, click-through
+   =========================================================================== */
+
+.page-overview .overview-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .page-overview .overview-kpi-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Skeleton placeholders matching KPI card height */
+.page-overview .overview-kpi-row .skeleton {
+  height: 102px;
+  border-radius: var(--radius);
+}
+
+/* ===========================================================================
+   3. Metrics + errors row (bento)
+   =========================================================================== */
+
+.page-overview .overview-bento {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 340px);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .page-overview .overview-bento {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===========================================================================
+   4. Recent-usage table card
+   =========================================================================== */
+
+.page-overview .overview-recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-overview .overview-recent-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.page-overview .overview-recent-title .section-title {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+
+.page-overview .overview-recent-title .section-sub {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+}
+
+/* ===========================================================================
+   5. 3-step starter (first-run / empty state)
+   Replaces the generic onboarding card when keys or tokens are missing.
+   Teaches: "1 Add a key → 2 Mint a token → 3 Test it"
+   =========================================================================== */
+
+.page-overview .overview-starter {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.page-overview .overview-starter-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-overview .overview-starter-title {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+
+.page-overview .overview-starter-sub {
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+  margin-top: 2px;
+}
+
+.page-overview .overview-starter-body {
+  padding: var(--space-4);
+}
+
+.page-overview .overview-starter-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .page-overview .overview-starter-steps {
+    flex-direction: row;
+    gap: var(--space-3);
+    align-items: flex-start;
+  }
+}
+
+.page-overview .overview-starter-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  padding: var(--space-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.page-overview .overview-starter-step[data-completed='true'] {
+  opacity: 0.65;
+}
+
+.page-overview .overview-starter-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.page-overview .overview-starter-step[data-completed='true'] .overview-starter-step-num {
+  background: var(--success-soft);
+  color: var(--success-ink);
+}
+
+.page-overview .overview-starter-step-title {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  line-height: var(--lh-tight);
+}
+
+.page-overview .overview-starter-step-desc {
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+  line-height: var(--lh-base);
+  flex: 1;
+}
+
+/* Connector between steps (horizontal only) */
+@media (min-width: 640px) {
+  .page-overview .overview-starter-connector {
+    flex-shrink: 0;
+    align-self: center;
+    color: var(--text-low);
+    font-size: var(--text-xs);
+    padding-top: var(--space-1);
+  }
+}
+
+@media (max-width: 639px) {
+  .page-overview .overview-starter-connector {
+    display: none;
+  }
+}
+
+/* ===========================================================================
+   6. Error + loading helpers specific to this page
+   =========================================================================== */
+
+.page-overview .overview-skeleton-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.page-overview .help {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+}
+
+/* ===========================================================================
+   7. Reduced motion
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .page-overview .overview-starter-step {
+    transition: none;
+  }
+}

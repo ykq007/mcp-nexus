@@ -13,8 +13,11 @@ export function JsonViewer({ data, className }: JsonViewerProps) {
 
   return (
     <pre
-      className={`json-viewer ${className || ''}`}
+      className={`json-viewer ${className ?? ''}`.trim()}
+      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: html }}
+      aria-label="JSON response"
+      tabIndex={0}
     />
   );
 }
@@ -27,7 +30,10 @@ function syntaxHighlight(json: unknown): string {
     jsonStr = json;
   }
 
+  // Escape HTML
   jsonStr = jsonStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Syntax colorize
   return jsonStr.replace(
     /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
     (match: string) => {

@@ -4,6 +4,9 @@
     "tavily": "Tavily",
     "brave": "Brave 搜索"
   },
+  "providerSwitch": {
+    "ariaLabel": "选择密钥提供商"
+  },
   "tavily": {
     "title": "Tavily 密钥",
     "stats": {

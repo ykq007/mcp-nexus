@@ -173,6 +173,7 @@ function OverviewPageWrapper({ api }: { api: AdminApi }) {
       onGoToKeys={() => navigate(ROUTE_PATHS.keys)}
       onGoToTokens={() => navigate(ROUTE_PATHS.tokens)}
       onGoToUsage={() => navigate(ROUTE_PATHS.usage)}
+      onGoToPlayground={() => navigate(ROUTE_PATHS.playground)}
     />
   );
 }

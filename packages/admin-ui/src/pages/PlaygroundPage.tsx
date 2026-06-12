@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 import { JsonViewer } from '../components/JsonViewer';
-import { ToolSelector, McpTool, coerceMcpTool } from '../components/ToolSelector';
+import { ToolSelector, type McpTool, coerceMcpTool } from '../components/ToolSelector';
 import { IconRefresh, IconSearch, IconTrash, IconInfo, IconCheck, IconAlertCircle } from '../ui/icons';
 import { ErrorBanner } from '../ui/ErrorBanner';
 import { resolveMcpUrl } from '../app/mcpSetupTemplates';
@@ -14,6 +15,7 @@ import {
   pickJsonRpcResponse,
   type JsonRpcMessage
 } from './playgroundMcp';
+import '../styles/pages/playground.css';
 
 // Types
 type PlaygroundHistoryItem = {
@@ -27,7 +29,7 @@ type PlaygroundHistoryItem = {
   duration: number;
 };
 
-// Helper for local storage
+// Persist state in localStorage across sessions
 function useStickyState<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   const [value, setValue] = useState<T>(() => {
     try {
@@ -42,7 +44,7 @@ function useStickyState<T>(key: string, defaultValue: T): [T, (value: T) => void
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      // Ignore write errors
+      // Ignore write errors (private browsing, storage quota, etc.)
     }
   }, [key, value]);
 
@@ -50,35 +52,44 @@ function useStickyState<T>(key: string, defaultValue: T): [T, (value: T) => void
 }
 
 export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
-  // State
+  const { t } = useTranslation('playground');
+
+  // Sticky state — persisted across reloads
   const [clientToken, setClientToken] = useStickyState<string>('mcp-playground-token', '');
   const [selectedToolRaw, setSelectedToolRaw] = useStickyState<McpTool>('mcp-playground-tool', 'tavily_search');
   const selectedTool = coerceMcpTool(selectedToolRaw);
 
+  // Sync coerced tool back if the stored value was invalid
   useEffect(() => {
     if (selectedToolRaw !== selectedTool) {
       setSelectedToolRaw(selectedTool);
     }
   }, [selectedToolRaw, selectedTool, setSelectedToolRaw]);
+
   const [paramsJson, setParamsJson] = useStickyState<string>(
     'mcp-playground-params',
-    `{
-  "query": "what is the weather in San Francisco?"
-}`
+    `{\n  "query": "what is the weather in San Francisco?"\n}`
   );
   const [history, setHistory] = useStickyState<PlaygroundHistoryItem[]>('mcp-playground-history', []);
   const [sessionId, setSessionId] = useStickyState<string>('mcp-playground-session-id', '');
+
+  // Local UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const [paramsError, setParamsError] = useState(false);
+
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const mcpUrl = resolveMcpUrl({ apiBaseUrl, origin });
 
-  // Derived state
-  const selectedHistoryItem = selectedHistoryId
-    ? history.find((h) => h.id === selectedHistoryId)
+  // Show the most-recently executed item when nothing is explicitly selected
+  const displayedItem = selectedHistoryId
+    ? history.find((h) => h.id === selectedHistoryId) ?? history[0]
     : history[0];
 
+  // ---------------------------------------------------------------------------
+  // Execute
+  // ---------------------------------------------------------------------------
   const handleExecute = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = clientToken.trim();
@@ -90,9 +101,11 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
     let params: unknown;
     try {
       params = JSON.parse(paramsJson);
+      setParamsError(false);
       setError(null);
     } catch {
-      setError('Invalid JSON parameters');
+      setParamsError(true);
+      setError(t('toolParametersInvalid'));
       return;
     }
 
@@ -102,7 +115,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
       id: uuidv4(),
       timestamp: startTime,
       tool: selectedTool,
-      params,
+      params
     };
 
     try {
@@ -155,6 +168,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
       let responseMessage: JsonRpcMessage | undefined;
       let responseRawText = '';
 
+      // Two-attempt retry: on session-invalid error, re-initialize and retry once
       for (let attempt = 0; attempt < 2; attempt += 1) {
         if (!activeSessionId) {
           activeSessionId = await initializeSession();
@@ -187,6 +201,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
 
         const messageText = getJsonRpcErrorMessage(responseMessage?.error);
         if (attempt === 0 && isSessionInvalidErrorMessage(messageText)) {
+          // Session expired — clear and retry with a fresh session
           activeSessionId = '';
           setSessionId('');
           continue;
@@ -212,7 +227,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
         response: result,
         error: isError ? result : undefined,
         status: isError ? 'error' : 'success',
-        duration,
+        duration
       };
 
       setHistory([newItem, ...history].slice(0, 50));
@@ -221,9 +236,9 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
       const duration = Date.now() - startTime;
       const newItem: PlaygroundHistoryItem = {
         ...newItemBase,
-        error: { message: err.message || 'Network Error' },
+        error: { message: (err as Error).message || 'Network Error' },
         status: 'error',
-        duration,
+        duration
       };
       setHistory([newItem, ...history].slice(0, 50));
       setSelectedHistoryId(newItem.id);
@@ -233,7 +248,7 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
   };
 
   const handleClearHistory = () => {
-    if (confirm('Are you sure you want to clear the request history?')) {
+    if (confirm(t('clearHistoryConfirm'))) {
       setHistory([]);
       setSelectedHistoryId(null);
     }
@@ -245,155 +260,230 @@ export function PlaygroundPage({ apiBaseUrl = '' }: { apiBaseUrl?: string }) {
     setSelectedHistoryId(item.id);
   };
 
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
   return (
-    <div className="stack gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Request Panel */}
-        <div className="card">
-          <div className="cardHeader">
-            <div className="h2" role="heading" aria-level={2}>Request</div>
+    <div className="page-playground">
+      {/* Two-pane: request / response */}
+      <div className="playground-panes">
+        {/* ---- Request panel ---- */}
+        <div className="playground-panel">
+          <div className="playground-panel-header">
+            <h2 className="playground-panel-title">{t('request')}</h2>
           </div>
-          <div className="cardBody">
-            <form onSubmit={handleExecute} className="stack gap-4">
-              {error && <ErrorBanner message={error} />}
+          <div className="playground-panel-body">
+            <form onSubmit={handleExecute} className="stack gap-4" noValidate>
+              {error ? <ErrorBanner message={error} /> : null}
 
-              <div className="stack gap-1">
-                <label htmlFor="client-token" className="label">
-                  Client Token
+              {/* Client token */}
+              <div className="playground-field">
+                <label htmlFor="playground-client-token" className="playground-field-label">
+                  {t('clientToken')}
                 </label>
                 <input
-                  id="client-token"
+                  id="playground-client-token"
                   type="password"
                   className="input"
-                  placeholder="Enter your Client Token"
+                  placeholder={t('clientTokenPlaceholder')}
                   value={clientToken}
                   onChange={(e) => setClientToken(e.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
                 />
-                <div className="help">Your secret client token (not the Tavily API key)</div>
+                <div className="playground-field-hint">{t('clientTokenDescription')}</div>
               </div>
 
+              {/* Tool selector */}
               <ToolSelector value={selectedTool} onChange={setSelectedToolRaw} disabled={loading} />
 
-              <div className="stack gap-1">
-                <label htmlFor="params" className="label">
-                  Parameters (JSON)
+              {/* JSON parameters */}
+              <div className="playground-field">
+                <label htmlFor="playground-params" className="playground-field-label">
+                  {t('toolParameters')}
                 </label>
                 <textarea
-                  id="params"
-                  className={`textarea mono ${error === 'Invalid JSON parameters' ? 'border-red-500' : ''}`}
+                  id="playground-params"
+                  className={`textarea mono playground-params-textarea${paramsError ? ' input--error' : ''}`}
                   rows={8}
                   value={paramsJson}
-                  onChange={(e) => setParamsJson(e.target.value)}
+                  onChange={(e) => {
+                    setParamsJson(e.target.value);
+                    setParamsError(false);
+                  }}
                   placeholder="{}"
+                  spellCheck={false}
+                  aria-invalid={paramsError ? 'true' : undefined}
+                  aria-describedby={paramsError ? 'params-error' : undefined}
                 />
+                {paramsError ? (
+                  <div id="params-error" className="inputError" role="alert">
+                    {t('toolParametersInvalid')}
+                  </div>
+                ) : null}
               </div>
 
-              <div className="row justify-end">
+              {/* Execute */}
+              <div className="playground-execute-row">
                 <button
                   type="submit"
                   className="btn"
                   data-variant="primary"
-                  disabled={loading || !clientToken}
+                  disabled={loading || !clientToken.trim()}
                 >
-                  {loading ? <IconRefresh className="spin" /> : <IconSearch />}
-                  {loading ? 'Running...' : 'Execute Tool'}
+                  {loading ? (
+                    <>
+                      <IconRefresh className="spin" aria-hidden="true" />
+                      {t('executing')}
+                    </>
+                  ) : (
+                    <>
+                      <IconSearch aria-hidden="true" />
+                      {t('execute')}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        {/* Response Panel */}
-        <div className="card flex flex-col min-h-[400px]">
-          <div className="cardHeader row">
-            <div className="h2" role="heading" aria-level={2}>Response</div>
-            {selectedHistoryItem && (
-               <span className={`badge`} data-variant={selectedHistoryItem.status === 'success' ? 'success' : 'danger'}>
-                 {selectedHistoryItem.status.toUpperCase()}
-                 <span className="ml-2 opacity-70">{selectedHistoryItem.duration}ms</span>
-               </span>
-            )}
+        {/* ---- Response panel ---- */}
+        <div className="playground-panel">
+          <div className="playground-panel-header">
+            <h2 className="playground-panel-title">{t('response')}</h2>
+            {displayedItem ? (
+              <div className="playground-response-status">
+                <span
+                  className="badge"
+                  data-variant={displayedItem.status === 'success' ? 'success' : 'danger'}
+                >
+                  {displayedItem.status === 'success' ? (
+                    <IconCheck aria-hidden="true" />
+                  ) : (
+                    <IconAlertCircle aria-hidden="true" />
+                  )}
+                  {t(displayedItem.status === 'success' ? 'statusSuccess' : 'statusError')}
+                </span>
+                <span className="playground-response-duration" aria-label={`${displayedItem.duration} milliseconds`}>
+                  {displayedItem.duration}ms
+                </span>
+              </div>
+            ) : null}
           </div>
-          <div className="cardBody flex-grow flex flex-col relative overflow-hidden">
-            {selectedHistoryItem ? (
-              <JsonViewer 
-                data={selectedHistoryItem.error || selectedHistoryItem.response} 
-                className="flex-grow h-full"
+          <div className="playground-panel-body playground-response-body">
+            {displayedItem ? (
+              <JsonViewer
+                data={displayedItem.error ?? displayedItem.response}
+                className="flex-1"
               />
             ) : (
-              <div className="emptyState emptyState--compact">
-                 <div className="emptyStateIcon"><IconInfo /></div>
-                 <div className="emptyStateMessage">Execute a tool to see the response here.</div>
+              <div className="playground-empty-response" aria-label={t('noResponse')}>
+                <IconInfo aria-hidden="true" />
+                <span>{t('noResponse')}</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* History Panel */}
-      <div className="card">
-        <div className="cardHeader row">
-          <div className="h2" role="heading" aria-level={2}>Request History</div>
-          {history.length > 0 && (
-            <button className="btn btn--sm" data-variant="ghost" onClick={handleClearHistory}>
-              <IconTrash /> Clear
+      {/* ---- History panel ---- */}
+      <div className="playground-history-card">
+        <div className="playground-history-header">
+          <h2 className="playground-history-title">{t('history')}</h2>
+          {history.length > 0 ? (
+            <button
+              type="button"
+              className="btn btn--sm"
+              data-variant="ghost"
+              onClick={handleClearHistory}
+              aria-label={t('clearHistory')}
+            >
+              <IconTrash aria-hidden="true" />
+              {t('clearHistory')}
             </button>
-          )}
+          ) : null}
         </div>
-        <div className="cardBody p-0">
-          {history.length === 0 ? (
-            <div className="p-6 text-center text-muted">No history yet.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '180px' }}>Time</th>
-                    <th>Tool</th>
-                    <th>Status</th>
-                    <th>Duration</th>
-                    <th className="text-right">Actions</th>
+
+        {history.length === 0 ? (
+          <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-low)', fontSize: 'var(--text-sm)' }}>
+            {t('noHistory')}
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table" aria-label={t('history')}>
+              <thead>
+                <tr>
+                  <th style={{ width: 180 }}>{t('historyTable.time')}</th>
+                  <th>{t('historyTable.tool')}</th>
+                  <th style={{ width: 110 }}>{t('historyTable.status')}</th>
+                  <th style={{ width: 100 }}>{t('historyTable.duration')}</th>
+                  <th style={{ width: 80, textAlign: 'right' }}>{t('historyTable.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((item) => (
+                  <tr
+                    key={item.id}
+                    data-selected={
+                      (selectedHistoryId === item.id || (!selectedHistoryId && item === history[0]))
+                        ? 'true'
+                        : undefined
+                    }
+                    onClick={() => setSelectedHistoryId(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedHistoryId(item.id);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="row"
+                    aria-selected={
+                      selectedHistoryId === item.id || (!selectedHistoryId && item === history[0])
+                    }
+                  >
+                    <td className="mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-mid)' }}>
+                      {formatDistanceToNow(item.timestamp, { addSuffix: true })}
+                    </td>
+                    <td className="mono" style={{ fontSize: 'var(--text-sm)' }}>
+                      {item.tool}
+                    </td>
+                    <td>
+                      {item.status === 'success' ? (
+                        <span className="badge" data-variant="success">
+                          <IconCheck aria-hidden="true" />
+                          {t('statusSuccess')}
+                        </span>
+                      ) : (
+                        <span className="badge" data-variant="danger">
+                          <IconAlertCircle aria-hidden="true" />
+                          {t('statusError')}
+                        </span>
+                      )}
+                    </td>
+                    <td className="mono" style={{ fontSize: 'var(--text-xs)' }}>
+                      {item.duration}ms
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        className="btn btn--sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadHistoryItem(item);
+                        }}
+                        aria-label={`Load params from ${item.tool} request`}
+                      >
+                        {t('loadParams')}
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {history.map((item) => (
-                    <tr 
-                      key={item.id} 
-                      onClick={() => setSelectedHistoryId(item.id)}
-                      className={selectedHistoryId === item.id ? 'bg-primary-light' : 'cursor-pointer hover:bg-surface-hover'}
-                      style={{ backgroundColor: selectedHistoryId === item.id ? 'var(--color-surface-hover)' : undefined }}
-                    >
-                      <td className="mono text-xs">
-                        {formatDistanceToNow(item.timestamp, { addSuffix: true })}
-                      </td>
-                      <td className="font-medium">{item.tool}</td>
-                      <td>
-                        {item.status === 'success' ? (
-                          <span className="badge" data-variant="success"><IconCheck className="w-3 h-3 mr-1" /> Success</span>
-                        ) : (
-                          <span className="badge" data-variant="danger"><IconAlertCircle className="w-3 h-3 mr-1" /> Error</span>
-                        )}
-                      </td>
-                      <td className="mono text-xs">{item.duration}ms</td>
-                      <td className="text-right">
-                        <button 
-                          className="btn btn--xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            loadHistoryItem(item);
-                          }}
-                        >
-                          Load Params
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

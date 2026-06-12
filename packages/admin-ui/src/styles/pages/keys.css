@@ -1,0 +1,123 @@
+/* ============================================================================
+   Keys page — "Graphite & Cobalt"
+   Scoped under .page-keys to avoid collisions with other pages.
+
+   Sections:
+   1.  Provider row (segmented control + count badges)
+   2.  Filter count label
+   3.  Error wrapper
+   4.  Responsive overrides
+   5.  Reduced-motion
+   ============================================================================ */
+
+/* ===========================================================================
+   1. Provider row
+   The segmented control sits in a flex row at the top of the page.
+   =========================================================================== */
+
+.page-keys .keys-providerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Provider option label: text + count pill inline */
+.page-keys .keys-providerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Count badge inside the provider option */
+.page-keys .keys-providerCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-semibold);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-low);
+  line-height: 1;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+/* Active provider segment: highlight count */
+.page-keys .segmentedItem--active .keys-providerCount {
+  background: var(--primary-soft);
+  border-color: color-mix(in oklch, var(--primary) 30%, transparent);
+  color: var(--primary);
+}
+
+/* ===========================================================================
+   2. Filter count label
+   Inline "Showing N of M keys" text in the toolbar filters area.
+   =========================================================================== */
+
+.page-keys .keys-filterCount {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ===========================================================================
+   3. Error wrapper
+   Small padding around ErrorBanner inside the card body.
+   =========================================================================== */
+
+.page-keys .keys-errorWrap {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ===========================================================================
+   4. Responsive overrides
+   =========================================================================== */
+
+/* Stack toolbar vertically below 680px */
+@media (max-width: 680px) {
+  .page-keys .tableToolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-keys .tableToolbarSearch {
+    width: 100%;
+  }
+  .page-keys .tableToolbarFilters {
+    flex-wrap: wrap;
+    row-gap: var(--space-1);
+  }
+  .page-keys .tableToolbarActions {
+    margin-left: 0;
+    flex-wrap: wrap;
+    row-gap: var(--space-1);
+  }
+}
+
+/* Stack KPI row to two cols on narrow */
+@media (max-width: 500px) {
+  .page-keys .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===========================================================================
+   5. Reduced-motion
+   Provider row and bulk bar animations disabled.
+   =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .page-keys .bulkActionsBar {
+    transition: none;
+  }
+  .page-keys .keys-providerCount {
+    transition: none;
+  }
+}

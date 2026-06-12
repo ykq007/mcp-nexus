@@ -6,19 +6,25 @@
   "clientTokenPlaceholder": "mcp_client_...",
   "clientTokenDescription": "Create a token on the Tokens page.",
   "tool": "Tool",
-  "toolParameters": "Tool Parameters (JSON)",
+  "toolDescription": "Select the MCP tool to execute.",
+  "toolParameters": "Parameters (JSON)",
   "toolParametersInvalid": "Invalid JSON format.",
-  "run": "Run",
+  "execute": "Execute",
+  "executing": "Running…",
   "response": "Response",
-  "noResponse": "Run a request to see the response here.",
-  "history": "History",
+  "noResponse": "Execute a tool to see the response here.",
+  "history": "Request History",
   "noHistory": "No requests yet.",
+  "clearHistory": "Clear",
+  "clearHistoryConfirm": "Clear all request history?",
+  "loadParams": "Load",
   "historyTable": {
-    "timestamp": "Timestamp",
+    "time": "Time",
     "tool": "Tool",
     "status": "Status",
-    "duration": "Duration"
+    "duration": "Duration",
+    "actions": "Actions"
   },
-  "statusSuccess": "Success",
-  "statusError": "Error"
+  "statusSuccess": "SUCCESS",
+  "statusError": "ERROR"
 }
