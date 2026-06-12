@@ -1,6 +1,11 @@
+/**
+ * KeyCreditsCell — displays Tavily key credits (remaining/total), a progress bar,
+ * last-checked time, and a refresh action.
+ */
 import React, { useState } from 'react';
 import type { AdminApi } from '../lib/adminApi';
 import { formatDateTime } from '../lib/format';
+import { IconRefresh } from '../ui/icons';
 import { useToast } from '../ui/toast';
 
 interface KeyCreditsCellProps {
@@ -33,14 +38,16 @@ export function KeyCreditsCell({ keyId, remaining, total, lastChecked, api, onUp
   if (remaining === null) {
     return (
       <div className="creditsCell">
-        <span className="muted text-xs">Unknown</span>
+        <span className="creditsMeta">Unknown</span>
         <button
+          type="button"
           onClick={handleRefresh}
           disabled={loading}
           className="btn btn--xs"
           title="Check credits now"
+          aria-label="Check credits"
         >
-          {loading ? '...' : '↻'}
+          <IconRefresh className={loading ? 'spin' : ''} />
         </button>
       </div>
     );
@@ -58,19 +65,17 @@ export function KeyCreditsCell({ keyId, remaining, total, lastChecked, api, onUp
       <div className="creditsInfo">
         <div className="creditsText">
           <span className="creditsValue">{remaining.toLocaleString()}</span>
-          <span className="creditsTotal">/ {max.toLocaleString()}</span>
+          <span className="creditsTotal"> / {max.toLocaleString()}</span>
         </div>
-        <div className="creditsMeta">
-          {lastChecked ? (
-            <span title={`Last checked: ${formatDateTime(lastChecked)}`}>
-               Checked {new Date(lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          ) : null}
-        </div>
+        {lastChecked ? (
+          <div className="creditsMeta" title={`Last checked: ${formatDateTime(lastChecked)}`}>
+            {new Date(lastChecked).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        ) : null}
       </div>
 
       <div className="creditsVisual">
-        <div className="progressBar">
+        <div className="progressBar" role="progressbar" aria-valuenow={remaining} aria-valuemin={0} aria-valuemax={max}>
           <div
             className="progressFill"
             data-variant={variant}
@@ -81,12 +86,14 @@ export function KeyCreditsCell({ keyId, remaining, total, lastChecked, api, onUp
 
       <div className="creditsActions">
         <button
+          type="button"
           onClick={handleRefresh}
           disabled={loading}
-          className="btn btn--xs"
+          className="btn btn--xs btn--icon"
           title="Refresh credits"
+          aria-label="Refresh credits"
         >
-          {loading ? '...' : '↻'}
+          <IconRefresh className={loading ? 'spin' : ''} />
         </button>
       </div>
     </div>

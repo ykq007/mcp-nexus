@@ -15,18 +15,18 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, message, action, compact }: EmptyStateProps) {
   return (
     <div className={compact ? 'emptyState emptyState--compact' : 'emptyState'}>
-      {icon && <div className="emptyStateIcon">{icon}</div>}
-      {title && <div className="emptyStateTitle">{title}</div>}
+      {icon ? <div className="emptyStateIcon">{icon}</div> : null}
+      {title ? <div className="emptyStateTitle">{title}</div> : null}
       <div className="emptyStateMessage">{message}</div>
-      {action && (
+      {action ? (
         <button
-          className="btn"
-          data-variant={action.variant ?? 'primary'}
+          type="button"
+          className={`btn btn--${action.variant ?? 'primary'}`}
           onClick={action.onClick}
         >
           {action.label}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

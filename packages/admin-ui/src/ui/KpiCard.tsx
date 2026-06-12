@@ -1,50 +1,43 @@
 import React from 'react';
 
 interface KpiCardProps {
-  title?: string;  // Support both 'title' (old) and 'label' (OverviewPage)
+  /** Label text above the value */
+  title?: string;
+  /** Alias for title (OverviewPage compat) */
   label?: string;
   value: string | number;
   icon?: React.ReactNode;
   trend?: { value: string; isPositive: boolean };
-  hint?: string;  // Support OverviewPage's 'hint' prop
+  hint?: string;
   variant?: 'primary' | 'success' | 'warning' | 'neutral' | 'keys' | 'tokens' | 'usage';
-  onClick?: () => void;  // Make it optionally clickable
+  onClick?: () => void;
 }
 
-export function KpiCard({
-  title,
-  label,
-  value,
-  icon,
-  trend,
-  hint,
-  variant = 'neutral',
-  onClick
-}: KpiCardProps) {
-  const displayTitle = title || label;
-  const Component = onClick ? 'button' : 'div';
-  const className = onClick ? 'card kpiCard' : 'kpiCard';
+export function KpiCard({ title, label, value, icon, trend, hint, variant = 'neutral', onClick }: KpiCardProps) {
+  const displayTitle = title ?? label;
+  const Tag = onClick ? 'button' : 'div';
 
   return (
-    <Component className={className} onClick={onClick} data-variant={variant}>
+    <Tag
+      className="kpiCard"
+      onClick={onClick}
+      data-variant={variant}
+      type={onClick ? 'button' : undefined}
+    >
       <div className="kpiCardHeader">
-        <div className="muted text-xs font-bold uppercase" style={{ letterSpacing: '0.08em' }}>
-          {displayTitle}
-        </div>
-        {icon && <div className="kpiCardIcon" data-variant={variant}>{icon}</div>}
+        <div className="kpiCardLabel">{displayTitle}</div>
+        {icon ? <div className="kpiCardIcon" data-variant={variant}>{icon}</div> : null}
       </div>
       <div className="kpiValue">{value}</div>
       <div className="kpiCardFooter">
-        {trend && (
-          <>
-            <span className="badge" data-variant={trend.isPositive ? 'success' : 'danger'}>
-              {trend.value}
-            </span>
-          </>
-        )}
-        {hint && <div className="help">{hint}</div>}
-        {onClick && <span className="kpiCardArrow">→</span>}
+        {trend ? (
+          <span className={`statusPill statusPill--${trend.isPositive ? 'success' : 'danger'}`}>
+            {trend.value}
+          </span>
+        ) : null}
+        {hint ? <div className="creditsMeta">{hint}</div> : null}
+        {onClick ? <span className="kpiCardArrow" aria-hidden="true">→</span> : null}
       </div>
-    </Component>
+    </Tag>
   );
 }

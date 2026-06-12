@@ -142,8 +142,7 @@ export function ActionMenu({ options, trigger, 'aria-label': ariaLabel }: Action
       <button
         ref={triggerRef}
         type="button"
-        className="btn btn--sm btn--icon"
-        data-variant="ghost"
+        className="btn btn--sm btn--icon btn--ghost"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={ariaLabel ?? 'More actions'}

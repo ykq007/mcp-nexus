@@ -10,6 +10,10 @@ import '@fontsource/geist/700.css';
 import '@fontsource/geist-mono/400.css';
 import '@fontsource/geist-mono/500.css';
 import '@fontsource/geist-mono/600.css';
+// CSS layer order: tokens → base → components → legacy page styles
+import './styles/tokens.css';
+import './styles/base.css';
+import './styles/components.css';
 import './styles.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -63,11 +63,17 @@ export function ConfirmDialog({
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <button className="btn" onClick={onClose} disabled={confirming}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+          <button type="button" className="btn btn--secondary" onClick={onClose} disabled={confirming}>
             {cancelLabel ?? t('actions.cancel')}
           </button>
-          <button className="btn" data-variant={confirmVariant} onClick={onConfirm} disabled={!canConfirm}>
+          <button
+            type="button"
+            className={`btn btn--${confirmVariant}`}
+            data-variant={confirmVariant}
+            onClick={onConfirm}
+            disabled={!canConfirm}
+          >
             {confirming ? `${confirmLabel}…` : confirmLabel}
           </button>
         </div>
@@ -75,4 +81,3 @@ export function ConfirmDialog({
     </Dialog>
   );
 }
-

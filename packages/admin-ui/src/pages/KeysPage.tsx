@@ -804,7 +804,8 @@ export function KeysPage({ api }: { api: AdminApi }) {
                         <KeyRevealCell
                           keyId={k.id}
                           maskedKey={k.maskedKey || '••••••••••••'}
-                          api={{ revealKey: api.revealBraveKey } as any}
+                          api={api}
+                          provider="brave"
                         />
                       )
                     },

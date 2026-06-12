@@ -61,8 +61,9 @@ export function StatusMenu({ status, onChange, disabled, options = DEFAULT_OPTIO
     [updatePosition]
   );
 
-  // Click outside to close
+  // Click outside to close — only attach when open (avoids 20 permanent listeners)
   useEffect(() => {
+    if (!open) return;
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
@@ -74,7 +75,7 @@ export function StatusMenu({ status, onChange, disabled, options = DEFAULT_OPTIO
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [open]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -209,9 +210,9 @@ export function StatusMenu({ status, onChange, disabled, options = DEFAULT_OPTIO
 function getStatusColor(status: string) {
   switch (status) {
     case 'active': return 'var(--success)';
-    case 'disabled': return 'var(--muted)';
+    case 'disabled': return 'var(--text-low)';
     case 'cooldown': return 'var(--warning)';
     case 'invalid': return 'var(--danger)';
-    default: return 'var(--text)';
+    default: return 'var(--text-mid)';
   }
 }

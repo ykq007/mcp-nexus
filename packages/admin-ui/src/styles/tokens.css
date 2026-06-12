@@ -201,6 +201,10 @@ html[data-theme='light'] {
   --text-muted:         var(--text-mid);
   --panel:              var(--surface-1);
   --panel-solid:        var(--surface-1);
+  --color-warning:      var(--warning);
+  --color-danger:       var(--danger);
+  --color-success:      var(--success);
+  --color-info:         var(--info);
 }
 
 /* ----------------------------------------------------------------------------
@@ -308,4 +312,8 @@ html[data-theme='dark'] {
   --text-muted:          var(--text-mid);
   --panel:               var(--surface-1);
   --panel-solid:         var(--surface-1);
+  --color-warning:       var(--warning);
+  --color-danger:        var(--danger);
+  --color-success:       var(--success);
+  --color-info:          var(--info);
 }

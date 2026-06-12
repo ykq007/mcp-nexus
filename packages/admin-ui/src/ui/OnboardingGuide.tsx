@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconKey, IconToken, IconSearch } from './icons';
 
@@ -7,7 +7,9 @@ interface OnboardingGuideProps {
   hasTokens: boolean;
   onGoToKeys: () => void;
   onGoToTokens: () => void;
-  onDismiss: () => void;
+  onDismiss?: () => void;
+  /** localStorage key for persisting dismiss state. Defaults to 'mcp-nexus.onboardingDismissed' */
+  storageKey?: string;
 }
 
 export function OnboardingGuide({
@@ -15,10 +17,26 @@ export function OnboardingGuide({
   hasTokens,
   onGoToKeys,
   onGoToTokens,
-  onDismiss
+  onDismiss,
+  storageKey = 'mcp-nexus.onboardingDismissed'
 }: OnboardingGuideProps) {
   const { t } = useTranslation('overview');
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Re-check storage if storageKey changes
+  useEffect(() => {
+    try {
+      setDismissed(localStorage.getItem(storageKey) === 'true');
+    } catch {
+      // ignore
+    }
+  }, [storageKey]);
 
   // Don't show if already dismissed or if setup is complete
   if (dismissed || (hasKeys && hasTokens)) {
@@ -56,8 +74,13 @@ export function OnboardingGuide({
   ];
 
   const handleDismiss = () => {
+    try {
+      localStorage.setItem(storageKey, 'true');
+    } catch {
+      // ignore
+    }
     setDismissed(true);
-    onDismiss();
+    onDismiss?.();
   };
 
   return (
@@ -69,8 +92,8 @@ export function OnboardingGuide({
             <div className="help">{t('onboarding.subtitle', 'Complete these steps to start using MCP Nexus')}</div>
           </div>
           <button
-            className="btn"
-            data-variant="ghost"
+            type="button"
+            className="btn btn--ghost"
             onClick={handleDismiss}
             aria-label={t('onboarding.dismiss', 'Dismiss')}
           >
@@ -94,9 +117,8 @@ export function OnboardingGuide({
                 <div className="onboardingStepDescription help">{step.description}</div>
                 {!step.completed && step.action && (
                   <button
-                    className="btn mt-2"
-                    data-variant="primary"
-                    data-size="sm"
+                    type="button"
+                    className="btn btn--sm btn--primary mt-2"
                     onClick={step.action}
                   >
                     {step.actionLabel}

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { IconAlertCircle, IconCheck, IconInfo, IconX } from './icons';
 
 type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -51,6 +51,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   const [progress, setProgress] = useState(100);
   const [isExiting, setIsExiting] = useState(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const interval = 50;
@@ -69,11 +70,17 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
     }, interval);
 
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Clear exit timer on unmount to avoid setState-after-unmount
+  useEffect(() => () => {
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
   }, []);
 
   function handleDismiss() {
     setIsExiting(true);
-    setTimeout(onDismiss, 200);
+    exitTimerRef.current = setTimeout(onDismiss, 200);
   }
 
   const variant = toast.variant ?? 'info';
@@ -102,6 +109,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
           {toast.message ? <p className="toastMsg">{toast.message}</p> : null}
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
           className="toastDismiss"
           aria-label="Dismiss notification"

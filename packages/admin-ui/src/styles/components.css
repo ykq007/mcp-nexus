@@ -1,0 +1,1580 @@
+/* ============================================================================
+   mcp-nexus Admin Console — "Graphite & Cobalt" component library
+   Shared component styles. Depends on tokens.css + base.css.
+
+   Component sections:
+   1.  Button / IconButton
+   2.  Input / Select / Textarea / label
+   3.  DataTable (dense, sticky header, responsive)
+   4.  StatusPill / badge
+   5.  StatusMenu / ActionMenu (Portal, fixed positioning)
+   6.  SegmentedControl
+   7.  Dialog / Drawer / ConfirmDialog
+   8.  Toast
+   9.  Skeleton / Loading / Spinner
+   10. EmptyState
+   11. ErrorBanner
+   12. KpiCard
+   13. MetricsCard
+   14. CopyButton (covered by Button rules)
+   15. Pagination
+   16. Reveal (shared secret-reveal + token countdown variant)
+   17. KeyCreditsCell
+   18. OnboardingGuide
+   19. Cards / panels
+   20. ImportExportActions (covered by ActionMenu + Button)
+   21. Tool checklist (token create form)
+   ========================================================================== */
+
+/* ===========================================================================
+   1. Button / IconButton
+   Heights: sm=28px  base=32px  lg=36px
+   Variants: primary (cobalt fill) · secondary (surface-1+border) ·
+             ghost (transparent, hover surface-2) · danger
+   =========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+  user-select: none;
+}
+.btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Primary (cobalt fill) */
+.btn--primary,
+.btn[data-variant='primary'],
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  font-weight: var(--fw-semibold);
+}
+.btn--primary:hover,
+.btn[data-variant='primary']:hover,
+.btn.primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.btn--primary:active,
+.btn[data-variant='primary']:active,
+.btn.primary:active {
+  background: var(--primary-active);
+  border-color: var(--primary-active);
+}
+
+/* Secondary (same as base but explicit) */
+.btn--secondary,
+.btn[data-variant='secondary'] {
+  background: var(--surface-1);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Ghost (transparent) */
+.btn--ghost,
+.btn[data-variant='ghost'],
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-mid);
+}
+.btn--ghost:hover,
+.btn[data-variant='ghost']:hover,
+.btn.ghost:hover {
+  background: var(--surface-2);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+/* Danger */
+.btn--danger,
+.btn[data-variant='danger'],
+.btn.danger {
+  background: var(--danger-soft);
+  border-color: color-mix(in oklch, var(--danger) 35%, transparent);
+  color: var(--danger-ink);
+  font-weight: var(--fw-medium);
+}
+.btn--danger:hover,
+.btn[data-variant='danger']:hover,
+.btn.danger:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--danger) 20%, transparent);
+}
+
+/* Size modifiers */
+.btn--sm { height: 28px; padding: 0 var(--space-2); font-size: var(--text-xs); }
+.btn--sm svg { width: 13px; height: 13px; }
+.btn--lg { height: 36px; padding: 0 var(--space-4); font-size: var(--text-base); }
+.btn--lg svg { width: 16px; height: 16px; }
+.btn--xs { height: 24px; padding: 0 var(--space-2); font-size: var(--text-2xs); }
+.btn--xs svg { width: 12px; height: 12px; }
+
+/* Icon-only square (equal width/height) */
+.btn--icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+.btn--icon.btn--sm { width: 28px; height: 28px; }
+.btn--icon.btn--xs { width: 24px; height: 24px; }
+.btn--icon.btn--lg { width: 36px; height: 36px; }
+
+/* IconButton component */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-low);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.iconBtn:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--ink);
+}
+.iconBtn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.iconBtn:active { transform: translateY(1px); }
+.iconBtn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+.iconBtn svg { width: 16px; height: 16px; }
+
+.iconBtn--sm { width: 28px; height: 28px; }
+.iconBtn--sm svg { width: 14px; height: 14px; }
+
+.iconBtn--primary { color: var(--primary); }
+.iconBtn--primary:hover {
+  background: var(--primary-soft);
+  border-color: color-mix(in oklch, var(--primary) 30%, transparent);
+  color: var(--primary);
+}
+
+.iconBtn--danger,
+.iconBtn--ghost-danger { color: var(--text-low); }
+.iconBtn--danger:hover,
+.iconBtn--ghost-danger:hover {
+  background: var(--danger-soft);
+  border-color: color-mix(in oklch, var(--danger) 40%, transparent);
+  color: var(--danger);
+}
+
+/* ===========================================================================
+   2. Input / Select / Textarea / label
+   =========================================================================== */
+.input,
+.select,
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='search'],
+input[type='url'],
+input[type='datetime-local'],
+select,
+textarea {
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+textarea {
+  height: auto;
+  min-height: 96px;
+  padding: var(--space-2) var(--space-3);
+  line-height: var(--lh-base);
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.input:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--surface-sunken);
+}
+
+.input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-low);
+}
+
+/* Select chevron */
+select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-low) 50%),
+    linear-gradient(135deg, var(--text-low) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 13px, calc(100% - 9px) 13px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+.label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-mid);
+  margin-bottom: var(--space-1);
+  letter-spacing: 0.01em;
+}
+
+.fieldError {
+  color: var(--danger-ink);
+  font-size: var(--text-xs);
+  margin-top: var(--space-1);
+}
+
+/* Search input wrapper */
+.searchInput {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.searchInput input {
+  padding-left: 34px;
+}
+.searchInputIcon {
+  position: absolute;
+  left: 10px;
+  display: inline-flex;
+  color: var(--text-low);
+  pointer-events: none;
+}
+.searchInputIcon svg { width: 15px; height: 15px; }
+
+/* Filter bar */
+.filterBar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-3);
+}
+.filterBarGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+.filterResults {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+}
+
+/* ===========================================================================
+   3. DataTable
+   Dense 40px rows. Sticky header on --surface-sunken. Responsive via
+   horizontal scroll wrapper + .dataTableCard stacked-card mobile fallback.
+   =========================================================================== */
+.dataTableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table,
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table thead th,
+table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 0 var(--space-3);
+  height: 36px;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-low);
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Sortable column header */
+.table thead th.sortable,
+table thead th.sortable {
+  cursor: pointer;
+}
+.table thead th.sortable:hover,
+table thead th.sortable:hover {
+  color: var(--ink);
+}
+.sortIndicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  opacity: 0.4;
+}
+.sortIndicator.active { opacity: 1; color: var(--primary); }
+
+.table tbody td,
+table tbody td {
+  padding: 0 var(--space-3);
+  height: 40px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-mid);
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr,
+table tbody tr {
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.table tbody tr:hover,
+table tbody tr:hover {
+  background: var(--surface-2);
+}
+.table tbody tr:last-child td,
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+.table .text-right,
+table .text-right {
+  text-align: right;
+}
+
+/* Checkbox column */
+.table .col-check,
+table .col-check {
+  width: 40px;
+  padding: 0 var(--space-2);
+  text-align: center;
+}
+.table input[type='checkbox'],
+table input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* Row focus for keyboard navigation */
+.table tbody tr:focus-visible,
+table tbody tr:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* Bulk-action bar — slides in when rows are selected */
+.bulkActionsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--primary-soft);
+  border: 1px solid color-mix(in oklch, var(--primary) 30%, transparent);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+.bulkActionsInfo {
+  font-size: var(--text-sm);
+  color: var(--primary);
+  font-weight: var(--fw-medium);
+}
+.bulkActionsButtons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* Standard table toolbar (search + filters left, action right) */
+.tableToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.tableToolbar .tableToolbarSearch {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.tableToolbar .tableToolbarFilters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.tableToolbarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  border-top: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.paginationButtons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ===========================================================================
+   4. StatusPill / badge
+   *-soft bg + *-ink text + small icon/dot. Never color-alone.
+   =========================================================================== */
+.statusPill,
+.badge,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+}
+.statusPill svg,
+.badge svg,
+.pill svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+/* Dot indicator (::before) for pill variant */
+.pill::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Variant fills */
+.statusPill--success,
+.pill.isActive, .pill.active,
+.badge.isActive, .badge.active,
+.status-active {
+  background: var(--success-soft);
+  color: var(--success-ink);
+  border-color: color-mix(in oklch, var(--success) 30%, transparent);
+}
+.statusPill--warning,
+.pill.cooldown, .badge.cooldown,
+.status-cooldown {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+  border-color: color-mix(in oklch, var(--warning) 30%, transparent);
+}
+.statusPill--danger,
+.pill.invalid, .badge.invalid,
+.pill.error, .badge.error,
+.pill.disabled, .badge.disabled,
+.status-invalid {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+  border-color: color-mix(in oklch, var(--danger) 30%, transparent);
+}
+.statusPill--neutral,
+.pill.neutral, .badge.neutral {
+  background: var(--surface-2);
+  color: var(--text-mid);
+  border-color: var(--border);
+}
+.statusPill--info,
+.pill.tavily, .badge.tavily {
+  background: var(--info-soft);
+  color: var(--info-ink);
+  border-color: color-mix(in oklch, var(--info) 30%, transparent);
+}
+
+/* StatusMenu trigger via data-variant */
+.badge[data-variant],
+button.badge[data-variant] {
+  height: 22px;
+  border: 1px solid var(--border);
+}
+button.badge[data-variant],
+.statusMenuTrigger.badge[data-variant] {
+  cursor: pointer;
+}
+.badge[data-variant='success'] {
+  background: var(--success-soft);
+  color: var(--success-ink);
+  border-color: color-mix(in oklch, var(--success) 30%, transparent);
+}
+.badge[data-variant='warning'] {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+  border-color: color-mix(in oklch, var(--warning) 30%, transparent);
+}
+.badge[data-variant='danger'] {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+  border-color: color-mix(in oklch, var(--danger) 30%, transparent);
+}
+.badge[data-variant='neutral'] {
+  background: var(--surface-2);
+  color: var(--text-mid);
+  border-color: var(--border);
+}
+
+/* ===========================================================================
+   5. StatusMenu / ActionMenu
+   Rendered via Portal + position:fixed to escape table overflow.
+   Full keyboard nav. Danger items.
+   =========================================================================== */
+.statusMenu,
+.actionMenu {
+  min-width: 160px;
+  padding: var(--space-1);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pop);
+  animation: menuPop var(--dur-fast) var(--ease-out) both;
+}
+
+@keyframes menuPop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .statusMenu,
+  .actionMenu { animation: overlayFadeIn var(--dur-fast) var(--ease-out) both; }
+}
+
+.statusMenuItem,
+.actionMenuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 34px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  color: var(--text-mid);
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.statusMenuItem:hover,
+.actionMenuItem:hover,
+.statusMenuItem[data-focused='true'],
+.actionMenuItem[data-focused='true'] {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.actionMenuItem.danger { color: var(--danger-ink); }
+.actionMenuItem.danger:hover,
+.actionMenuItem.danger[data-focused='true'] {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+.statusMenuItem svg,
+.actionMenuItem svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.statusMenuItem:focus-visible,
+.actionMenuItem:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* ===========================================================================
+   6. SegmentedControl
+   ARIA radiogroup. Sizes: base · sm · xs.
+   =========================================================================== */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.segmented--sm .segmentedItem {
+  height: 26px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+}
+.segmented--xs .segmentedItem {
+  height: 22px;
+  padding: 0 var(--space-2);
+  font-size: var(--text-2xs);
+}
+
+.segmentedItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-low);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid transparent;
+}
+.segmentedItem:hover { color: var(--ink); }
+.segmentedItem--active {
+  background: var(--surface-1);
+  color: var(--primary);
+  box-shadow: 0 1px 2px oklch(0.2 0.02 255 / 0.08), inset 0 0 0 1px var(--border);
+}
+.segmentedItem--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+/* Focus ring via hidden radio */
+.segmentedItem:has(input:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.srOnly,
+.segmentedItem input[type='radio'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===========================================================================
+   7. Dialog / Drawer / ConfirmDialog
+   Backdrop, focus trap, Esc/Tab, scroll lock. Semantic z-scale.
+   =========================================================================== */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: oklch(0.10 0.01 245 / 0.64);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: overlayFadeIn var(--dur) var(--ease-out) both;
+}
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  background: oklch(0.10 0.01 245 / 0.64);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: flex-end;
+  animation: overlayFadeIn var(--dur) var(--ease-out) both;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.dialog {
+  width: min(560px, 100%);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: dialogSlideIn var(--dur-slow) var(--ease-out) both;
+}
+@keyframes dialogSlideIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.drawer {
+  width: min(520px, 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-xl);
+  animation: drawerSlideIn var(--dur-slow) var(--ease-out) both;
+}
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: none; }
+}
+
+.dialog.isExiting,
+.drawer.isExiting {
+  animation: dialogSlideIn var(--dur) reverse both;
+}
+
+.dialogHeader,
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dialogHeader .h2,
+.drawerHeader .h2,
+.dialogHeader h2,
+.drawerHeader h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+}
+
+.dialogBody,
+.drawerBody {
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+/* Reduced motion: no entrance animation, just fade */
+@media (prefers-reduced-motion: reduce) {
+  .dialogOverlay,
+  .drawerOverlay,
+  .dialog,
+  .drawer,
+  .dialog.isExiting,
+  .drawer.isExiting {
+    animation: overlayFadeIn var(--dur) var(--ease-out) both;
+  }
+}
+
+/* ===========================================================================
+   8. Toast
+   Bottom-right, semantic variant + icon, auto-dismiss, aria-live.
+   =========================================================================== */
+.toastWrap {
+  position: fixed;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 360px;
+  pointer-events: none;
+}
+.toastWrap > * { pointer-events: auto; }
+
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  animation: toastSlideIn var(--dur-slow) var(--ease-out) both;
+}
+.toast--exiting {
+  animation: toastSlideIn var(--dur) reverse both;
+}
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.toastIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.toastIcon svg { width: 17px; height: 17px; }
+.toastIcon[data-variant='success'] { color: var(--success); }
+.toastIcon[data-variant='error']   { color: var(--danger); }
+.toastIcon[data-variant='warning'] { color: var(--warning); }
+.toastIcon[data-variant='info']    { color: var(--primary); }
+
+.toastTitle {
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  line-height: var(--lh-tight);
+}
+.toastMsg {
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+  margin-top: 2px;
+}
+.toastDismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-low);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.toastDismiss:hover { color: var(--ink); }
+.toastDismiss svg { width: 14px; height: 14px; }
+
+.toastProgress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+}
+.toastProgressBar {
+  height: 100%;
+  transition: width 50ms linear;
+}
+
+/* Reduced motion: no slide animation */
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast--exiting {
+    animation: overlayFadeIn var(--dur) var(--ease-out) both;
+  }
+  .toastProgressBar { transition: none; }
+}
+
+/* ===========================================================================
+   9. Skeleton / Loading / Spinner
+   =========================================================================== */
+.skeleton,
+.skeletonKpi,
+.skeletonMetricTile,
+.skeletonTableRow {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+.skeletonKpi       { height: 100px; }
+.skeletonMetricTile { height: 68px; }
+.skeletonTableRow  { height: 40px; margin-bottom: 2px; }
+
+.skeleton::after,
+.skeletonKpi::after,
+.skeletonMetricTile::after,
+.skeletonTableRow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--ink) 5%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .skeletonKpi::after,
+  .skeletonMetricTile::after,
+  .skeletonTableRow::after {
+    animation: none;
+  }
+}
+
+/* Inline spinner */
+.spin {
+  animation: spin 0.9s linear infinite;
+  display: inline-flex;
+}
+.spin svg { width: 15px; height: 15px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spin { animation: none; opacity: 0.6; }
+}
+
+.loading,
+.retrying,
+.syncingCredits,
+.braveLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-low);
+  font-size: var(--text-sm);
+}
+
+.progressBar {
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.progressFill[data-variant='success'] { background: var(--success); }
+.progressFill[data-variant='warning'] { background: var(--warning); }
+.progressFill[data-variant='danger']  { background: var(--danger); }
+@media (prefers-reduced-motion: reduce) {
+  .progressFill { transition: none; }
+}
+
+/* ===========================================================================
+   10. EmptyState
+   Teaches: what it is + primary action.
+   =========================================================================== */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  color: var(--text-low);
+}
+.emptyState--compact {
+  padding: var(--space-5) var(--space-3);
+}
+.emptyStateIcon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--primary);
+  margin-bottom: var(--space-1);
+  flex-shrink: 0;
+}
+.emptyStateIcon svg { width: 22px; height: 22px; }
+.emptyStateTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+.emptyStateMessage {
+  font-size: var(--text-sm);
+  color: var(--text-mid);
+  max-width: 44ch;
+  line-height: var(--lh-base);
+}
+
+/* ===========================================================================
+   11. ErrorBanner
+   =========================================================================== */
+.errorBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in oklch, var(--danger) 30%, transparent);
+  border-radius: var(--radius);
+  color: var(--ink);
+}
+.errorBannerIcon {
+  color: var(--danger);
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.errorBannerIcon svg { width: 17px; height: 17px; }
+.errorBannerTitle {
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-sm);
+}
+.errorBannerMessage {
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+  margin-top: 2px;
+}
+
+/* ===========================================================================
+   12. KpiCard
+   Flat on grid. Mono number, sans label. NOT hero-metric template.
+   =========================================================================== */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.kpiCard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+/* Clickable KPI card */
+button.kpiCard,
+a.kpiCard {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+button.kpiCard:hover,
+a.kpiCard:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+button.kpiCard:focus-visible,
+a.kpiCard:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.kpiCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.kpiCardLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-mid);
+  letter-spacing: 0.02em;
+}
+.kpiCardIcon {
+  display: inline-flex;
+  color: var(--primary);
+  opacity: 0.8;
+}
+.kpiCardIcon svg { width: 15px; height: 15px; }
+
+.kpiValue {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-2xl);
+  color: var(--ink);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: -0.02em;
+}
+
+.kpiCardFooter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  min-height: 18px;
+}
+.kpiCardArrow {
+  display: inline-flex;
+  color: var(--primary);
+  font-size: var(--text-xs);
+}
+
+/* ===========================================================================
+   13. MetricsCard
+   Metric array + live badge + skeleton.
+   =========================================================================== */
+.metricsCard {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.metricsCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.metricsCardTitleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.metricsCardTitleStack .h3,
+.metricsCardTitleStack h3 {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+.metricTile {
+  background: var(--surface-1);
+  padding: var(--space-3) var(--space-4);
+}
+.metricLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-low);
+  letter-spacing: 0.02em;
+}
+.metricValue {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-xl);
+  color: var(--ink);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums slashed-zero;
+  line-height: 1.1;
+}
+.metricValue[data-variant='success'] { color: var(--success); }
+.metricValue[data-variant='warning'] { color: var(--warning); }
+.metricValue[data-variant='danger']  { color: var(--danger); }
+
+/* Live pill */
+.metricsLivePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-semibold);
+  color: var(--primary);
+  padding: 4px 10px;
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: livePulse 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liveDot { animation: none; }
+}
+
+/* ===========================================================================
+   15. Pagination — already under DataTable section but repeated here for clarity
+   =========================================================================== */
+/* see DataTable section above */
+
+/* ===========================================================================
+   16. Reveal — shared secret-reveal affordance
+   masked → reveal → cleartext in a mono well + copy.
+   Token variant adds 30s countdown bar + aria-live + auto-clear.
+   =========================================================================== */
+
+/* Key reveal cell layout */
+.keyReveal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.keyRevealValue {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 4px var(--space-2);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.keyReveal__text { /* inner text span */ }
+.keyReveal__actions {
+  display: inline-flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+/* Token reveal well (mono cleartext block) */
+.tokenWell {
+  width: 100%;
+  padding: var(--space-3) var(--space-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  word-break: break-all;
+  line-height: var(--lh-base);
+  user-select: text;
+}
+
+/* Reveal countdown bar (30s token window) */
+.revealCountdown {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.revealCountdownBar {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.revealCountdownFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 1s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .revealCountdownFill { transition: none; }
+}
+.revealCountdownLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===========================================================================
+   17. KeyCreditsCell
+   =========================================================================== */
+.creditsCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+.creditsInfo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+.creditsValue {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-base);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.creditsTotal,
+.creditsText,
+.creditsMeta {
+  font-size: var(--text-2xs);
+  color: var(--text-low);
+}
+.creditsVisual { width: 100%; }
+.creditsActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* ===========================================================================
+   18. OnboardingGuide
+   =========================================================================== */
+.onboardingSteps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.onboardingStep {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.onboardingStep[data-completed='true'] {
+  opacity: 0.7;
+}
+.onboardingStepNumber {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: var(--text-sm);
+}
+.onboardingStepNumber[data-completed='true'] {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.onboardingStepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.onboardingStepTitle {
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.onboardingStepDescription {
+  font-size: var(--text-xs);
+  color: var(--text-mid);
+}
+
+/* ===========================================================================
+   19. Cards / panels
+   flat surface-1 + hairline border + shadow-sm. No nested cards.
+   =========================================================================== */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.cardHeader h2,
+.cardHeader h3,
+.cardHeader .h2,
+.cardHeader .h3 {
+  font-size: var(--text-base);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+.cardBody {
+  padding: var(--space-4);
+}
+
+/* Layout helpers */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ===========================================================================
+   20. Tool checklist (used in token create form)
+   =========================================================================== */
+.toolGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.toolGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.toolGroupLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-low);
+}
+.toolCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.toolCheckItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px var(--space-2);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.toolCheckItem:hover {
+  background: var(--surface-2);
+}
+.toolCheckItem input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.toolCheckItemLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+
+/* Expiry preview caption */
+.expiryPreview {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  min-height: 16px;
+}
+
+/* Revoked token row muted styling */
+.tokenRow--revoked td {
+  color: var(--text-low);
+  opacity: 0.7;
+}
