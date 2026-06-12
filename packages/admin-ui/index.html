@@ -5,13 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>mcp-nexus · admin console</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Verdigris type system: IBM Plex Sans (UI/body) + IBM Plex Mono (data) -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Geist fonts are self-hosted via @fontsource (see main.tsx imports).
+         No external font requests — avoids render-blocking and privacy leaks. -->
     <script>
       // Apply the stored theme before paint to avoid a flash. Default: light.
       (function () {

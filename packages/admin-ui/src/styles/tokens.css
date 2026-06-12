@@ -1,0 +1,311 @@
+/* ============================================================================
+   mcp-nexus Admin Console — "Graphite & Cobalt" design tokens
+   Ink-forward monochrome + single cobalt primary + copper signal accent.
+   Type: Geist Sans (UI/body) + Geist Mono (data only).
+   OKLCH throughout. Light default + true dark first-class parity.
+   ========================================================================== */
+
+/* ----------------------------------------------------------------------------
+   Light theme (default) — html[data-theme='light']
+   -------------------------------------------------------------------------- */
+:root,
+html[data-theme='light'] {
+  color-scheme: light;
+
+  /* Type families */
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* --- Backward compat aliases (consumed by existing component rules) --- */
+  --font-display: var(--font-sans);
+  --font-ui: var(--font-sans);
+
+  /* Type scale */
+  --text-2xs: 0.6875rem;   /* 11px */
+  --text-xs:  0.75rem;     /* 12px */
+  --text-sm:  0.8125rem;   /* 13px */
+  --text-base:0.875rem;    /* 14px */
+  --text-md:  0.9375rem;   /* 15px */
+  --text-lg:  1.0625rem;   /* 17px */
+  --text-xl:  1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  --lh-tight: 1.2;
+  --lh-base:  1.55;
+  --lh-loose: 1.7;
+
+  --tracking-wide:  0.06em;
+  --tracking-wider: 0.10em;
+
+  /* Spacing — 4px base, 8px grid */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  40px;
+  --space-8:  48px;
+  --space-10: 64px;
+  --space-12: 96px;
+
+  /* Radii */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius:      8px;
+  --radius-lg:   12px;
+  --radius-pill: 999px;
+
+  /* === Graphite & Cobalt · light === */
+
+  /* Surfaces — pure neutral, faintest cool. Mood is NOT in the bg. */
+  --canvas:         oklch(0.986 0.001 255);
+  --surface-1:      oklch(1 0 0);
+  --surface-2:      oklch(0.973 0.002 255);
+  --surface-sunken: oklch(0.961 0.003 255);
+
+  --border:        oklch(0.917 0.003 255);
+  --border-strong: oklch(0.852 0.005 255);
+
+  --ink:       oklch(0.225 0.012 255);   /* body ≥7:1 on white */
+  --text-mid:  oklch(0.470 0.012 255);   /* secondary ≥4.5:1 */
+  --text-low:  oklch(0.595 0.010 255);   /* meta, large only ≥3:1 */
+
+  /* Brand — cobalt, action/active/focus ONLY */
+  --primary:        oklch(0.550 0.205 264);
+  --primary-hover:  oklch(0.490 0.205 264);
+  --primary-active: oklch(0.430 0.185 264);
+  --primary-soft:   oklch(0.550 0.205 264 / 0.10);
+  --on-primary:     oklch(1 0 0);
+  --ring:           oklch(0.550 0.210 264 / 0.45);
+
+  /* Accent — copper, SIGNAL ONLY (quota/cost warnings, one landing highlight) */
+  --accent-copper:  oklch(0.560 0.130 52);
+  --accent-soft-copper: oklch(0.560 0.130 52 / 0.12);
+  --on-accent-copper: oklch(1 0 0);
+
+  /* Status */
+  --success:      oklch(0.530 0.120 158);
+  --success-soft: oklch(0.530 0.120 158 / 0.12);
+  --success-ink:  oklch(0.430 0.110 158);
+
+  --warning:      oklch(0.650 0.130 72);
+  --warning-soft: oklch(0.650 0.130 72 / 0.14);
+  --warning-ink:  oklch(0.430 0.090 72);
+
+  --danger:       oklch(0.550 0.195 27);
+  --danger-soft:  oklch(0.550 0.195 27 / 0.12);
+  --danger-ink:   oklch(0.470 0.180 27);
+
+  --info:         oklch(0.550 0.120 245);
+  --info-soft:    oklch(0.550 0.120 245 / 0.12);
+  --info-ink:     oklch(0.460 0.130 245);
+
+  /* Elevation — soft shadow + hairline, never glow */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 255 / 0.06);
+  --shadow:    0 2px 8px oklch(0.2 0.02 255 / 0.08), 0 0 0 1px var(--border);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.02 255 / 0.14), 0 0 0 1px var(--border);
+  --shadow-xl: 0 24px 56px oklch(0.2 0.02 255 / 0.18), 0 0 0 1px var(--border);
+  --shadow-pop: 0 8px 24px oklch(0.2 0.02 255 / 0.18);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --dur-fast: 120ms;
+  --dur:      180ms;
+  --dur-slow: 240ms;
+
+  /* Backward compat motion aliases */
+  --t-fast: 120ms cubic-bezier(0.33, 1, 0.68, 1);
+  --t-base: 180ms cubic-bezier(0.33, 1, 0.68, 1);
+  --t-slow: 240ms cubic-bezier(0.33, 1, 0.68, 1);
+
+  /* Semantic z-index scale — never arbitrary 999 */
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-drawer:   300;
+  --z-backdrop: 400;
+  --z-modal:    500;
+  --z-toast:    600;
+  --z-tooltip:  700;
+
+  /* Layout */
+  --nav-h:              56px;
+  --nav-height:         56px;   /* backward compat */
+  --sidebar-w:          248px;
+  --sidebar-w-collapsed: 64px;
+
+  /* -------------------------------------------------------------------------
+     Backward compatibility aliases
+     Old Verdigris names → new Graphite & Cobalt values.
+     Component rules in styles.css keep working; no component rewrite in P0.
+     ----------------------------------------------------------------------- */
+
+  /* Surfaces */
+  --bg:          var(--canvas);
+  --bg-deep:     var(--surface-sunken);
+  --surface-3:   var(--surface-2);            /* was a 3rd level in Verdigris */
+  --surface-hover: oklch(0.550 0.205 264 / 0.07); /* primary-tinted row hover */
+
+  /* Borders */
+  --border-subtle: var(--border);             /* Verdigris had separate subtle */
+
+  /* Text */
+  --text-hi:    var(--ink);
+  --text-faint: var(--text-low);              /* text-faint → text-low */
+
+  /* Accent (mapped to cobalt primary — the new "brand action color") */
+  --accent:      var(--primary);
+  --accent-dim:  var(--primary-hover);
+  --accent-deep: oklch(0.550 0.205 264 / 0.20); /* soft tinted border */
+  --accent-soft: var(--primary-soft);
+  --accent-glow: oklch(0.550 0.205 264 / 0.22);
+  --on-accent:   var(--on-primary);
+
+  /* Signal (copper) */
+  --signal:      var(--accent-copper);
+  --signal-soft: var(--accent-soft-copper);
+
+  /* Status compat (amber/cyan → warning/info) */
+  --amber:      var(--warning);
+  --amber-soft: var(--warning-soft);
+  --cyan:       var(--info);
+  --cyan-soft:  var(--info-soft);
+
+  /* Glow compat */
+  --glow-accent: 0 0 0 1px var(--ring);
+  --glow-danger: 0 0 0 1px var(--danger);
+
+  /* Color aliases used by some components */
+  --color-bg:           var(--canvas);
+  --color-surface-1:    var(--surface-1);
+  --color-surface-2:    var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+  --color-text:         var(--ink);
+  --color-text-muted:   var(--text-mid);
+  --color-border:       var(--border);
+  --color-border-subtle: var(--border);
+  --color-primary:      var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-soft);
+  --primary-hover:      var(--primary-hover);
+  --primary-light:      var(--primary-soft);
+  --primary-active:     var(--primary-active);
+  --muted:              var(--text-mid);
+  --text-muted:         var(--text-mid);
+  --panel:              var(--surface-1);
+  --panel-solid:        var(--surface-1);
+}
+
+/* ----------------------------------------------------------------------------
+   Dark theme — html[data-theme='dark']
+   -------------------------------------------------------------------------- */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas:         oklch(0.170 0.006 255);
+  --surface-1:      oklch(0.218 0.007 255);
+  --surface-2:      oklch(0.262 0.008 255);
+  --surface-sunken: oklch(0.150 0.006 255);
+
+  --border:        oklch(0.300 0.008 255);
+  --border-strong: oklch(0.400 0.010 255);
+
+  --ink:       oklch(0.958 0.004 255);
+  --text-mid:  oklch(0.715 0.010 255);
+  --text-low:  oklch(0.560 0.010 255);
+
+  /* Cobalt — brighter to pop on dark */
+  --primary:        oklch(0.700 0.160 264);
+  --primary-hover:  oklch(0.760 0.150 264);
+  --primary-active: oklch(0.650 0.160 264);
+  --primary-soft:   oklch(0.700 0.160 264 / 0.16);
+  --on-primary:     oklch(0.180 0.040 264);
+  --ring:           oklch(0.700 0.160 264 / 0.50);
+
+  /* Copper accent */
+  --accent-copper:      oklch(0.720 0.130 55);
+  --accent-soft-copper: oklch(0.720 0.130 55 / 0.18);
+  --on-accent-copper:   oklch(0.180 0.040 55);
+
+  /* Status */
+  --success:      oklch(0.700 0.140 158);
+  --success-soft: oklch(0.700 0.140 158 / 0.18);
+  --success-ink:  var(--success);
+
+  --warning:      oklch(0.770 0.140 72);
+  --warning-soft: oklch(0.770 0.140 72 / 0.18);
+  --warning-ink:  var(--warning);
+
+  --danger:       oklch(0.660 0.185 27);
+  --danger-soft:  oklch(0.660 0.185 27 / 0.20);
+  --danger-ink:   var(--danger);
+
+  --info:         oklch(0.700 0.120 245);
+  --info-soft:    oklch(0.700 0.120 245 / 0.18);
+  --info-ink:     var(--info);
+
+  /* Shadows (deeper on dark) */
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.40);
+  --shadow:    0 6px 20px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border);
+  --shadow-lg: 0 18px 44px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border);
+  --shadow-xl: 0 28px 64px oklch(0 0 0 / 0.60), 0 0 0 1px var(--border);
+  --shadow-pop: 0 8px 24px oklch(0 0 0 / 0.50);
+
+  /* -------------------------------------------------------------------------
+     Backward compatibility aliases (dark overrides)
+     ----------------------------------------------------------------------- */
+  --bg:           var(--canvas);
+  --bg-deep:      var(--surface-sunken);
+  --surface-3:    var(--surface-2);
+  --surface-hover: oklch(0.700 0.160 264 / 0.12);
+
+  --border-subtle: var(--border);
+
+  --text-hi:    var(--ink);
+  --text-faint: var(--text-low);
+
+  --accent:      var(--primary);
+  --accent-dim:  var(--primary-hover);
+  --accent-deep: oklch(0.700 0.160 264 / 0.25);
+  --accent-soft: var(--primary-soft);
+  --accent-glow: oklch(0.700 0.160 264 / 0.30);
+  --on-accent:   var(--on-primary);
+
+  --signal:      var(--accent-copper);
+  --signal-soft: var(--accent-soft-copper);
+
+  --amber:      var(--warning);
+  --amber-soft: var(--warning-soft);
+  --cyan:       var(--info);
+  --cyan-soft:  var(--info-soft);
+
+  --glow-accent: 0 0 0 1px var(--ring);
+  --glow-danger: 0 0 0 1px var(--danger);
+
+  --color-bg:            var(--canvas);
+  --color-surface-1:     var(--surface-1);
+  --color-surface-2:     var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+  --color-text:          var(--ink);
+  --color-text-muted:    var(--text-mid);
+  --color-border:        var(--border);
+  --color-border-subtle: var(--border);
+  --color-primary:       var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-soft);
+  --primary-hover:       var(--primary-hover);
+  --primary-light:       var(--primary-soft);
+  --primary-active:      var(--primary-active);
+  --muted:               var(--text-mid);
+  --text-muted:          var(--text-mid);
+  --panel:               var(--surface-1);
+  --panel-solid:         var(--surface-1);
+}

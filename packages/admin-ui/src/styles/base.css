@@ -1,0 +1,124 @@
+/* ============================================================================
+   mcp-nexus Admin Console — base reset + global defaults
+   Depends on tokens.css being loaded first.
+   ========================================================================== */
+
+/* Modern reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Body defaults */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  color: var(--ink);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+a {
+  color: var(--primary-hover);
+  text-decoration: none;
+}
+a:hover { color: var(--primary); }
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+code, kbd, pre, .mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Global focus ring — every interactive element */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Selection */
+::selection {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+
+/* Tabular numerals for data display */
+.kpiValue, .metricValue, .creditsValue, .tabBadge, .badge, td, .pagination {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Themed scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--text-low); }
+
+/* Skip-to-content link */
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: var(--z-modal);
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-sm);
+}
+.skipLink:focus { left: var(--space-4); top: var(--space-4); }
+
+/* Reduced-motion base rule */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,9 +1,9 @@
 /* ============================================================================
-   mcp-nexus // Admin Console — "Verdigris" design system
-   A precision instrument at rest. Lab-grade control surface, cool teal
-   readout on clean neutral. Restrained, exact, engineered.
-   UI/body: IBM Plex Sans · data (keys/tokens/metrics): IBM Plex Mono
-   Palette: OKLCH neutral surfaces + verdigris-teal accent. Light + true dark.
+   mcp-nexus // Admin Console — "Graphite & Cobalt" design system
+   A precision instrument at rest. Ink-forward monochrome + single cobalt
+   primary + copper signal accent. Calm, dense, exact.
+   Type: Geist Sans (UI/body) · Geist Mono (data only).
+   Palette: OKLCH. Light default + true dark first-class parity.
    ========================================================================== */
 
 /* ----------------------------------------------------------------------------
@@ -12,189 +12,296 @@
 :root {
   color-scheme: light;
 
-  /* Type families — one engineered sans for UI, mono only for real data */
-  --font-display: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-ui: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Type families — Geist Sans for UI; Geist Mono for data only */
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Backward compat: existing component rules reference --font-display / --font-ui */
+  --font-display: var(--font-sans);
+  --font-ui: var(--font-sans);
 
-  /* Type scale (data console reads slightly smaller, denser) */
-  --text-2xs: 10.5px;
-  --text-xs: 11.5px;
-  --text-sm: 12.5px;
-  --text-base: 13.5px;
-  --text-lg: 16px;
-  --text-xl: 20px;
-  --text-2xl: 27px;
-  --text-3xl: 38px;
-  --text-4xl: 52px;
+  /* Type scale — rem-based, ratio ≈1.2 */
+  --text-2xs: 0.6875rem;   /* 11px */
+  --text-xs:  0.75rem;     /* 12px */
+  --text-sm:  0.8125rem;   /* 13px */
+  --text-base:0.875rem;    /* 14px */
+  --text-md:  0.9375rem;   /* 15px */
+  --text-lg:  1.0625rem;   /* 17px */
+  --text-xl:  1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
 
-  --fw-normal: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
 
-  --lh-tight: 1.15;
-  --lh-base: 1.55;
+  --lh-tight: 1.2;
+  --lh-base:  1.55;
   --lh-loose: 1.7;
-  --tracking-wide: 0.08em;
-  --tracking-wider: 0.16em;
+  --tracking-wide:  0.06em;
+  --tracking-wider: 0.10em;
 
-  /* Spacing — 8px grid */
-  --space-0: 0;
-  --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
-  --space-5: 40px;
-  --space-6: 48px;
-  --space-8: 64px;
+  /* Spacing — existing 8px grid preserved for component layout compat.
+     Design-system 4px-base vars (--space-1 = 4px etc.) used in P1+ rebuilds. */
+  --space-0:  0;
+  --space-1:  8px;
+  --space-2:  16px;
+  --space-3:  24px;
+  --space-4:  32px;
+  --space-5:  40px;
+  --space-6:  48px;
+  --space-8:  64px;
   --space-10: 80px;
   --space-12: 96px;
 
-  /* Radii — crisp, not pillowy */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius: 6px;
-  --radius-lg: 10px;
+  /* Design-system 4px-base scale (for P1+ components) */
+  --ds-space-1:  4px;
+  --ds-space-2:  8px;
+  --ds-space-3:  12px;
+  --ds-space-4:  16px;
+  --ds-space-5:  24px;
+  --ds-space-6:  32px;
+  --ds-space-7:  40px;
+  --ds-space-8:  48px;
+  --ds-space-10: 64px;
+  --ds-space-12: 96px;
+
+  /* Radii */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius:      8px;
+  --radius-lg:   12px;
   --radius-pill: 999px;
 
-  /* ---- Verdigris palette · light (default) ---- */
-  --bg: oklch(0.984 0.003 225);          /* app canvas */
-  --bg-deep: oklch(0.962 0.004 225);     /* sunken wells, tab tracks */
-  --surface-1: oklch(1 0 0);             /* cards, panels (pure white) */
-  --surface-2: oklch(0.968 0.004 225);   /* inputs, raised */
-  --surface-3: oklch(0.945 0.005 225);   /* hover raised */
-  --surface-hover: oklch(0.56 0.12 192 / 0.07);  /* primary-tinted row hover */
+  /* === Graphite & Cobalt · light (default) === */
 
-  --border: oklch(0.905 0.005 230);
-  --border-subtle: oklch(0.935 0.004 230);
-  --border-strong: oklch(0.855 0.006 230);
+  /* Surfaces — pure neutral, faintest cool. Mood is NOT in the bg. */
+  --canvas:         oklch(0.986 0.001 255);
+  --surface-1:      oklch(1 0 0);
+  --surface-2:      oklch(0.973 0.002 255);
+  --surface-sunken: oklch(0.961 0.003 255);
+  --surface-3:      oklch(0.961 0.003 255); /* compat alias */
 
-  --text-hi: oklch(0.24 0.015 235);
-  --text-mid: oklch(0.46 0.014 235);
-  --text-low: oklch(0.565 0.012 235);
-  --text-faint: oklch(0.66 0.010 235);
+  --border:        oklch(0.917 0.003 255);
+  --border-strong: oklch(0.852 0.005 255);
 
-  /* Verdigris teal — the brand / primary */
-  --accent: oklch(0.56 0.12 192);
-  --accent-dim: oklch(0.50 0.12 192);    /* hover/active */
-  --accent-deep: oklch(0.64 0.07 200);   /* low-chroma teal for soft borders */
-  --accent-soft: oklch(0.56 0.12 192 / 0.10);
-  --accent-glow: oklch(0.56 0.12 192 / 0.22);
-  --on-accent: oklch(1 0 0);
-  --ring: oklch(0.56 0.13 192 / 0.45);
+  /* Canonical ink names */
+  --ink:       oklch(0.225 0.012 255);   /* ≥7:1 on white */
+  --text-mid:  oklch(0.470 0.012 255);   /* ≥4.5:1 */
+  --text-low:  oklch(0.595 0.010 255);   /* ≥3:1, large/meta */
 
-  /* Copper — reserved signal accent, used sparingly */
-  --signal: oklch(0.60 0.13 50);
-  --signal-soft: oklch(0.60 0.13 50 / 0.12);
+  /* Brand — cobalt, action/active/focus ONLY */
+  --primary:        oklch(0.550 0.205 264);
+  --primary-hover:  oklch(0.490 0.205 264);
+  --primary-active: oklch(0.430 0.185 264);
+  --primary-soft:   oklch(0.550 0.205 264 / 0.10);
+  --on-primary:     oklch(1 0 0);
+  --ring:           oklch(0.550 0.210 264 / 0.45);
 
-  /* Status — distinct hues; never color-alone */
-  --amber: oklch(0.70 0.13 75);          /* brave / cooldown */
-  --amber-soft: oklch(0.70 0.13 75 / 0.14);
-  --cyan: oklch(0.55 0.11 232);          /* tavily */
-  --cyan-soft: oklch(0.55 0.11 232 / 0.12);
-  --danger: oklch(0.55 0.20 27);
-  --danger-soft: oklch(0.55 0.20 27 / 0.12);
-  --danger-glow: oklch(0.55 0.20 27 / 0.22);
-  --success: oklch(0.52 0.13 155);
-  --success-soft: oklch(0.52 0.13 155 / 0.12);
-  --warning: var(--amber);
-  --warning-soft: var(--amber-soft);
+  /* Accent — copper, SIGNAL ONLY (quota/cost warnings, landing highlight) */
+  --accent-copper:      oklch(0.560 0.130 52);
+  --accent-soft-copper: oklch(0.560 0.130 52 / 0.12);
+  --on-accent-copper:   oklch(1 0 0);
 
-  /* Semantic aliases (component contract) */
-  --color-bg: var(--bg);
-  --color-surface-1: var(--surface-1);
-  --color-surface-2: var(--surface-2);
-  --color-surface-hover: var(--surface-hover);
-  --color-text: var(--text-hi);
-  --color-text-muted: var(--text-mid);
-  --color-border: var(--border);
-  --color-border-subtle: var(--border-subtle);
-  --color-primary: var(--accent);
-  --color-primary-hover: var(--accent-dim);
-  --color-primary-light: var(--accent-soft);
-  --primary: var(--accent);
-  --primary-hover: var(--accent-dim);
-  --primary-light: var(--accent-soft);
-  --muted: var(--text-mid);
-  --text-muted: var(--text-mid);
-  --panel: var(--surface-1);
-  --panel-solid: var(--surface-1);
+  /* Status */
+  --success:      oklch(0.530 0.120 158);
+  --success-soft: oklch(0.530 0.120 158 / 0.12);
+  --success-ink:  oklch(0.430 0.110 158);
 
-  /* Elevation — soft depth + hairline, never glow */
-  --shadow-sm: 0 1px 2px oklch(0.2 0.02 240 / 0.06);
-  --shadow: 0 2px 8px oklch(0.2 0.02 240 / 0.08), 0 0 0 1px var(--border-subtle);
-  --shadow-lg: 0 12px 32px oklch(0.2 0.02 240 / 0.12), 0 0 0 1px var(--border-subtle);
-  --shadow-xl: 0 24px 56px oklch(0.2 0.02 240 / 0.16), 0 0 0 1px var(--border);
-  --glow-accent: 0 0 0 1px var(--ring);
-  --glow-danger: 0 0 0 1px var(--danger);
+  --warning:      oklch(0.650 0.130 72);
+  --warning-soft: oklch(0.650 0.130 72 / 0.14);
+  --warning-ink:  oklch(0.430 0.090 72);
+
+  --danger:       oklch(0.550 0.195 27);
+  --danger-soft:  oklch(0.550 0.195 27 / 0.12);
+  --danger-ink:   oklch(0.470 0.180 27);
+  --danger-glow:  oklch(0.550 0.195 27 / 0.22);
+
+  --info:         oklch(0.550 0.120 245);
+  --info-soft:    oklch(0.550 0.120 245 / 0.12);
+  --info-ink:     oklch(0.460 0.130 245);
+
+  /* Elevation — soft shadow + hairline, never glow */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 255 / 0.06);
+  --shadow:    0 2px 8px oklch(0.2 0.02 255 / 0.08), 0 0 0 1px var(--border);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.02 255 / 0.14), 0 0 0 1px var(--border);
+  --shadow-xl: 0 24px 56px oklch(0.2 0.02 255 / 0.18), 0 0 0 1px var(--border);
+  --shadow-pop: 0 8px 24px oklch(0.2 0.02 255 / 0.18);
 
   /* Motion */
-  --t-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
-  --t-base: 220ms cubic-bezier(0.4, 0, 0.2, 1);
-  --t-slow: 340ms cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --dur-fast: 120ms;
+  --dur:      180ms;
+  --dur-slow: 240ms;
+  --t-fast: 120ms cubic-bezier(0.33, 1, 0.68, 1);
+  --t-base: 180ms cubic-bezier(0.33, 1, 0.68, 1);
+  --t-slow: 240ms cubic-bezier(0.33, 1, 0.68, 1);
 
-  /* Z-index */
-  --z-sticky: 40;
-  --z-dropdown: 50;
-  --z-drawer: 100;
-  --z-toast: 110;
-  --z-modal: 120;
+  /* Semantic z-index scale */
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-drawer:   300;
+  --z-backdrop: 400;
+  --z-modal:    500;
+  --z-toast:    600;
+  --z-tooltip:  700;
 
-  --nav-height: 60px;
-  --sidebar-w: 248px;
-  --sidebar-w-collapsed: 72px;
-}
+  /* Layout */
+  --nav-h:               56px;
+  --nav-height:          56px;
+  --sidebar-w:           248px;
+  --sidebar-w-collapsed: 64px;
 
-/* Full dark Verdigris ramp — first-class parity with light. */
-html[data-theme='dark'] {
-  color-scheme: dark;
-  --bg: oklch(0.178 0.008 240);
-  --bg-deep: oklch(0.150 0.008 240);
-  --surface-1: oklch(0.215 0.009 240);
-  --surface-2: oklch(0.255 0.010 240);
-  --surface-3: oklch(0.295 0.011 240);
-  --surface-hover: oklch(0.74 0.13 190 / 0.12);
+  /* -------------------------------------------------------------------------
+     Backward compatibility aliases
+     Old Verdigris names → new Graphite & Cobalt values.
+     Keeps all existing component class rules working without modification.
+     ----------------------------------------------------------------------- */
+  --bg:           var(--canvas);
+  --bg-deep:      var(--surface-sunken);
+  --surface-hover: oklch(0.550 0.205 264 / 0.07);
+  --border-subtle: var(--border);
 
-  --border: oklch(0.300 0.010 240);
-  --border-subtle: oklch(0.258 0.009 240);
-  --border-strong: oklch(0.400 0.012 240);
+  --text-hi:    var(--ink);
+  --text-faint: var(--text-low);
 
-  --text-hi: oklch(0.950 0.006 230);
-  --text-mid: oklch(0.720 0.010 235);
-  --text-low: oklch(0.560 0.010 240);
-  --text-faint: oklch(0.460 0.010 240);
+  --accent:      var(--primary);
+  --accent-dim:  var(--primary-hover);
+  --accent-deep: oklch(0.550 0.205 264 / 0.20);
+  --accent-soft: var(--primary-soft);
+  --accent-glow: oklch(0.550 0.205 264 / 0.22);
+  --on-accent:   var(--on-primary);
 
-  --accent: oklch(0.74 0.13 190);
-  --accent-dim: oklch(0.80 0.13 190);    /* hover brightens in dark */
-  --accent-deep: oklch(0.52 0.10 196);
-  --accent-soft: oklch(0.74 0.13 190 / 0.14);
-  --accent-glow: oklch(0.74 0.13 190 / 0.30);
-  --on-accent: oklch(0.17 0.03 195);     /* near-black on bright teal */
-  --ring: oklch(0.74 0.13 190 / 0.50);
+  --signal:      var(--accent-copper);
+  --signal-soft: var(--accent-soft-copper);
 
-  --signal: oklch(0.74 0.13 55);
-  --signal-soft: oklch(0.74 0.13 55 / 0.16);
+  --amber:      var(--warning);
+  --amber-soft: var(--warning-soft);
+  --cyan:       var(--info);
+  --cyan-soft:  var(--info-soft);
 
-  --amber: oklch(0.78 0.14 75);
-  --amber-soft: oklch(0.78 0.14 75 / 0.16);
-  --cyan: oklch(0.72 0.12 232);
-  --cyan-soft: oklch(0.72 0.12 232 / 0.16);
-  --danger: oklch(0.66 0.19 27);
-  --danger-soft: oklch(0.66 0.19 27 / 0.18);
-  --danger-glow: oklch(0.66 0.19 27 / 0.30);
-  --success: oklch(0.72 0.14 155);
-  --success-soft: oklch(0.72 0.14 155 / 0.16);
-  --warning: var(--amber);
-  --warning-soft: var(--amber-soft);
-
-  /* Deeper base shadows for dark surfaces */
-  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.40);
-  --shadow: 0 6px 20px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border-subtle);
-  --shadow-lg: 0 18px 44px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border-subtle);
-  --shadow-xl: 0 28px 64px oklch(0 0 0 / 0.60), 0 0 0 1px var(--border);
   --glow-accent: 0 0 0 1px var(--ring);
   --glow-danger: 0 0 0 1px var(--danger);
+
+  --color-bg:             var(--canvas);
+  --color-surface-1:      var(--surface-1);
+  --color-surface-2:      var(--surface-2);
+  --color-surface-hover:  var(--surface-hover);
+  --color-text:           var(--ink);
+  --color-text-muted:     var(--text-mid);
+  --color-border:         var(--border);
+  --color-border-subtle:  var(--border);
+  --color-primary:        var(--primary);
+  --color-primary-hover:  var(--primary-hover);
+  --color-primary-light:  var(--primary-soft);
+  --primary-hover:        var(--primary-hover);
+  --primary-light:        var(--primary-soft);
+  --muted:                var(--text-mid);
+  --text-muted:           var(--text-mid);
+  --panel:                var(--surface-1);
+  --panel-solid:          var(--surface-1);
+}
+
+/* Full Graphite & Cobalt dark ramp — first-class parity. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+
+  --canvas:         oklch(0.170 0.006 255);
+  --surface-1:      oklch(0.218 0.007 255);
+  --surface-2:      oklch(0.262 0.008 255);
+  --surface-sunken: oklch(0.150 0.006 255);
+  --surface-3:      oklch(0.262 0.008 255);
+
+  --border:        oklch(0.300 0.008 255);
+  --border-strong: oklch(0.400 0.010 255);
+
+  --ink:       oklch(0.958 0.004 255);
+  --text-mid:  oklch(0.715 0.010 255);
+  --text-low:  oklch(0.560 0.010 255);
+
+  /* Cobalt — brighter in dark */
+  --primary:        oklch(0.700 0.160 264);
+  --primary-hover:  oklch(0.760 0.150 264);
+  --primary-active: oklch(0.650 0.160 264);
+  --primary-soft:   oklch(0.700 0.160 264 / 0.16);
+  --on-primary:     oklch(0.180 0.040 264);
+  --ring:           oklch(0.700 0.160 264 / 0.50);
+
+  /* Copper */
+  --accent-copper:      oklch(0.720 0.130 55);
+  --accent-soft-copper: oklch(0.720 0.130 55 / 0.18);
+  --on-accent-copper:   oklch(0.180 0.040 55);
+
+  /* Status */
+  --success:      oklch(0.700 0.140 158);
+  --success-soft: oklch(0.700 0.140 158 / 0.18);
+  --success-ink:  var(--success);
+
+  --warning:      oklch(0.770 0.140 72);
+  --warning-soft: oklch(0.770 0.140 72 / 0.18);
+  --warning-ink:  var(--warning);
+
+  --danger:       oklch(0.660 0.185 27);
+  --danger-soft:  oklch(0.660 0.185 27 / 0.20);
+  --danger-ink:   var(--danger);
+  --danger-glow:  oklch(0.660 0.185 27 / 0.30);
+
+  --info:         oklch(0.700 0.120 245);
+  --info-soft:    oklch(0.700 0.120 245 / 0.18);
+  --info-ink:     var(--info);
+
+  /* Shadows (deeper on dark) */
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.40);
+  --shadow:    0 6px 20px oklch(0 0 0 / 0.45), 0 0 0 1px var(--border);
+  --shadow-lg: 0 18px 44px oklch(0 0 0 / 0.55), 0 0 0 1px var(--border);
+  --shadow-xl: 0 28px 64px oklch(0 0 0 / 0.60), 0 0 0 1px var(--border);
+  --shadow-pop: 0 8px 24px oklch(0 0 0 / 0.50);
+
+  /* Backward compat aliases — dark overrides */
+  --bg:            var(--canvas);
+  --bg-deep:       var(--surface-sunken);
+  --surface-hover: oklch(0.700 0.160 264 / 0.12);
+  --border-subtle: var(--border);
+
+  --text-hi:    var(--ink);
+  --text-faint: var(--text-low);
+
+  --accent:      var(--primary);
+  --accent-dim:  var(--primary-hover);
+  --accent-deep: oklch(0.700 0.160 264 / 0.25);
+  --accent-soft: var(--primary-soft);
+  --accent-glow: oklch(0.700 0.160 264 / 0.30);
+  --on-accent:   var(--on-primary);
+
+  --signal:      var(--accent-copper);
+  --signal-soft: var(--accent-soft-copper);
+
+  --amber:      var(--warning);
+  --amber-soft: var(--warning-soft);
+  --cyan:       var(--info);
+  --cyan-soft:  var(--info-soft);
+
+  --glow-accent: 0 0 0 1px var(--ring);
+  --glow-danger: 0 0 0 1px var(--danger);
+
+  --color-bg:             var(--canvas);
+  --color-surface-1:      var(--surface-1);
+  --color-surface-2:      var(--surface-2);
+  --color-surface-hover:  var(--surface-hover);
+  --color-text:           var(--ink);
+  --color-text-muted:     var(--text-mid);
+  --color-border:         var(--border);
+  --color-border-subtle:  var(--border);
+  --color-primary:        var(--primary);
+  --color-primary-hover:  var(--primary-hover);
+  --color-primary-light:  var(--primary-soft);
+  --primary-hover:        var(--primary-hover);
+  --primary-light:        var(--primary-soft);
+  --muted:                var(--text-mid);
+  --text-muted:           var(--text-mid);
+  --panel:                var(--surface-1);
+  --panel-solid:          var(--surface-1);
 }
 
 /* Light is the :root default; this hook re-affirms it for explicit toggles. */
@@ -222,21 +329,22 @@ body,
 }
 
 body {
-  font-family: var(--font-ui);
+  font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: var(--lh-base);
-  color: var(--text-mid);
-  background: var(--bg);
+  color: var(--ink);
+  background: var(--canvas);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: var(--fw-semibold);
-  color: var(--text-hi);
+  color: var(--ink);
   line-height: var(--lh-tight);
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 a {
@@ -262,14 +370,14 @@ code, kbd, pre, .mono {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
 
 ::selection {
-  background: var(--accent-soft);
-  color: var(--text-hi);
+  background: var(--primary-soft);
+  color: var(--ink);
 }
 
 /* Tabular numerals everywhere numbers matter */
@@ -304,8 +412,8 @@ code, kbd, pre, .mono {
   left: -9999px;
   top: 0;
   z-index: var(--z-modal);
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--primary);
+  color: var(--on-primary);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-weight: var(--fw-semibold);
@@ -473,8 +581,8 @@ code, kbd, pre, .mono {
   justify-content: space-between;
   gap: var(--space-2);
   padding: 0 var(--space-3);
-  background: var(--bg);
-  border-bottom: 1px solid var(--border-subtle);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--border);
 }
 
 .appHeaderMeta { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
