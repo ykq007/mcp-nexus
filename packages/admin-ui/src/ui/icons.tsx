@@ -43,6 +43,17 @@ export function IconShield(props: IconProps) {
   );
 }
 
+export function IconGrid(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </Svg>
+  );
+}
+
 export function IconKey(props: IconProps) {
   return (
     <Svg {...props}>
@@ -254,6 +265,15 @@ export function IconMoon(props: IconProps) {
   return (
     <Svg {...props}>
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+    </Svg>
+  );
+}
+
+export function IconBeaker(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 3h6M9 3v6l-4 9a1 1 0 0 0 .9 1.4h12.2A1 1 0 0 0 19 18l-4-9V3" />
+      <path d="M6.9 15h10.2" />
     </Svg>
   );
 }

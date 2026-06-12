@@ -21,10 +21,15 @@
     "expand": "Expand",
     "collapse": "Collapse",
     "expandSidebar": "Expand sidebar",
-    "collapseSidebar": "Collapse sidebar"
+    "collapseSidebar": "Collapse sidebar",
+    "ariaLabel": "Sidebar"
   },
   "a11y": {
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme"
   },
   "connection": "Connection"
 }

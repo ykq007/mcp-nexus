@@ -1,225 +1,19 @@
 /* ============================================================================
-   mcp-nexus Admin Console — Legacy shell + page-layout + utilities
+   mcp-nexus Admin Console — Page-layout helpers + utility layer
    ============================================================================
    IMPORTANT: Design tokens live in styles/tokens.css.
               Component classes live in styles/components.css.
+              Shell (appFrame, sidebar, top bar, mobileNav) live in
+              styles/pages/shell.css.
               This file contains ONLY:
-                - App shell frame (.appFrame, .appShell, .sidebar + nav, .mainPanel,
-                  .appHeader, .mainBody, .mobileNav)
-                - Page-layout helpers (.kpis are in components.css; .overviewBentoRow,
-                  .filterBar, .filterBarGrid, .grid2, etc. are in components.css)
-                - Utility / typography helpers (.h1–.h3, .muted, .mono, .help,
+                - Page-layout helpers (.overviewBentoRow, .grid2, etc.)
+                - Utility / typography helpers (.h1–.h3, .muted, .mono,
                   .flex, .gap-*, .p-*, .mt-*, etc.)
-              Migrated incrementally in P2 (shell) and P3 (pages).
+                - JSON viewer / code blocks
+                - Usage page specifics
+                - Token row states
+                - Tabs (page-level tab bar)
    ============================================================================ */
-
-/* ----------------------------------------------------------------------------
-   App shell
-   -------------------------------------------------------------------------- */
-.appFrame {
-  min-height: 100%;
-  display: flex;
-}
-
-.appShell {
-  display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr;
-  width: 100%;
-  min-height: 100vh;
-  transition: grid-template-columns var(--t-base);
-}
-.appFrame.sidebar-collapsed .appShell {
-  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
-}
-
-/* ---- Sidebar ---- */
-.sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, var(--bg-deep), var(--bg));
-  border-right: 1px solid var(--border-subtle);
-  padding: var(--space-2) var(--space-2) var(--space-2);
-  overflow: hidden;
-}
-
-.navHeader {
-  padding: var(--space-1) var(--space-1) var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: var(--space-2);
-}
-.navTitle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-.navTitle svg { width: 26px; height: 26px; color: var(--accent); flex: none; }
-.navTitleText { min-width: 0; }
-.navBrand {
-  font-family: var(--font-display);
-  font-weight: var(--fw-semibold);
-  font-size: var(--text-lg);
-  color: var(--text-hi);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-.sidebar-collapsed .navTitleText .help { display: none; }
-.help {
-  font-size: var(--text-xs);
-  color: var(--text-low);
-  line-height: 1.5;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.navItem {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 10px var(--space-1);
-  border-radius: var(--radius-sm);
-  color: var(--text-mid);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  letter-spacing: 0.02em;
-  position: relative;
-  transition: background var(--t-fast), color var(--t-fast);
-  white-space: nowrap;
-}
-.navItem:hover { background: var(--surface-hover); color: var(--text-hi); }
-.navItemIcon { display: inline-flex; flex: none; }
-.navItemIcon svg { width: 18px; height: 18px; }
-.sidebar-collapsed .navItemLabel { display: none; }
-
-.navItem--active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.navItem--active::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--space-2));
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 18px;
-  border-radius: var(--radius-pill);
-  background: var(--accent);
-}
-
-.navFooter {
-  border-top: 1px solid var(--border-subtle);
-  padding-top: var(--space-2);
-  margin-top: var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-.navConnectionInfo { min-width: 0; }
-.navConnectionSummary {
-  font-size: var(--text-2xs);
-  color: var(--text-low);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebarToggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  width: 100%;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-1);
-  color: var(--text-mid);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-medium);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
-}
-.sidebarToggle:hover { color: var(--accent); border-color: var(--accent-deep); background: var(--surface-2); }
-.sidebarToggle svg { width: 16px; height: 16px; flex: none; }
-/* Collapse to an icon-only square when the sidebar is collapsed */
-.sidebar-collapsed .sidebarToggle { justify-content: center; padding: 0; width: 34px; }
-.sidebar-collapsed .sidebarToggle span { display: none; }
-/* Icon-only rail: hide text-heavy chrome when collapsed */
-.sidebar-collapsed .navTitleText,
-.sidebar-collapsed .navConnectionInfo { display: none; }
-.sidebar-collapsed .navTitle { justify-content: center; }
-
-/* ---- Main column ---- */
-.mainPanel {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.appHeader {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  height: var(--nav-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: 0 var(--space-3);
-  background: var(--canvas);
-  border-bottom: 1px solid var(--border);
-}
-
-.topbarTitle { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.appHeaderMeta { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
-.appHeader h1, .appHeader .h1 {
-  font-size: var(--text-xl);
-  font-weight: var(--fw-semibold);
-  letter-spacing: -0.01em;
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.headerConnection {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--text-low);
-}
-
-.mainBody {
-  flex: 1;
-  padding: var(--space-3);
-  max-width: 1320px;
-  width: 100%;
-  margin: 0 auto;
-  animation: pageFade var(--t-base) both;
-}
-
-@keyframes pageFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mainBody { animation: none; }
-}
 
 /* ----------------------------------------------------------------------------
    Page-layout helpers
@@ -233,40 +27,22 @@
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 
 /* ----------------------------------------------------------------------------
-   Mobile nav
-   -------------------------------------------------------------------------- */
-.mobileNav {
-  display: none;
-  position: sticky;
-  bottom: 0;
-  z-index: var(--z-sticky);
-  background: color-mix(in oklch, var(--bg) 92%, transparent);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-subtle);
-  padding: 6px;
-}
-.mobileNavItem {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-2xs);
-  color: var(--text-low);
-}
-.mobileNavItem.isActive { color: var(--accent); background: var(--accent-soft); }
-
-/* ----------------------------------------------------------------------------
-   Typography helpers + utility layer
+   Typography helpers
    -------------------------------------------------------------------------- */
 .h1 { font-family: var(--font-display); font-size: var(--text-2xl); color: var(--text-hi); }
 .h2 { font-family: var(--font-display); font-size: var(--text-xl); color: var(--text-hi); }
 .h3 { font-family: var(--font-display); font-size: var(--text-lg); color: var(--text-hi); }
 .muted, .text-muted { color: var(--text-mid); }
 .mono { font-family: var(--font-mono); }
+.help {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  line-height: 1.5;
+}
 
+/* ----------------------------------------------------------------------------
+   Utility layer
+   -------------------------------------------------------------------------- */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .flex-grow { flex: 1 1 auto; }
@@ -330,7 +106,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Tabs (page-level tab bar used by shell) */
+/* Tabs (page-level tab bar used by pages) */
 .tabs {
   display: inline-flex;
   gap: 2px;
@@ -417,13 +193,8 @@ pre {
 }
 
 /* ----------------------------------------------------------------------------
-   Responsive
+   Responsive helpers (page-level; shell responsive is in shell.css)
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
-  .appFrame { flex-direction: column; }
-  .appShell, .appFrame.sidebar-collapsed .appShell { grid-template-columns: minmax(0, 1fr); }
-  .sidebar { display: none; }
-  .mobileNav { display: flex; }
-  .mainBody { padding: var(--space-2); }
   .grid2, .grid-cols-2 { grid-template-columns: 1fr; }
 }

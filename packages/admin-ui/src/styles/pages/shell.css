@@ -1,0 +1,527 @@
+/* ============================================================================
+   mcp-nexus Admin Console — App Shell & Navigation
+   "Graphite & Cobalt" · P2
+
+   Sections:
+   1.  App frame + grid
+   2.  Sidebar
+   3.  Sidebar: brand header
+   4.  Sidebar: nav items
+   5.  Sidebar: footer + collapse toggle
+   6.  Top bar (appHeader)
+   7.  Main content area
+   8.  Mobile bottom navigation
+   9.  Responsive breakpoints
+   10. Reduced-motion overrides
+   ============================================================================ */
+
+/* ===========================================================================
+   1. App frame + grid
+   =========================================================================== */
+
+.appFrame {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.appShell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  width: 100%;
+  min-height: 100vh;
+  transition: grid-template-columns var(--dur) var(--ease-out);
+}
+
+.appFrame.sidebar-collapsed .appShell {
+  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+}
+
+/* ===========================================================================
+   2. Sidebar
+   =========================================================================== */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  /* Clip the nav items so the collapsed icon rail looks clean */
+  transition: width var(--dur) var(--ease-out);
+}
+
+/* ===========================================================================
+   3. Sidebar: brand header
+   =========================================================================== */
+
+.navHeader {
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.navTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.navTitle svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.navTitleText {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navBrand {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--text-base);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  line-height: var(--lh-tight);
+}
+
+.navBrandSub {
+  font-size: var(--text-2xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+/* Hide text in collapsed icon rail */
+.sidebar-collapsed .navTitleText {
+  display: none;
+}
+
+.sidebar-collapsed .navTitle {
+  justify-content: center;
+  padding: 0 var(--space-2);
+}
+
+/* ===========================================================================
+   4. Sidebar: nav items
+   =========================================================================== */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-mid);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+  /* Remove any default button appearance */
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.navItem:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Active state: full-bg tint (NO side-stripe border — explicitly banned) */
+.navItem--active,
+.navItem[data-active='true'] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.navItem--active:hover,
+.navItem[data-active='true']:hover {
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.navItemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.navItemIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.navItemLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed icon rail: center icon, hide label */
+.sidebar-collapsed .navItem {
+  justify-content: center;
+  gap: 0;
+  padding: 9px;
+}
+
+.sidebar-collapsed .navItemLabel {
+  display: none;
+}
+
+/* ===========================================================================
+   5. Sidebar: footer + collapse toggle
+   =========================================================================== */
+
+.navFooter {
+  border-top: 1px solid var(--border);
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Collapse / expand toggle button */
+.sidebarToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-mid);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.sidebarToggle:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+
+.sidebarToggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.sidebarToggle svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Collapsed: icon-only, centered */
+.sidebar-collapsed .sidebarToggle {
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+  margin: 0 auto;
+}
+
+.sidebar-collapsed .sidebarToggle .sidebarToggleLabel {
+  display: none;
+}
+
+/* Connection info in footer */
+.navConnectionInfo {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navConnectionLabel {
+  font-size: var(--text-2xs);
+  color: var(--text-low);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.navConnectionSummary {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+/* Hide connection info in collapsed icon rail */
+.sidebar-collapsed .navConnectionInfo {
+  display: none;
+}
+
+/* ===========================================================================
+   6. Top bar (appHeader)
+   =========================================================================== */
+
+.mainPanel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.appHeader {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Left: page title + subtitle */
+.topbarTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.topbarPageTitle {
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbarPageSubtitle {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Center/right: connection + controls */
+.appHeaderMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.headerConnectionLabel {
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+}
+
+.headerConnection {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+/* Separator between header sections */
+.appHeaderSep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* ===========================================================================
+   7. Main content area
+   =========================================================================== */
+
+.mainBody {
+  flex: 1;
+  padding: var(--space-5);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* No page-load choreography in the console (design.md §3): content renders
+   immediately on navigation — motion is reserved for state (hover/focus/
+   selection/reveal/drawer-dialog enter), not page transitions. */
+
+/* ===========================================================================
+   8. Mobile bottom navigation
+   =========================================================================== */
+
+.mobileNav {
+  display: none;
+  position: sticky;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  background: var(--canvas);
+  border-top: 1px solid var(--border);
+  padding: var(--space-1) var(--space-2);
+  gap: var(--space-1);
+}
+
+.mobileNavItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: var(--space-1) var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-low);
+  text-decoration: none;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+  min-width: 0;
+  text-align: center;
+}
+
+.mobileNavItem svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.mobileNavItem:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.mobileNavItem:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Active state: bg tint + cobalt text */
+.mobileNavItem--active,
+.mobileNavItem[data-active='true'] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ===========================================================================
+   9. Responsive breakpoints
+   =========================================================================== */
+
+@media (max-width: 900px) {
+  .appFrame {
+    flex-direction: column;
+  }
+
+  .appShell,
+  .appFrame.sidebar-collapsed .appShell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .mobileNav {
+    display: flex;
+  }
+
+  .mainBody {
+    padding: var(--space-4);
+  }
+
+  .appHeader {
+    padding: 0 var(--space-4);
+  }
+
+  .headerConnection {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainBody {
+    padding: var(--space-3);
+  }
+
+  .appHeader {
+    padding: 0 var(--space-3);
+  }
+
+  .topbarPageSubtitle {
+    display: none;
+  }
+
+  .mobileNavItem span {
+    display: none;
+  }
+}
+
+/* ===========================================================================
+   10. Reduced-motion overrides
+   =========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .appShell,
+  .sidebar,
+  .navItem,
+  .sidebarToggle,
+  .mobileNavItem {
+    transition: none;
+  }
+}

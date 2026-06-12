@@ -21,10 +21,15 @@
     "expand": "展开",
     "collapse": "收起",
     "expandSidebar": "展开侧边栏",
-    "collapseSidebar": "收起侧边栏"
+    "collapseSidebar": "收起侧边栏",
+    "ariaLabel": "侧边栏"
   },
   "a11y": {
-    "skipToContent": "跳到主要内容"
+    "skipToContent": "跳到主要内容",
+    "mainNav": "主导航",
+    "mobileNav": "移动导航",
+    "switchToLight": "切换到浅色主题",
+    "switchToDark": "切换到深色主题"
   },
   "connection": "连接"
 }
