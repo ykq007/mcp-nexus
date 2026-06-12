@@ -1,60 +1,52 @@
 # Design
 
 > Visual system for `mcp-nexus` — Admin Console (product) + Landing (brand).
-> Direction: **"Verdigris"** — a precision instrument at rest. Lab-grade control
-> surface, cool teal readout on clean neutral, the quiet confidence of a tool
-> that just works. Restrained, exact, engineered. Replaces the retired
-> "Phosphor Ops" terminal look (see `PRODUCT.md` anti-references).
+> Direction: **"Graphite & Cobalt"** — a precision instrument at rest.
+> Monochrome ink on clean neutral; a single cobalt blue that appears only where
+> the operator acts. Calm, dense, exact — Vercel's stillness with Linear's
+> precision. Replaces the retired "Verdigris" (teal) and "Phosphor Ops"
+> (terminal) looks (see `PRODUCT.md` anti-references).
 
 ## Theme
 
-- **Strategy:** Restrained (product floor) — neutral surfaces, one teal primary
-  that earns its place, a single copper signal accent. The mood lives in the
-  brand color + typography, never in a tinted background.
-- **Light + true dark mode, both first-class.** Toggle via `html[data-theme]`.
-  Light is the default canvas; dark has full parity. WCAG AA in both.
+- **Strategy:** Restrained, ink-forward. Neutral surfaces; the mood lives in
+  typography + the single cobalt primary, never in a tinted background.
+- **Default light, true dark at full parity.** Toggle via `html[data-theme]`.
+  WCAG AA in both.
+- **Primary (cobalt):** actions, active nav, selection, focus — only.
+- **Accent (copper):** signal only (credit/quota warnings, one landing
+  highlight). Never decoration.
 - **Mood:** calm, precise, infrastructure-grade. Reliability shown through
   alignment, honest numbers, and restraint — not glow, gradients, or ornament.
 
 ## Colors
 
-OKLCH throughout. Two complete ramps; semantics are theme-agnostic aliases.
+OKLCH throughout. Canonical source: `packages/admin-ui/src/styles/tokens.css`
+(landing mirrors the same color values). Semantics are theme-agnostic aliases.
 
 ### Light (default)
 
 ```css
 html[data-theme='light'] {
-  color-scheme: light;
-  /* Surfaces — pure-neutral cool, near-white canvas + white cards */
-  --canvas:        oklch(0.984 0.003 225); /* app background */
-  --surface-1:     oklch(1 0 0);           /* cards, panels (pure white) */
-  --surface-2:     oklch(0.968 0.004 225); /* raised / hover / inputs */
-  --surface-sunken:oklch(0.955 0.004 225); /* wells, code blocks */
-
-  --border:        oklch(0.916 0.004 225);
-  --border-strong: oklch(0.858 0.006 230);
-
-  --ink:           oklch(0.24 0.015 235);  /* body text  ≥7:1 on white */
-  --text-mid:      oklch(0.49 0.012 235);  /* secondary  ≥4.5:1 */
-  --text-low:      oklch(0.60 0.010 235);  /* faint, large/meta only ≥3:1 */
-
-  /* Brand */
-  --primary:       oklch(0.56 0.120 192);  /* verdigris teal */
-  --primary-hover: oklch(0.50 0.120 192);
-  --primary-active:oklch(0.45 0.110 192);
-  --primary-soft:  oklch(0.56 0.120 192 / 0.10); /* selected/tint bg */
-  --on-primary:    oklch(1 0 0);           /* white text on teal fill */
-  --ring:          oklch(0.56 0.130 192 / 0.45);
-
-  --accent:        oklch(0.62 0.130 50);   /* copper — signal only */
-  --accent-soft:   oklch(0.62 0.130 50 / 0.12);
-  --on-accent:     oklch(1 0 0);
-
-  /* Semantic status (distinct hues; never color-alone) */
-  --success:       oklch(0.56 0.130 155); --success-soft: oklch(0.56 0.130 155 / 0.12);
-  --warning:       oklch(0.70 0.140 75);  --warning-soft: oklch(0.70 0.140 75 / 0.14);
-  --danger:        oklch(0.55 0.200 27);  --danger-soft:  oklch(0.55 0.200 27 / 0.12);
-  --info:          oklch(0.56 0.120 245); --info-soft:    oklch(0.56 0.120 245 / 0.12);
+  --canvas:         oklch(0.986 0.001 255);  /* app background */
+  --surface-1:      oklch(1 0 0);            /* cards, panels */
+  --surface-2:      oklch(0.973 0.002 255);  /* inputs, raised, hover */
+  --surface-sunken: oklch(0.961 0.003 255);  /* wells, code, table head */
+  --border:         oklch(0.917 0.003 255);
+  --border-strong:  oklch(0.852 0.005 255);
+  --ink:            oklch(0.225 0.012 255);  /* body  ≥7:1 on white */
+  --text-mid:       oklch(0.470 0.012 255);  /* secondary ≥4.5:1 */
+  --text-low:       oklch(0.595 0.010 255);  /* meta, large only ≥3:1 */
+  --primary:        oklch(0.550 0.205 264);  /* cobalt — action/active/focus */
+  --primary-hover:  oklch(0.490 0.205 264);
+  --primary-active: oklch(0.430 0.185 264);
+  --primary-soft:   oklch(0.550 0.205 264 / 0.10);
+  --on-primary:     oklch(1 0 0);
+  --ring:           oklch(0.550 0.210 264 / 0.45);
+  --accent-copper:  oklch(0.560 0.130 52);   /* signal only */
+  --success: oklch(0.530 0.120 158); --warning: oklch(0.650 0.130 72);
+  --danger:  oklch(0.550 0.195 27);  --info:    oklch(0.550 0.120 245);
+  /* + *-soft tints and *-ink (darker text-on-soft) variants */
 }
 ```
 
@@ -62,125 +54,94 @@ html[data-theme='light'] {
 
 ```css
 html[data-theme='dark'] {
-  color-scheme: dark;
-  --canvas:        oklch(0.178 0.008 240);
-  --surface-1:     oklch(0.215 0.009 240);
-  --surface-2:     oklch(0.255 0.010 240);
-  --surface-sunken:oklch(0.150 0.008 240);
-
-  --border:        oklch(0.300 0.010 240);
-  --border-strong: oklch(0.400 0.012 240);
-
-  --ink:           oklch(0.950 0.006 230);
-  --text-mid:      oklch(0.720 0.010 235);
-  --text-low:      oklch(0.560 0.010 240);
-
-  --primary:       oklch(0.74 0.130 190);  /* brighter in dark for pop */
-  --primary-hover: oklch(0.80 0.130 190);
-  --primary-active:oklch(0.68 0.120 190);
-  --primary-soft:  oklch(0.74 0.130 190 / 0.14);
-  --on-primary:    oklch(0.17 0.030 195);  /* near-black teal on bright teal */
-  --ring:          oklch(0.74 0.130 190 / 0.50);
-
-  --accent:        oklch(0.74 0.130 55);
-  --accent-soft:   oklch(0.74 0.130 55 / 0.16);
-  --on-accent:     oklch(0.18 0.030 55);
-
-  --success:       oklch(0.72 0.140 155); --success-soft: oklch(0.72 0.140 155 / 0.16);
-  --warning:       oklch(0.78 0.140 75);  --warning-soft: oklch(0.78 0.140 75 / 0.16);
-  --danger:        oklch(0.66 0.190 27);  --danger-soft:  oklch(0.66 0.190 27 / 0.18);
-  --info:          oklch(0.72 0.120 245); --info-soft:    oklch(0.72 0.120 245 / 0.16);
+  --canvas:         oklch(0.170 0.006 255);
+  --surface-1:      oklch(0.218 0.007 255);
+  --surface-2:      oklch(0.262 0.008 255);
+  --surface-sunken: oklch(0.150 0.006 255);
+  --border:         oklch(0.300 0.008 255);
+  --border-strong:  oklch(0.400 0.010 255);
+  --ink:            oklch(0.958 0.004 255);
+  --text-mid:       oklch(0.715 0.010 255);
+  --text-low:       oklch(0.560 0.010 255);
+  --primary:        oklch(0.700 0.160 264);  /* brighter to pop on dark */
+  --on-primary:     oklch(0.180 0.040 264);  /* near-black-blue on bright fill */
+  --accent-copper:  oklch(0.720 0.130 55);
+  /* status hues lifted for dark; same semantic names */
 }
 ```
 
-**Rules:** white text on the light-mode teal fill; near-black on the bright
-dark-mode teal fill. Accent (copper) is reserved for signal (attention, credit
-warnings, a single landing highlight) — never decoration. Status colors always
-pair with an icon/label/shape, never color alone.
+**Rules:** white text on the light cobalt fill; near-black-blue on the bright
+dark cobalt fill (Helmholtz-Kohlrausch — saturated mid fills take white text).
+Status pills = `*-soft` bg + `*-ink` text + a small icon/shape — never
+color-alone. Contrast verified in BOTH themes (ink/canvas ~16:1, text-mid
+~6.5:1).
 
 ## Typography
 
-One engineered family for everything UI; mono **only** for real data.
-
 ```css
---font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
---font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+--font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+--font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 ```
 
-- **Sans** carries headings, labels, buttons, body. IBM Plex reads "engineered"
-  honestly and is not the Inter default.
-- **Mono** is for tabular numerals, API keys, client tokens, IDs, timestamps,
-  metric values, and code/config snippets — anything the operator reads as data.
-  This is the deliberate line vs. the old mono-everything terminal look.
-- Fixed rem scale, ratio ≈1.2 (product). No fluid clamp in console UI; the
-  landing may use one large clamp hero (max ≤ 4rem, tracking ≥ -0.02em).
+- Geist + Geist Mono self-hosted via `@fontsource` (no layout-shift), `swap`.
+- Sans carries all UI. Mono is **data only** — API keys, client tokens, IDs,
+  timestamps, metric values, code/config (tabular-nums). Deliberate line vs. the
+  retired mono-everything terminal look.
+- Fixed rem scale, ratio ≈1.2 (product). No fluid clamp in console; landing may
+  use ONE clamp hero (max ≤ 3.5rem, tracking ≥ -0.02em). `text-wrap: balance` on
+  h1–h3; landing prose capped 65–75ch.
 
-```css
---text-2xs: .6875rem; --text-xs: .75rem;  --text-sm: .8125rem;
---text-base:.875rem;  --text-md: .9375rem; --text-lg: 1.0625rem;
---text-xl: 1.25rem;   --text-2xl:1.5rem;   --text-3xl:1.875rem; --text-4xl:2.5rem;
---fw-normal:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700;
---lh-tight:1.2; --lh-base:1.55; --lh-loose:1.7;
-```
+## Space, radius, elevation, motion
 
-Landing prose capped 65–75ch; `text-wrap: balance` on h1–h3.
-
-## Spacing, Radii, Elevation
-
-```css
-/* 8px / 4px grid */
---space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px;
---space-6:32px; --space-7:40px; --space-8:48px; --space-10:64px; --space-12:96px;
-
-/* Crisp, not pillowy */
---radius-xs:3px; --radius-sm:5px; --radius:7px; --radius-lg:10px; --radius-pill:999px;
-
-/* Depth via soft shadow + hairline, never glow */
---shadow-sm: 0 1px 2px oklch(0.2 0.02 240 / .06);
---shadow:    0 2px 8px oklch(0.2 0.02 240 / .08), 0 0 0 1px var(--border);
---shadow-lg: 0 12px 32px oklch(0.2 0.02 240 / .12), 0 0 0 1px var(--border);
-```
+8px/4px grid (`--space-1:4px … --space-12:96px`). Radii crisp
+(`--radius-xs:4px … --radius-lg:12px --radius-pill:999px`). Depth via soft
+shadow + hairline, never glow. Semantic z-scale (dropdown→sticky→drawer→
+backdrop→modal→toast→tooltip), never arbitrary 999. Motion 120–240ms ease-out
+(`cubic-bezier(0.33,1,0.68,1)`), conveys state only — **no page-load
+choreography in the console**. `prefers-reduced-motion` alternative for every
+animation; reveals enhance an already-visible default (never gate visibility).
 
 ## Components
 
-Every interactive element ships **default · hover · focus-visible · active ·
-disabled · loading**. Focus is always a visible `--ring`.
+Canonical source: `packages/admin-ui/src/styles/components.css` +
+`packages/admin-ui/src/ui/*`. Every interactive element ships **default · hover ·
+focus-visible · active · disabled · loading**; focus is always a visible
+`--ring`. Vocabulary: Button (primary/secondary/ghost/danger) · Input/Select/
+Textarea · DataTable (dense 40px rows, sticky header, sortable headers, optional
+checkbox + bulk-action bar, keyboard, responsive fallback) · StatusPill (soft bg
++ ink text + icon) · StatusMenu/ActionMenu (Portal + fixed to escape table
+clipping) · SegmentedControl · Dialog/Drawer/ConfirmDialog (focus trap, Esc,
+typed-confirm) · Toast · Skeleton · EmptyState (teaches) · KpiCard/MetricsCard
+(flat, mono number — NOT the hero-metric template) · Reveal (shared secret
+reveal; token variant adds 30s countdown + auto-clear on blur/hidden/timeout).
+Flat `--surface-1` cards + hairline border; never nested cards, side-stripe
+borders, or glass.
 
-- **Buttons:** primary (teal fill), secondary (surface + border), ghost,
-  danger. One shape, one height scale across the whole app.
-- **Inputs/selects:** `--surface-2` fill, `--border`, teal focus ring. Identical
-  vocabulary everywhere.
-- **Data table:** dense rows, mono tabular numerals, sticky header, row hover,
-  zebra optional. The console's primary surface — tune it hardest.
-- **Status pills:** semantic-soft bg + solid text + small icon. Never color-only.
-- **KPI / metric:** number in mono, label in sans `--text-mid`. NOT the
-  gradient hero-metric template — flat, honest, aligned to a grid.
-- **Cards/panels:** flat `--surface-1` + hairline border. Never nested cards,
-  never side-stripe borders, never glass.
-- **Loading:** skeletons for content, inline spinners only for button actions.
-- **Empty states:** teach the interface (what it is + the primary action), not
-  "nothing here."
+## Layout & CSS architecture
 
-## Layout
+- **Console shell:** top bar (`--nav-h:56px`) + left sidebar (`--sidebar-w:248px`,
+  collapsible to 64px icon rail) + content (max-width 1200px). Active nav =
+  `--primary-soft` bg tint (not a side-stripe). Mobile bottom nav.
+- **Landing:** centered ~1080px sections, one cobalt-accented hero + one copper
+  highlight. No SaaS-cream, no gradient blobs, no per-section eyebrows.
+- **CSS layering (load order):** `styles/tokens.css` → `styles/base.css` →
+  `styles/components.css` → `styles.css` (shrinking legacy residual: shell/util/
+  typography) → per-page `styles/pages/<page>.css` (scoped under `.page-<x>`,
+  imported by the page component). Vanilla CSS, OKLCH via tokens, no Tailwind/
+  CSS-in-JS. See the task `followup-debt.md` for the residual styles.css cleanup.
 
-- **Console:** app shell — top bar (`--nav-h:56px`) + left sidebar
-  (`--sidebar-w:248px`, collapsible to icons) + content. Responsive is
-  structural: sidebar collapses, tables go horizontally scrollable / stacked.
-- **Landing:** centered max-width (~1080px) sections, generous vertical rhythm,
-  one teal-accented hero. No per-section uppercase eyebrows, no 01/02/03 markers.
+## Accessibility
 
-## Motion
-
-- 150–250 ms, ease-out (`cubic-bezier(0.33,1,0.68,1)`). Conveys state only:
-  hover, focus, selection, reveal, toast. No page-load choreography in the
-  console. Landing may stagger one section's reveal, enhancing an already-visible
-  default.
-- `@media (prefers-reduced-motion: reduce)` → crossfade/instant for every
-  animation.
+WCAG 2.1 AA both themes: body ≥4.5:1, large ≥3:1; visible `--ring` focus on every
+interactive element; full keyboard for menus/dialogs/drawers/tables; semantic
+landmarks + skip link; state never by color alone; `prefers-reduced-motion`
+alternative for every animation.
 
 ## Bans (project-specific, on top of the global absolute bans)
 
-Anything from the retired Phosphor Ops vocabulary: phosphor/lime glow, scanlines,
-signal-grid backdrops, mono-everything UI, terminal-green. Plus the global bans:
-gradient text, glassmorphism, side-stripe borders, hero-metric template, identical
-card grids, per-section eyebrows, numbered section scaffolding.
+Retired Phosphor vocabulary (phosphor/lime glow, scanlines, signal-grid,
+terminal-green, mono-everything) AND retired Verdigris teal. Plus the global
+bans: gradient text, default glassmorphism, side-stripe borders, hero-metric
+template, identical icon-card grids, per-section eyebrows, numbered section
+scaffolding, text overflow at any breakpoint.
+</content>

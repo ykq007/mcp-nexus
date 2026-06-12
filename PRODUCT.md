@@ -44,6 +44,10 @@ not ornament.
 - **The previous "Phosphor Ops" look** — dark phosphor-terminal / observability
   console with lime-green glow, scanlines, signal-grid motifs, mono-everything.
   Explicitly retired. Avoid cyberpunk-neon, terminal-green, and glow-as-identity.
+- **The previous "Verdigris" look** — cool verdigris-teal primary (hue ~190) on
+  clean neutral. Explicitly retired in favor of the current **"Graphite & Cobalt"**
+  system (ink-forward monochrome + single cobalt primary + copper signal; Geist
+  type — see `DESIGN.md`). Avoid teal/green as the brand color; that lane is spent.
 - **SaaS-cream landing** — warm near-white body bg, gradient blobs, tiny tracked
   uppercase eyebrows over every section, the hero-metric template.
 - **Over-decorated dashboards** — gradient text, glassmorphism cards, side-stripe
