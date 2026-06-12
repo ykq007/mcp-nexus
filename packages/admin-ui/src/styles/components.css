@@ -1234,11 +1234,14 @@ a.kpiCard:focus-visible {
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 1px;
-  background: var(--border);
+  gap: 0;
+  background: var(--surface-1);
 }
 .metricTile {
   background: var(--surface-1);
+  /* Gridlines drawn per-tile so a partial last row never shows an empty
+     border-colored block (the gap-as-line trick does). */
+  box-shadow: inset 1px 1px 0 0 var(--border);
   padding: var(--space-3) var(--space-4);
 }
 .metricLabel {
@@ -1415,60 +1418,7 @@ a.kpiCard:focus-visible {
 }
 
 /* ===========================================================================
-   18. OnboardingGuide
-   =========================================================================== */
-.onboardingSteps {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.onboardingStep {
-  display: flex;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-.onboardingStep[data-completed='true'] {
-  opacity: 0.7;
-}
-.onboardingStepNumber {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-family: var(--font-mono);
-  font-weight: var(--fw-bold);
-  font-size: var(--text-sm);
-}
-.onboardingStepNumber[data-completed='true'] {
-  background: var(--success-soft);
-  color: var(--success);
-}
-.onboardingStepContent {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.onboardingStepTitle {
-  font-weight: var(--fw-semibold);
-  font-size: var(--text-sm);
-  color: var(--ink);
-}
-.onboardingStepDescription {
-  font-size: var(--text-xs);
-  color: var(--text-mid);
-}
-
-/* ===========================================================================
-   19. Cards / panels
+   18. Cards / panels
    flat surface-1 + hairline border + shadow-sm. No nested cards.
    =========================================================================== */
 .card {
