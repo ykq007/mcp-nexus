@@ -108,5 +108,108 @@ export const MCP_SETUP_TARGETS: McpSetupTarget[] = [
         '}'
       ].join('\n');
     }
+  },
+  {
+    id: 'claude-code-cli',
+    title: 'Claude Code (CLI)',
+    kind: 'http',
+    description: 'Claude Code CLI. Registers the bridge as a remote HTTP MCP server. Drop -s user to scope it to the current project instead.',
+    render: (ctx) => {
+      const url = resolveMcpUrl(ctx);
+      const token = tokenOrPlaceholder(ctx.clientToken);
+      return [
+        '# Add the bridge as a remote HTTP MCP server (user scope)',
+        `claude mcp add --transport http tavily-bridge "${url}" \\`,
+        `  --header "Authorization: Bearer ${token}" \\`,
+        '  -s user',
+        '',
+        '# Verify it connected',
+        'claude mcp list'
+      ].join('\n');
+    }
+  },
+  {
+    id: 'codex-cli',
+    title: 'Codex CLI',
+    kind: 'stdio',
+    description: 'Codex CLI. Add to ~/.codex/config.toml. Uses the published stdio npx wrapper, which talks stdio locally and connects to the bridge over HTTP.',
+    render: (ctx) => {
+      const token = tokenOrPlaceholder(ctx.clientToken);
+      const baseUrl = baseUrlOrPlaceholder(resolveMcpBaseUrl(ctx));
+      return [
+        '# ~/.codex/config.toml',
+        '[mcp_servers.tavily-bridge]',
+        'command = "npx"',
+        'args = ["-y", "@nexus-mcp/stdio-http-bridge"]',
+        `env = { TAVILY_BRIDGE_BASE_URL = "${baseUrl}", TAVILY_BRIDGE_MCP_TOKEN = "${token}" }`
+      ].join('\n');
+    }
+  },
+  {
+    id: 'cursor',
+    title: 'Cursor',
+    kind: 'http',
+    description: 'Cursor IDE. Save as .cursor/mcp.json in your project, or ~/.cursor/mcp.json to enable it everywhere.',
+    render: (ctx) => {
+      const url = resolveMcpUrl(ctx);
+      const token = tokenOrPlaceholder(ctx.clientToken);
+      return [
+        '{',
+        '  "mcpServers": {',
+        '    "tavily-bridge": {',
+        `      "url": "${url}",`,
+        '      "headers": {',
+        `        "Authorization": "Bearer ${token}"`,
+        '      }',
+        '    }',
+        '  }',
+        '}'
+      ].join('\n');
+    }
+  },
+  {
+    id: 'vscode',
+    title: 'VS Code',
+    kind: 'http',
+    description: 'VS Code (agent mode / GitHub Copilot). Save as .vscode/mcp.json in your workspace.',
+    render: (ctx) => {
+      const url = resolveMcpUrl(ctx);
+      const token = tokenOrPlaceholder(ctx.clientToken);
+      return [
+        '{',
+        '  "servers": {',
+        '    "tavily-bridge": {',
+        '      "type": "http",',
+        `      "url": "${url}",`,
+        '      "headers": {',
+        `        "Authorization": "Bearer ${token}"`,
+        '      }',
+        '    }',
+        '  }',
+        '}'
+      ].join('\n');
+    }
+  },
+  {
+    id: 'gemini-cli',
+    title: 'Gemini CLI',
+    kind: 'http',
+    description: 'Gemini CLI. Add to ~/.gemini/settings.json, or .gemini/settings.json for a single project.',
+    render: (ctx) => {
+      const url = resolveMcpUrl(ctx);
+      const token = tokenOrPlaceholder(ctx.clientToken);
+      return [
+        '{',
+        '  "mcpServers": {',
+        '    "tavily-bridge": {',
+        `      "httpUrl": "${url}",`,
+        '      "headers": {',
+        `        "Authorization": "Bearer ${token}"`,
+        '      }',
+        '    }',
+        '  }',
+        '}'
+      ].join('\n');
+    }
   }
 ];
