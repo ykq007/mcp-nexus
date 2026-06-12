@@ -42,7 +42,13 @@
     "seconds": "{{count}}秒",
     "minutes": "{{count}}分钟",
     "hours": "{{count}}小时",
-    "days": "{{count}}天"
+    "days": "{{count}}天",
+    "never": "永不",
+    "justNow": "刚刚",
+    "timeAgo": "{{label}}前",
+    "inTime": "{{label}}后",
+    "daysAgo": "{{count}}天前",
+    "inDays": "{{count}}天后"
   },
   "auth": {
     "signedOut": "已退出登录",

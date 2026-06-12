@@ -42,7 +42,13 @@
     "seconds": "{{count}}s",
     "minutes": "{{count}}m",
     "hours": "{{count}}h",
-    "days": "{{count}}d"
+    "days": "{{count}}d",
+    "never": "never",
+    "justNow": "just now",
+    "timeAgo": "{{label}} ago",
+    "inTime": "in {{label}}",
+    "daysAgo": "{{count}}d ago",
+    "inDays": "in {{count}}d"
   },
   "auth": {
     "signedOut": "Signed out",

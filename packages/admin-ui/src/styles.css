@@ -795,6 +795,11 @@ code, kbd, pre, .mono {
   background: var(--surface-2);
   white-space: nowrap;
 }
+.badge svg, .pill svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
 .pill::before {
   content: '';
   width: 6px;
@@ -834,8 +839,12 @@ code, kbd, pre, .mono {
 /* StatusMenu trigger uses .badge[data-variant] — glowing status field */
 .badge[data-variant] {
   height: 24px;
-  cursor: pointer;
   border: 1px solid var(--border);
+}
+/* Only interactive badge triggers (buttons) get the pointer cursor */
+button.badge[data-variant],
+.statusMenuTrigger.badge[data-variant] {
+  cursor: pointer;
 }
 .badge[data-variant='success'] {
   color: var(--success);
@@ -1460,6 +1469,7 @@ pre {
 .overflow-hidden { overflow: hidden; }
 .overflow-x-auto { overflow-x: auto; }
 .cursor-pointer { cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
 .opacity-70 { opacity: 0.7; }
 .rounded-lg { border-radius: var(--radius-lg); }
 .h-3 { height: 12px; }
@@ -1496,7 +1506,185 @@ pre {
 .icon-search, .icon-trash { color: var(--text-low); }
 
 /* ----------------------------------------------------------------------------
-   20. Responsive
+   20. SegmentedControl
+   -------------------------------------------------------------------------- */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.segmented--sm .segmentedItem { padding: 5px 11px; font-size: var(--text-xs); }
+.segmented--xs .segmentedItem { padding: 3px 9px; font-size: var(--text-2xs); }
+
+.segmentedItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-low);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+  white-space: nowrap;
+  user-select: none;
+  border: 1px solid transparent;
+}
+.segmentedItem:hover { color: var(--text-hi); }
+.segmentedItem--active {
+  background: var(--surface-2);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.segmentedItem--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* Focus ring is applied to the hidden input, but we show it on the label */
+.segmentedItem input:focus-visible ~ * { outline: none; }
+.segmentedItem:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Visually hidden but still accessible */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Token-well: mono read-only block for displayed tokens */
+.tokenWell {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-hi);
+  word-break: break-all;
+  line-height: var(--lh-loose);
+  user-select: text;
+}
+
+/* Countdown progress bar for reveal dialog */
+.revealCountdown {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.revealCountdownBar {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.revealCountdownFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 1s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .revealCountdownFill { transition: none; }
+}
+.revealCountdownLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  white-space: nowrap;
+  flex: none;
+}
+
+/* Tool-checklist group */
+.toolGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toolGroupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+.toolGroupLabel {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-low);
+  font-weight: var(--fw-semibold);
+}
+.toolCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--space-1);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+.toolCheckItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+.toolCheckItem:hover { background: var(--surface-hover); }
+.toolCheckItem input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  accent-color: var(--accent);
+}
+.toolCheckItemLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-hi);
+}
+
+/* Expiry preview caption */
+.expiryPreview {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-low);
+  min-height: 18px;
+}
+
+/* Revoked row muted styling */
+.tokenRow--revoked td {
+  color: var(--text-low);
+  opacity: 0.75;
+}
+
+/* ActionMenu focused item highlight */
+.actionMenuItem[data-focused='true'] {
+  background: var(--surface-hover);
+  color: var(--text-hi);
+}
+.actionMenuItem.danger[data-focused='true'] {
+  background: var(--danger-soft);
+}
+
+/* ----------------------------------------------------------------------------
+   22. Responsive
    -------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   /* Stack the shell vertically so the sticky bottom nav doesn't sit beside the
