@@ -102,7 +102,6 @@ html[data-theme='light'] {
   --text:            var(--ink);
   --muted:           var(--text-mid);
   --panel:           var(--surface-1);
-  --primary:         var(--primary);
 }
 
 /* Full Graphite & Cobalt dark ramp */

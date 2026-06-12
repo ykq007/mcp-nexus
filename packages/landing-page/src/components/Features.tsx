@@ -1,101 +1,166 @@
-import type { ReactNode } from 'react';
+/* Features section — "Graphite & Cobalt" redesign.
+ *
+ * Layout: NOT a uniform 4-up icon-heading-text card grid.
+ * Structure:
+ *   Row 1 (full width): Key management — the flagship feature, wider treatment
+ *   Row 2 (split): Client tokens (left) | Usage observability (right)
+ *   Row 3 (full width): Deployment — self-hosted, low-friction
+ *
+ * Each cell uses a slightly different compositional rhythm to break the
+ * template feel: some lead with a large tag cluster, one with a code excerpt,
+ * one with a capability list with explanatory micro-text.
+ */
 
-interface FeatureCardProps {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  highlights: string[];
+function KeyIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M7 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM10.121 9.38l1.415 1.414-1.415 1.415L11.535 13.6l-1.414 1.414L8.707 13.6 7 15.306"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 7a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
-function FeatureCard({ icon, title, description, highlights }: FeatureCardProps) {
+function TokenIcon() {
   return (
-    <article className="feature-card">
-      <div className="feature-card__icon">{icon}</div>
-      <h3 className="feature-card__title">{title}</h3>
-      <p className="feature-card__description">{description}</p>
-      <ul className="feature-card__highlights">
-        {highlights.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-    </article>
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3 8.5h14" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M6 12h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 14l3.5-3.5 3 2 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 4v12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CloudIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M5.5 14a3 3 0 0 1-.5-5.95 4.5 4.5 0 0 1 8.66-1.1A3 3 0 0 1 14.5 14H5.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
 export function Features() {
   return (
     <section className="features" id="features" aria-labelledby="features-title">
-      <div className="landing-shell features__container">
+      <div className="l-container">
         <header className="features__header">
           <h2 className="features__title" id="features-title">
-            Everything needed to operate a search bridge at scale
+            The complete operator surface for search infrastructure.
           </h2>
           <p className="features__subtitle">
-            From routing reliability to observability, MCP Nexus provides the core blocks to
-            keep provider-backed search available and measurable.
+            From upstream key rotation to client token lifecycle to usage cost
+            tracking — everything an operator needs, built for precision and speed.
           </p>
         </header>
 
-        <div className="features__grid">
-          <FeatureCard
-            icon={
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-              </svg>
-            }
-            title="Provider abstraction"
-            description="A single MCP-facing interface across Tavily and Brave tool surfaces."
-            highlights={[
-              'Unified endpoint and response handling',
-              'Provider fallback and continuity behavior',
-              'Low-friction integration for MCP clients'
-            ]}
-          />
+        {/* Varied layout grid — NOT identical card grid */}
+        <div className="features__layout" role="list">
 
-          <FeatureCard
-            icon={
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
-              </svg>
-            }
-            title="Intelligent key lifecycle"
-            description="Protect quotas and uptime with automatic rotation and cooldown recovery."
-            highlights={[
-              'Credit-aware selection controls',
-              'Cooldown and health-state enforcement',
-              'Operational safeguards for burst traffic'
-            ]}
-          />
+          {/* Feature 1: Key management — full-width hero cell with horizontal layout */}
+          <article className="feature-cell feature-cell--wide" role="listitem">
+            <div className="feature-cell__icon">
+              <KeyIcon />
+            </div>
+            <div className="feature-cell__body">
+              <h3 className="feature-cell__title">Multi-provider key management</h3>
+              <p className="feature-cell__desc">
+                Manage Tavily and Brave API keys from a single pool. Round-robin or
+                random selection, automatic cooldown recovery, credit tracking, and
+                bulk import/export — so you never hit a wall mid-operation.
+              </p>
+              <div className="feature-cell__tags" role="list" aria-label="Capability tags">
+                <span className="feature-tag" role="listitem">tvly-key rotation</span>
+                <span className="feature-tag" role="listitem">credit-aware routing</span>
+                <span className="feature-tag" role="listitem">cooldown recovery</span>
+                <span className="feature-tag" role="listitem">bulk import / export</span>
+                <span className="feature-tag" role="listitem">status: active / disabled / invalid</span>
+              </div>
+            </div>
+          </article>
 
-          <FeatureCard
-            icon={
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-              </svg>
-            }
-            title="Admin observability"
-            description="Track request trends, usage, and key status in one focused dashboard."
-            highlights={[
-              'Live usage and route diagnostics',
-              'Rapid troubleshooting for degraded providers',
-              'Operational data built for maintenance workflows'
-            ]}
-          />
+          {/* Feature 2: Client tokens — left cell, list-driven */}
+          <article className="feature-cell" role="listitem">
+            <div className="feature-cell__icon">
+              <TokenIcon />
+            </div>
+            <h3 className="feature-cell__title">Scoped client tokens</h3>
+            <p className="feature-cell__desc">
+              Issue tokens to MCP clients with fine-grained control.
+              Each token carries its own scope, expiry, and rate limit —
+              so a compromised client never takes down the whole pool.
+            </p>
+            <ul className="feature-cell__list" aria-label="Token capabilities">
+              <li>Expiry: never / 1 h / 24 h / 7 d / 30 d / 90 d / custom</li>
+              <li>Tool allowlist: all or restrict to Tavily / Brave subsets</li>
+              <li>Rate limit per token (req/min), revealed once and auto-cleared</li>
+              <li>Soft revoke or hard delete; setup snippet per MCP target</li>
+            </ul>
+          </article>
 
-          <FeatureCard
-            icon={
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12a7.5 7.5 0 0 1 12.96-5.303M4.5 12H3m1.5 0h3m13.5 0a7.5 7.5 0 0 1-12.96 5.303M19.5 12H21m-1.5 0h-3" />
-              </svg>
-            }
-            title="Production-ready controls"
-            description="Run confidently with route checks, health endpoints, and predictable behavior."
-            highlights={[
-              'Health status endpoint for automation',
-              'Clear integration pathways (stdio + HTTP)',
-              'Consistent controls for operational teams'
-            ]}
-          />
+          {/* Feature 3: Usage observability — right cell, metrics angle */}
+          <article className="feature-cell" role="listitem">
+            <div className="feature-cell__icon">
+              <ChartIcon />
+            </div>
+            <h3 className="feature-cell__title">Usage and cost observability</h3>
+            <p className="feature-cell__desc">
+              Full audit log of every request: tool, outcome, latency, client
+              token, and upstream key. Filter by any dimension; inspect args and
+              error detail inline. Tavily credit consumption and Brave cost
+              estimates surface in the dashboard.
+            </p>
+            <ul className="feature-cell__list" aria-label="Observability capabilities">
+              <li>Live metrics: req/min, req/hr, active tokens, pool health</li>
+              <li>Per-request query preview, latency, and error message</li>
+              <li>Tavily credit + Brave USD cost estimate by period</li>
+            </ul>
+          </article>
+
+          {/* Feature 4: Deployment — full-width bottom cell, compact */}
+          <article className="feature-cell feature-cell--wide" role="listitem">
+            <div className="feature-cell__icon">
+              <CloudIcon />
+            </div>
+            <div className="feature-cell__body">
+              <h3 className="feature-cell__title">Self-hosted on Cloudflare Workers</h3>
+              <p className="feature-cell__desc">
+                Deploy on your own Workers account. A single worker handles the MCP
+                endpoint, key routing, token validation, and the admin API — with
+                D1 for persistence. No third-party backend, no shared infrastructure,
+                no surprise billing.
+              </p>
+              <div className="feature-cell__tags" role="list" aria-label="Deployment stack">
+                <span className="feature-tag" role="listitem">Cloudflare Workers</span>
+                <span className="feature-tag" role="listitem">D1 SQLite</span>
+                <span className="feature-tag" role="listitem">MCP JSON-RPC 2.0</span>
+                <span className="feature-tag" role="listitem">stdio + HTTP transport</span>
+                <span className="feature-tag" role="listitem">/health endpoint</span>
+              </div>
+            </div>
+          </article>
+
         </div>
       </div>
     </section>

@@ -7,24 +7,33 @@ type AdminLoginModalProps = {
   onSuccess: (opts: { adminToken: string; remember: boolean }) => void;
 };
 
-const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 function normalizeBaseUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return '';
-  return trimmed.replace(/\/+$/, '');
+  return raw.trim().replace(/\/+$/, '');
 }
 
 function buildAdminUrl(baseUrl: string, path: string): string {
-  if (!path.startsWith('/')) {
-    throw new Error(`path must start with '/': ${path}`);
-  }
+  if (!path.startsWith('/')) throw new Error(`path must start with '/': ${path}`);
   return baseUrl ? `${baseUrl}${path}` : path;
 }
 
 function getDefaultApiBaseUrl(): string {
   const raw = import.meta.env.VITE_ADMIN_API_BASE;
   return typeof raw === 'string' ? normalizeBaseUrl(raw) : '';
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M1 1l12 12M13 1L1 13"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalProps) {
@@ -34,35 +43,36 @@ export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalPro
   const [remember, setRemember] = useState(() => loadRememberAdminTokenPreference());
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const modalRef = useRef<HTMLDivElement | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const previousActiveElement = useRef<HTMLElement | null>(null);
 
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  // ── Scroll lock + initial focus ──────────────────────────────────────────
   useEffect(() => {
     if (!open) return;
     if (typeof window === 'undefined') return;
 
-    previousActiveElement.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    prevFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    const previousOverflow = document.body.style.overflow;
-    const previousPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPad = document.body.style.paddingRight;
+    const sb = window.innerWidth - document.documentElement.clientWidth;
 
     document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
+    if (sb > 0) document.body.style.paddingRight = `${sb}px`;
 
-    // Focus an explicit control for keyboard users.
-    closeButtonRef.current?.focus();
+    closeBtnRef.current?.focus();
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.paddingRight = previousPaddingRight;
-      (previousActiveElement.current ?? null)?.focus?.();
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPad;
+      (prevFocusRef.current ?? null)?.focus?.();
     };
   }, [open]);
 
+  // ── Keyboard: Escape + focus trap ────────────────────────────────────────
   useEffect(() => {
     if (!open) {
       setAdminToken('');
@@ -71,48 +81,51 @@ export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalPro
       return;
     }
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
         return;
       }
+      if (e.key !== 'Tab') return;
 
-      if (event.key !== 'Tab') return;
       const modal = modalRef.current;
       if (!modal) return;
 
-      const focusable = Array.from(modal.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-        (el) => !(el as any).disabled
-      );
+      const focusable = Array.from(
+        modal.querySelectorAll<HTMLElement>(FOCUSABLE)
+      ).filter((el) => !(el as HTMLInputElement).disabled);
       if (focusable.length === 0) return;
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const active =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
       if (!active || !modal.contains(active)) {
-        event.preventDefault();
-        (event.shiftKey ? last : first).focus();
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
         return;
       }
 
-      if (event.shiftKey && active === first) {
-        event.preventDefault();
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
         first.focus();
       }
     };
+
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, onClose]);
 
   if (!open) return null;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  // ── Form submission: validate via GET /admin/api/keys ───────────────────
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     const token = adminToken.trim();
     if (!token) {
       setErrorMessage('Admin token is required.');
@@ -123,12 +136,10 @@ export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalPro
     setErrorMessage(null);
 
     try {
-      const response = await fetch(buildAdminUrl(getDefaultApiBaseUrl(), '/admin/api/keys'), {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${token}`
-        }
-      });
+      const response = await fetch(
+        buildAdminUrl(getDefaultApiBaseUrl(), '/admin/api/keys'),
+        { method: 'GET', headers: { authorization: `Bearer ${token}` } }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -136,24 +147,33 @@ export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalPro
           return;
         }
         if (response.status === 404) {
-          setErrorMessage('Admin API not found at /admin/api. Check your deployment routing.');
+          setErrorMessage(
+            'Admin API not found at /admin/api. Check your deployment routing.'
+          );
           return;
         }
 
         let details = '';
         try {
-          const body = await response.json();
+          const body = (await response.json()) as { error?: unknown };
           if (typeof body?.error === 'string') details = body.error;
         } catch {
           // ignore JSON parse failures
         }
-        setErrorMessage(details ? `Sign-in failed: ${details}` : `Sign-in failed with HTTP ${response.status}.`);
+        setErrorMessage(
+          details
+            ? `Sign-in failed: ${details}`
+            : `Sign-in failed with HTTP ${response.status}.`
+        );
         return;
       }
 
       onSuccess({ adminToken: token, remember });
-    } catch (error) {
-      const reason = typeof (error as any)?.message === 'string' ? ` (${(error as any).message})` : '';
+    } catch (err) {
+      const reason =
+        typeof (err as { message?: unknown })?.message === 'string'
+          ? ` (${(err as { message: string }).message})`
+          : '';
       setErrorMessage(`Network error: could not reach Admin API.${reason}`);
     } finally {
       setSubmitting(false);
@@ -161,73 +181,88 @@ export function AdminLoginModal({ open, onClose, onSuccess }: AdminLoginModalPro
   }
 
   return (
-    <div className="landingLoginModal__overlay" role="presentation" onClick={onClose}>
+    <div className="modal-overlay" role="presentation" onClick={onClose}>
       <div
-        className="landingLoginModal"
+        className="modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        onClick={(event) => event.stopPropagation()}
         ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="landingLoginModal__header">
+        {/* Header */}
+        <div className="modal__header">
           <div>
-            <h2 id={titleId} className="landingLoginModal__title">
-              Sign in to Admin UI
+            <h2 id={titleId} className="modal__title">
+              Sign in to Admin Console
             </h2>
-            <p id={descriptionId} className="landingLoginModal__description">
+            <p id={descriptionId} className="modal__description">
               Provide the admin token configured on the server.
             </p>
           </div>
           <button
-            ref={closeButtonRef}
+            ref={closeBtnRef}
             type="button"
-            className="landingLoginModal__close"
+            className="modal__close"
             onClick={onClose}
             aria-label="Close sign-in modal"
           >
-            Close
+            <CloseIcon />
           </button>
         </div>
 
-        <form className="landingLoginModal__form" onSubmit={handleSubmit}>
-          <div className="landingLoginModal__field">
-            <label htmlFor="landing-admin-token-input" className="landingLoginModal__label">
-              Admin token
+        {/* Form (contains all fields + actions) */}
+        <form className="modal__form-wrap" onSubmit={handleSubmit}>
+          <div className="modal__body">
+            <div className="modal__field">
+              <label htmlFor="landing-admin-token" className="modal__label">
+                Admin token
+              </label>
+              <input
+                id="landing-admin-token"
+                type="password"
+                className="modal__input"
+                value={adminToken}
+                onChange={(e) => setAdminToken(e.target.value)}
+                placeholder="Paste ADMIN_API_TOKEN"
+                autoComplete="off"
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+            </div>
+
+            <label className="modal__remember">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              <span>Remember this token on this browser</span>
             </label>
-            <input
-              id="landing-admin-token-input"
-              className="landingLoginModal__input"
-              type="password"
-              value={adminToken}
-              onChange={(event) => setAdminToken(event.target.value)}
-              placeholder="Paste ADMIN_API_TOKEN"
-              autoComplete="off"
-              autoFocus
-            />
+
+            {errorMessage != null && (
+              <p className="modal__error" role="alert">
+                {errorMessage}
+              </p>
+            )}
           </div>
 
-          <label className="landingLoginModal__remember">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(event) => setRemember(event.target.checked)}
-            />
-            <span>Remember this token on this browser</span>
-          </label>
-
-          {errorMessage ? (
-            <p className="landingLoginModal__error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-
-          <div className="landingLoginModal__actions">
-            <button type="button" className="btn btn--secondary" onClick={onClose} disabled={submitting}>
+          {/* Actions inside the form so submit button works natively */}
+          <div className="modal__actions">
+            <button
+              type="button"
+              className="btn"
+              onClick={onClose}
+              disabled={submitting}
+            >
               Cancel
             </button>
-            <button type="submit" className="btn btn--primary" disabled={submitting}>
+            <button
+              type="submit"
+              className="btn btn--primary"
+              disabled={submitting}
+            >
               {submitting ? 'Signing in…' : 'Sign in'}
             </button>
           </div>
