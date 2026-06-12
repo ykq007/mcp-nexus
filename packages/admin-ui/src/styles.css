@@ -183,15 +183,6 @@ pre {
   opacity: 0.75;
 }
 
-/* ActionMenu focused item highlight (compat rule used by pages) */
-.actionMenuItem[data-focused='true'] {
-  background: var(--surface-hover);
-  color: var(--text-hi);
-}
-.actionMenuItem.danger[data-focused='true'] {
-  background: var(--danger-soft);
-}
-
 /* ----------------------------------------------------------------------------
    Responsive helpers (page-level; shell responsive is in shell.css)
    -------------------------------------------------------------------------- */

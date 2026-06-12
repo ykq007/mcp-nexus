@@ -178,10 +178,6 @@ html[data-theme='light'] {
   --cyan:       var(--info);
   --cyan-soft:  var(--info-soft);
 
-  /* Glow compat */
-  --glow-accent: 0 0 0 1px var(--ring);
-  --glow-danger: 0 0 0 1px var(--danger);
-
   /* Color aliases used by some components */
   --color-bg:           var(--canvas);
   --color-surface-1:    var(--surface-1);
@@ -290,9 +286,6 @@ html[data-theme='dark'] {
   --amber-soft: var(--warning-soft);
   --cyan:       var(--info);
   --cyan-soft:  var(--info-soft);
-
-  --glow-accent: 0 0 0 1px var(--ring);
-  --glow-danger: 0 0 0 1px var(--danger);
 
   --color-bg:            var(--canvas);
   --color-surface-1:     var(--surface-1);
