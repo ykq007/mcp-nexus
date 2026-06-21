@@ -1,4 +1,0 @@
-{"file": ".trellis/tasks/06-12-redesign-ui-from-scratch/research/functional-inventory.md", "reason": "Parity baseline to verify zero functional regression per page."}
-{"file": ".trellis/tasks/06-12-redesign-ui-from-scratch/design.md", "reason": "Locked visual system + per-page UX spec to verify compliance (tokens, type, component vocabulary, bans, a11y floors)."}
-{"file": ".trellis/spec/admin-ui/frontend/quality-guidelines.md", "reason": "Quality bar for the admin-ui rebuild during check."}
-{"file": ".trellis/spec/guides/index.md", "reason": "Cross-layer + code-reuse checks."}

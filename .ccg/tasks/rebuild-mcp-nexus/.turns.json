@@ -1,1 +1,0 @@
-[{"phase":"4-implementation","next":"M0 基础层：env / crypto / d1 client 干净重写 + 兼容自检","ts":1781165946971},{"phase":"4-implementation","next":"M3 设计系统已完成（Phosphor Ops 样式表 + 字体，60 测试通过/build 绿/截图验证）。下一步 M4：逐页精修 + i18n brand 改 mcp-nexus + KPI slashed-zero","ts":1781166527159}]

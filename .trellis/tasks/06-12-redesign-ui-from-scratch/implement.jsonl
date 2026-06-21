@@ -1,4 +1,0 @@
-{"file": ".trellis/tasks/06-12-redesign-ui-from-scratch/research/functional-inventory.md", "reason": "Parity baseline — every feature/field/action/state the redesign must preserve. Implementers check each page against this."}
-{"file": ".trellis/spec/admin-ui/frontend/index.md", "reason": "Admin-ui frontend spec: component/hook/state/type-safety/quality guidelines + directory structure the rebuild must follow."}
-{"file": ".trellis/spec/landing-page/frontend/index.md", "reason": "Landing-page frontend spec for the P4 landing rebuild."}
-{"file": ".trellis/spec/guides/index.md", "reason": "Shared thinking guides (code-reuse, cross-layer) for consistent implementation."}
