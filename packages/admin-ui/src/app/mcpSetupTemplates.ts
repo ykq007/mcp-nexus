@@ -112,16 +112,19 @@ export const MCP_SETUP_TARGETS: McpSetupTarget[] = [
   {
     id: 'claude-code-cli',
     title: 'Claude Code (CLI)',
-    kind: 'http',
-    description: 'Claude Code CLI. Registers the bridge as a remote HTTP MCP server. Drop -s user to scope it to the current project instead.',
+    kind: 'stdio',
+    description: "Claude Code CLI. Registers the published stdio npx wrapper (talks stdio locally, connects to the bridge over HTTP). Claude Code's native HTTP transport currently ignores static bearer headers and forces an OAuth login, so the stdio wrapper is the reliable path. Drop -s user to scope it to the current project instead.",
     render: (ctx) => {
-      const url = resolveMcpUrl(ctx);
       const token = tokenOrPlaceholder(ctx.clientToken);
+      const baseUrl = baseUrlOrPlaceholder(resolveMcpBaseUrl(ctx));
       return [
-        '# Add the bridge as a remote HTTP MCP server (user scope)',
-        `claude mcp add --transport http tavily-bridge "${url}" \\`,
-        `  --header "Authorization: Bearer ${token}" \\`,
-        '  -s user',
+        '# Add the bridge via the stdio npx wrapper (user scope).',
+        '# Auth is passed via env (-e), never as a header, so Claude Code',
+        '# does not fall back to an OAuth login flow.',
+        'claude mcp add tavily-bridge -s user \\',
+        `  -e "TAVILY_BRIDGE_BASE_URL=${baseUrl}" \\`,
+        `  -e "TAVILY_BRIDGE_MCP_TOKEN=${token}" \\`,
+        '  -- npx -y @nexus-mcp/stdio-http-bridge',
         '',
         '# Verify it connected',
         'claude mcp list'
