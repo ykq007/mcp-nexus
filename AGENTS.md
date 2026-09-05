@@ -1,18 +1,17 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
+# Agent instructions
 
-These instructions are for AI assistants working in this project.
+`AGENTS.md` is the canonical instruction file for agents working in this repository.
 
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
+## Agent skills
 
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
+### Issue tracker
 
-Keep this managed block so 'openspec update' can refresh the instructions.
+Issues and specs are tracked in GitHub Issues for `ykq007/mcp-nexus`. See `docs/agents/issue-tracker.md`.
 
-<!-- OPENSPEC:END -->
+### Triage labels
+
+Use the canonical Matt Pocock triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a multi-context monorepo. Use the root `CONTEXT-MAP.md` when present to locate package-level `CONTEXT.md` files and ADRs. See `docs/agents/domain.md`.
