@@ -1,76 +1,31 @@
 const proofPoints = [
   'Self-hosted on Cloudflare Workers + D1',
-  'Round-robin / random key selection with cooldown recovery',
-  'Client token scoping, expiry, and rate limits'
+  'Tavily + Brave behind one MCP endpoint',
+  'Client tokens, key rotation, and request visibility'
 ];
 
-const panelRows = [
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="hero__panel-row-icon">
-        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: 'Tavily pool',
-    value: <span className="hero__panel-badge hero__panel-badge--active">3 active</span>
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="hero__panel-row-icon">
-        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: 'Brave pool',
-    value: <span className="hero__panel-badge hero__panel-badge--active">2 active</span>
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="hero__panel-row-icon">
-        <path d="M8 2v4l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
-    label: 'Client tokens',
-    value: <span className="hero__panel-badge hero__panel-badge--active">12 active</span>
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="hero__panel-row-icon">
-        <path d="M2 8h12M8 2l4 6-4 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: 'Tavily credits',
-    value: <span className="hero__panel-badge hero__panel-badge--warn">4 820 / 5 000</span>
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" className="hero__panel-row-icon">
-        <path d="M8 2l1.8 3.6 4 .6-2.9 2.8.7 4L8 11l-3.6 1.9.7-4L2.2 6.2l4-.6L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-    label: 'Requests / min',
-    value: <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--ink)' }}>47</span>
-  }
+const clientNodes = ['Claude / MCP', 'Codex / MCP', 'Custom client'];
+
+const providerNodes = [
+  { name: 'Tavily', meta: 'key pool · credits' },
+  { name: 'Brave', meta: 'key pool · rate state' }
 ];
 
 export function Hero({ onOpenDashboard }: { onOpenDashboard: () => void }) {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="l-container hero__container">
-        {/* Left: value proposition */}
         <div className="hero__content">
           <h1 className="hero__title" id="hero-title">
-            One{' '}
-            <span className="hero__copper">resilient gateway</span>{' '}
-            for multi-provider search.
+            One MCP search endpoint.<br />
+            Multiple upstreams.<br />
+            <span>One control plane.</span>
           </h1>
 
           <p className="hero__subtitle">
-            MCP Nexus routes Tavily and Brave traffic through a single MCP endpoint
-            — with credit-aware key rotation, scoped client tokens, and a full
-            admin console for production operations.
+            Route Tavily and Brave through one self-hosted MCP gateway. Manage
+            upstream keys, mint scoped client tokens, inspect usage, and test the
+            full path without leaving the console.
           </p>
 
           <div className="hero__cta">
@@ -79,53 +34,107 @@ export function Hero({ onOpenDashboard }: { onOpenDashboard: () => void }) {
               className="btn btn--primary btn--lg"
               onClick={onOpenDashboard}
             >
-              Open Admin Console
+              Sign in to console
             </button>
             <a
-              href="https://github.com/anthropics/mcp-nexus"
+              href="https://github.com/ykq007/mcp-nexus"
               className="btn btn--lg"
               target="_blank"
               rel="noreferrer"
               aria-label="View source on GitHub (opens in a new tab)"
             >
-              <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
-              </svg>
-              GitHub
+              View source
             </a>
           </div>
 
           <ul className="hero__proof" aria-label="Platform highlights">
             {proofPoints.map((point) => (
               <li key={point} className="hero__proof-item">
-                <span className="hero__proof-dot" aria-hidden="true" />
+                <span className="hero__proof-mark" aria-hidden="true" />
                 {point}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Right: live-status instrument panel */}
-        <aside className="hero__panel" aria-label="Admin console status preview">
-          <div className="hero__panel-header">
-            <span className="hero__panel-title">Admin Console</span>
-            <span className="hero__panel-status">All systems operational</span>
+        <aside className="route-board" aria-label="mcp-nexus routing model">
+          <div className="route-board__head">
+            <div>
+              <div className="route-board__title">Live route</div>
+              <div className="route-board__sub">Illustrative control-plane state</div>
+            </div>
+            <span className="route-board__status">
+              <span className="route-board__status-dot" aria-hidden="true" />
+              ready
+            </span>
           </div>
-          <ul className="hero__panel-rows">
-            {panelRows.map((row, i) => (
-              <li key={i} className="hero__panel-row">
-                <span className="hero__panel-row-label">
-                  {row.icon}
-                  {row.label}
-                </span>
-                <span className="hero__panel-row-value">{row.value}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="hero__panel-footer">
-            <a href="/health" className="hero__panel-cta">
-              Health endpoint →
-            </a>
+
+          <div className="route-board__flow">
+            <div className="route-stage route-stage--clients">
+              <div className="route-stage__label">MCP clients</div>
+              <div className="route-stage__stack">
+                {clientNodes.map((name) => (
+                  <div className="route-node route-node--client" key={name}>
+                    <span className="route-node__signal" aria-hidden="true" />
+                    <span>{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="route-link" aria-hidden="true">
+              <span />
+            </div>
+
+            <div className="route-core">
+              <div className="route-core__brand">mcp / nexus</div>
+              <div className="route-core__endpoint mono">POST /mcp</div>
+              <dl className="route-core__ledger">
+                <div>
+                  <dt>client auth</dt>
+                  <dd>scoped</dd>
+                </div>
+                <div>
+                  <dt>routing</dt>
+                  <dd>combined</dd>
+                </div>
+                <div>
+                  <dt>key state</dt>
+                  <dd>healthy</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="route-link route-link--out" aria-hidden="true">
+              <span />
+            </div>
+
+            <div className="route-stage route-stage--providers">
+              <div className="route-stage__label">Upstreams</div>
+              <div className="route-stage__stack">
+                {providerNodes.map((provider) => (
+                  <div className="route-node route-node--provider" key={provider.name}>
+                    <span className="route-node__provider-name">{provider.name}</span>
+                    <span className="route-node__meta">{provider.meta}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="route-board__foot">
+            <div>
+              <span>active upstream keys</span>
+              <strong className="mono">5</strong>
+            </div>
+            <div>
+              <span>client tokens</span>
+              <strong className="mono">12</strong>
+            </div>
+            <div>
+              <span>route mode</span>
+              <strong className="mono">auto</strong>
+            </div>
           </div>
         </aside>
       </div>

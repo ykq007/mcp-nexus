@@ -17,6 +17,7 @@ import {
   shouldAutoOpenLoginModal
 } from '../lib/adminRouting';
 import '../styles/landing.css';
+import '../styles/network-ledger.css';
 
 // ── CtaBand: calm midpage prompt to enter the console ────────────────────────
 function CtaBand({ onOpenDashboard }: { onOpenDashboard: () => void }) {
@@ -40,7 +41,7 @@ function CtaBand({ onOpenDashboard }: { onOpenDashboard: () => void }) {
             Open Admin Console
           </button>
           <a
-            href="https://github.com/anthropics/mcp-nexus"
+            href="https://github.com/ykq007/mcp-nexus"
             className="btn btn--lg"
             target="_blank"
             rel="noreferrer"

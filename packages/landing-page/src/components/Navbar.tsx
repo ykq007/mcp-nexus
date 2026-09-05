@@ -4,7 +4,7 @@ const NAV_LINKS = [
   { href: '#features', label: 'Features' },
   { href: '/health', label: 'Health' },
   {
-    href: 'https://github.com/anthropics/mcp-nexus',
+    href: 'https://github.com/ykq007/mcp-nexus',
     label: 'GitHub',
     external: true
   }

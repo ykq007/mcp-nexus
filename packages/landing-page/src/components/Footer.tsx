@@ -34,7 +34,7 @@ export function Footer({ onOpenDashboard }: { onOpenDashboard: () => void }) {
             <div className="footer__nav-group">
               <p className="footer__nav-heading">Resources</p>
               <a
-                href="https://github.com/anthropics/mcp-nexus"
+                href="https://github.com/ykq007/mcp-nexus"
                 className="footer__nav-link"
                 target="_blank"
                 rel="noreferrer"
